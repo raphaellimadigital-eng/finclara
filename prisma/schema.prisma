@@ -17,6 +17,12 @@ enum TipoLancamento {
   INVESTIMENTO
 }
 
+enum PerfilInvestidor {
+  CONSERVADOR
+  MODERADO
+  ARROJADO
+}
+
 enum TipoMeta {
   RESERVA
   VIAGEM
@@ -51,6 +57,7 @@ model Usuario {
   // senha não é armazenada aqui: autenticação é feita pelo Supabase Auth,
   // este id é o mesmo id do usuário no Supabase (auth.users.id)
   criadoEm  DateTime @default(now())
+  perfilInvestidor PerfilInvestidor?
 
   lancamentos Lancamento[]
   dividas     Divida[]

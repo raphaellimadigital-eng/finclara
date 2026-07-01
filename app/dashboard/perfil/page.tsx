@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { ChevronLeft, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
+import { getUsuarioAtual } from "./actions";
+import { QuestionarioPerfil } from "@/components/QuestionarioPerfil";
+import { LABEL_PERFIL, DESCRICAO_PERFIL } from "@/lib/perfilInvestidor";
 
 export default async function PerfilPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const usuario = await getUsuarioAtual();
 
   return (
     <div className="container">
@@ -35,9 +39,23 @@ export default async function PerfilPage() {
         </div>
       </div>
 
-      <p className="texto-secundario" style={{ marginTop: 12 }}>
+      <p className="texto-secundario" style={{ marginTop: -8, marginBottom: 16 }}>
         Edição de nome, telefone e outros dados chega em breve.
       </p>
+
+      {usuario.perfilInvestidor && (
+        <div className="card">
+          <div className="rotulo">Seu perfil de investidor atual</div>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
+            {LABEL_PERFIL[usuario.perfilInvestidor]}
+          </div>
+          <p className="texto-secundario" style={{ margin: 0 }}>
+            {DESCRICAO_PERFIL[usuario.perfilInvestidor]}
+          </p>
+        </div>
+      )}
+
+      <QuestionarioPerfil />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { getLancamentos } from "./actions";
 import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
 import { getMetas } from "./metas/actions";
+import { getUsuarioAtual } from "./perfil/actions";
 import { FormLancamento } from "@/components/FormLancamento";
 import { ListaLancamentos } from "@/components/ListaLancamentos";
 import { Resumo } from "@/components/Resumo";
@@ -12,10 +13,12 @@ import { GraficoAlocacao } from "@/components/GraficoAlocacao";
 import { CardDividas } from "@/components/CardDividas";
 import { CardCartoes } from "@/components/CardCartoes";
 import { CardMetas } from "@/components/CardMetas";
+import { CardOrientacao } from "@/components/CardOrientacao";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
-import { calcularAlocacao } from "@/lib/financas";
+import { calcularAlocacao, CATEGORIAS_ESSENCIAIS } from "@/lib/financas";
+import { calcularOrientacao } from "@/lib/orientacao";
 
 type Props = {
   searchParams: { ano?: string; mes?: string };
@@ -29,11 +32,12 @@ export default async function DashboardPage({ searchParams }: Props) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const [lancamentos, dividas, cartoes, metas] = await Promise.all([
+  const [lancamentos, dividas, cartoes, metas, usuario] = await Promise.all([
     getLancamentos(ano, mes),
     getDividas(),
     getCartoes(),
     getMetas(),
+    getUsuarioAtual(),
   ]);
 
   const totalReceitas = lancamentos
@@ -46,6 +50,21 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const saldo = totalReceitas - totalDespesas;
   const alocacao = calcularAlocacao(totalReceitas, lancamentos, dividas);
+
+  const essenciaisMensal = lancamentos
+    .filter((l) => l.tipo === "DESPESA" && CATEGORIAS_ESSENCIAIS.includes(l.categoria))
+    .reduce((s, l) => s + Number(l.valor), 0);
+
+  const reservaAtual = metas
+    .filter((m) => m.tipo === "RESERVA")
+    .reduce((s, m) => s + Number(m.valorAtual), 0);
+
+  const orientacao = calcularOrientacao({
+    temDividaCara: alocacao.temDividaCara,
+    reservaAtual,
+    essenciaisMensal,
+    perfilInvestidor: usuario.perfilInvestidor,
+  });
 
   return (
     <div className="container">
@@ -85,6 +104,9 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {/* Metas financeiras */}
       <CardMetas metas={metas} />
+
+      {/* Orientação financeira (dívida → reserva → investir) */}
+      <CardOrientacao orientacao={orientacao} />
 
       {/* Sugestão de alocação da renda */}
       <GraficoAlocacao alocacao={alocacao} />
