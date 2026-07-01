@@ -46,9 +46,9 @@ export default function TermosPage() {
           <p className="texto-secundario">
             Seus dados financeiros são tratados de acordo com a Lei Geral de Proteção de Dados
             (LGPD), com a finalidade exclusiva de operar o FinClara para você. Seus lançamentos são
-            isolados por conta — nenhum outro usuário tem acesso a eles. Você pode solicitar a
-            exportação ou exclusão dos seus dados a qualquer momento pelo suporte (veja a página de
-            Ajuda); a exclusão automática pelo próprio app está prevista para uma versão futura.
+            isolados por conta — nenhum outro usuário tem acesso a eles. Você pode exportar ou
+            excluir todos os seus dados financeiros a qualquer momento, diretamente na página de
+            Configurações.
           </p>
         </section>
 

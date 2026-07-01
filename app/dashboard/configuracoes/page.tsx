@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ChevronLeft, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ConfiguracaoDoisFatores } from "@/components/ConfiguracaoDoisFatores";
+import { ExportarExcluirDados } from "@/components/ExportarExcluirDados";
 
 export default function ConfiguracoesPage() {
   return (
@@ -25,9 +27,9 @@ export default function ConfiguracoesPage() {
         <ThemeToggle />
       </div>
 
-      <p className="texto-secundario" style={{ marginTop: 12 }}>
-        Notificações e preferências de conta chegam em breve.
-      </p>
+      <ConfiguracaoDoisFatores />
+
+      <ExportarExcluirDados />
     </div>
   );
 }
