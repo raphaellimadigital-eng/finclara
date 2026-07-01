@@ -70,7 +70,13 @@ function formatarData(data: Date) {
   return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-export function ListaLancamentos({ lancamentos }: { lancamentos: Lancamento[] }) {
+export function ListaLancamentos({
+  lancamentos,
+  categoriasEstouradas = new Set(),
+}: {
+  lancamentos: Lancamento[];
+  categoriasEstouradas?: Set<string>;
+}) {
   const [deletando, setDeletando] = useState<string | null>(null);
   const [erro, setErro] = useState("");
 
@@ -141,7 +147,16 @@ export function ListaLancamentos({ lancamentos }: { lancamentos: Lancamento[] })
                 <div style={{ fontWeight: 500, fontSize: 15 }}>{l.descricao}</div>
                 <div className="texto-secundario" style={{ marginTop: 3, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                   <span>{formatarData(l.data)}</span>
-                  <span className="categoria-tag">{LABEL_CATEGORIA[l.categoria]}</span>
+                  <span
+                    className="categoria-tag"
+                    style={
+                      categoriasEstouradas.has(l.categoria)
+                        ? { background: "var(--vermelho-clara)", color: "var(--vermelho)" }
+                        : undefined
+                    }
+                  >
+                    {LABEL_CATEGORIA[l.categoria]}
+                  </span>
                   {l.recorrente && <Repeat size={12} aria-label="Recorrente" />}
                 </div>
               </div>

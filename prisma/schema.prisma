@@ -63,6 +63,7 @@ model Usuario {
   dividas     Divida[]
   cartoes     CartaoCredito[]
   metas       Meta[]
+  limitesCategoria LimiteCategoria[]
 
   @@map("usuarios")
 }
@@ -159,4 +160,19 @@ model Meta {
 
   @@index([usuarioId])
   @@map("metas")
+}
+
+model LimiteCategoria {
+  id           String    @id @default(uuid())
+  usuarioId    String
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  categoria    Categoria
+  valorLimite  Decimal   @db.Decimal(12, 2)
+
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  @@unique([usuarioId, categoria])
+  @@map("limites_categoria")
 }

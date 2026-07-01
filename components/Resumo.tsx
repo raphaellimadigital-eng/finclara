@@ -1,9 +1,12 @@
-import { BarChart3, CheckCircle2, AlertTriangle, AlertOctagon } from "lucide-react";
+import { BarChart3, CheckCircle2, AlertTriangle, AlertOctagon, PiggyBank } from "lucide-react";
 
 type Props = {
   totalReceitas: number;
   totalDespesas: number;
   saldo: number;
+  parcelasCartaoMes: number;
+  parcelasDividaMes: number;
+  poupancaRecomendada: number;
 };
 
 function formatarMoeda(valor: number) {
@@ -20,12 +23,24 @@ function situacaoFinanceira(percentualGasto: number) {
   return { classe: "confortavel", Icone: CheckCircle2, texto: "Situação confortável", cor: "var(--verde)" };
 }
 
-export function Resumo({ totalReceitas, totalDespesas, saldo }: Props) {
+export function Resumo({
+  totalReceitas,
+  totalDespesas,
+  saldo,
+  parcelasCartaoMes,
+  parcelasDividaMes,
+  poupancaRecomendada,
+}: Props) {
+  // Comprometimento da renda considera despesas do mês + faturas de cartão + parcelas de
+  // dívidas (regra 9.1) — cartões e dívidas continuam sendo cadastrados à parte, mas entram
+  // aqui para o indicador de risco refletir o compromisso financeiro real do mês.
+  const totalComprometido = totalDespesas + parcelasCartaoMes + parcelasDividaMes;
   const percentualGasto =
-    totalReceitas > 0 ? Math.round((totalDespesas / totalReceitas) * 100) : 0;
+    totalReceitas > 0 ? Math.round((totalComprometido / totalReceitas) * 100) : 0;
 
   const situacao = situacaoFinanceira(percentualGasto);
   const IconeSituacao = situacao.Icone;
+  const temOutrosCompromissos = parcelasCartaoMes > 0 || parcelasDividaMes > 0;
 
   return (
     <div className="card">
@@ -74,7 +89,30 @@ export function Resumo({ totalReceitas, totalDespesas, saldo }: Props) {
             }}
           />
         </div>
+        {temOutrosCompromissos && (
+          <div className="texto-secundario" style={{ fontSize: 11.5, marginTop: 4 }}>
+            Despesas {formatarMoeda(totalDespesas)} + faturas de cartão {formatarMoeda(parcelasCartaoMes)} + parcelas de dívida {formatarMoeda(parcelasDividaMes)}
+          </div>
+        )}
       </div>
+
+      {poupancaRecomendada > 0 && (
+        <div
+          style={{
+            marginTop: 16,
+            paddingTop: 16,
+            borderTop: "1px solid var(--borda)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 12.5,
+            color: "var(--texto-secundario)",
+          }}
+        >
+          <PiggyBank size={15} style={{ color: "var(--verde)", flexShrink: 0 }} aria-hidden="true" />
+          Você pode guardar com segurança até <strong style={{ color: "var(--texto)" }}>{formatarMoeda(poupancaRecomendada)}</strong> este mês (renda menos despesas essenciais).
+        </div>
+      )}
     </div>
   );
 }

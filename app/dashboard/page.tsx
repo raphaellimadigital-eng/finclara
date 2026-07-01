@@ -4,6 +4,7 @@ import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
 import { getMetas } from "./metas/actions";
 import { getUsuarioAtual } from "./perfil/actions";
+import { getLimites } from "./limites/actions";
 import { FormLancamento } from "@/components/FormLancamento";
 import { ListaLancamentos } from "@/components/ListaLancamentos";
 import { Resumo } from "@/components/Resumo";
@@ -14,11 +15,27 @@ import { CardDividas } from "@/components/CardDividas";
 import { CardCartoes } from "@/components/CardCartoes";
 import { CardMetas } from "@/components/CardMetas";
 import { CardOrientacao } from "@/components/CardOrientacao";
+import { CardAlertas } from "@/components/CardAlertas";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
 import { calcularAlocacao, CATEGORIAS_ESSENCIAIS } from "@/lib/financas";
 import { calcularOrientacao } from "@/lib/orientacao";
+import { valorFaturaNoMes } from "@/lib/cartoes";
+import { totalParcelasMensais } from "@/lib/dividas";
+import { calcularProgressoLimites, categoriasEstouradas } from "@/lib/limites";
+import { alertasLimites, alertasCartoes, alertasDividas, alertasMetas, ordenarPorSeveridade } from "@/lib/alertas";
+
+const LABEL_CATEGORIA: Record<string, string> = {
+  MORADIA: "Moradia",
+  ALIMENTACAO: "Alimentação",
+  TRANSPORTE: "Transporte",
+  SAUDE: "Saúde",
+  EDUCACAO: "Educação",
+  LAZER: "Lazer",
+  ASSINATURAS: "Assinaturas",
+  OUTRAS_DESPESAS: "Outras despesas",
+};
 
 type Props = {
   searchParams: { ano?: string; mes?: string };
@@ -32,12 +49,13 @@ export default async function DashboardPage({ searchParams }: Props) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const [lancamentos, dividas, cartoes, metas, usuario] = await Promise.all([
+  const [lancamentos, dividas, cartoes, metas, usuario, limites] = await Promise.all([
     getLancamentos(ano, mes),
     getDividas(),
     getCartoes(),
     getMetas(),
     getUsuarioAtual(),
+    getLimites(),
   ]);
 
   const totalReceitas = lancamentos
@@ -65,6 +83,23 @@ export default async function DashboardPage({ searchParams }: Props) {
     essenciaisMensal,
     perfilInvestidor: usuario.perfilInvestidor,
   });
+
+  const parcelasCartaoMes = cartoes.reduce(
+    (soma, c) => soma + valorFaturaNoMes(c.compras, c.diaFechamento, mes, ano),
+    0
+  );
+  const parcelasDividaMes = totalParcelasMensais(dividas);
+  const poupancaRecomendada = Math.max(totalReceitas - essenciaisMensal, 0);
+
+  const progressoLimites = calcularProgressoLimites(lancamentos, limites);
+  const estouradas = categoriasEstouradas(progressoLimites);
+
+  const alertas = ordenarPorSeveridade([
+    ...alertasLimites(progressoLimites, LABEL_CATEGORIA),
+    ...alertasCartoes(cartoes),
+    ...alertasDividas(dividas),
+    ...alertasMetas(metas),
+  ]);
 
   return (
     <div className="container">
@@ -94,7 +129,13 @@ export default async function DashboardPage({ searchParams }: Props) {
         totalReceitas={totalReceitas}
         totalDespesas={totalDespesas}
         saldo={saldo}
+        parcelasCartaoMes={parcelasCartaoMes}
+        parcelasDividaMes={parcelasDividaMes}
+        poupancaRecomendada={poupancaRecomendada}
       />
+
+      {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) */}
+      <CardAlertas alertas={alertas} />
 
       {/* Dívidas */}
       <CardDividas dividas={dividas} />
@@ -115,7 +156,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       <FormLancamento />
 
       {/* Lista de lançamentos */}
-      <ListaLancamentos lancamentos={lancamentos} />
+      <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />
     </div>
   );
 }
