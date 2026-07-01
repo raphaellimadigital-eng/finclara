@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { PieChart as PieChartIcone, Lightbulb } from "lucide-react";
+import { PieChart as PieChartIcone, Lightbulb, Sparkles } from "lucide-react";
+import { pedirRecomendacaoIA } from "@/app/dashboard/ai-actions";
 import type { Alocacao } from "@/lib/financas";
 
 // Cores da marca FinClara + um acento de apoio (investimento) que não conflita
@@ -19,6 +21,22 @@ function formatarMoeda(valor: number) {
 
 export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
   const { totalReceitas, atual, ideal, dicas } = alocacao;
+  const [recomendacaoIA, setRecomendacaoIA] = useState("");
+  const [carregandoIA, setCarregandoIA] = useState(false);
+  const [erroIA, setErroIA] = useState("");
+
+  async function handlePedirIA() {
+    setCarregandoIA(true);
+    setErroIA("");
+    try {
+      const texto = await pedirRecomendacaoIA(alocacao);
+      setRecomendacaoIA(texto);
+    } catch (err: any) {
+      setErroIA(err.message || "Não foi possível gerar a recomendação agora.");
+    } finally {
+      setCarregandoIA(false);
+    }
+  }
 
   if (totalReceitas <= 0) {
     return (
@@ -101,6 +119,31 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
             <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" /> {dica}
           </p>
         ))}
+      </div>
+
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
+        {!recomendacaoIA && (
+          <button
+            type="button"
+            onClick={handlePedirIA}
+            disabled={carregandoIA}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          >
+            <Sparkles size={16} aria-hidden="true" />
+            {carregandoIA ? "Gerando recomendação..." : "Pedir recomendação personalizada (IA)"}
+          </button>
+        )}
+
+        {erroIA && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginTop: 8 }}>{erroIA}</p>}
+
+        {recomendacaoIA && (
+          <div>
+            <div className="texto-secundario" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+              <Sparkles size={14} aria-hidden="true" /> Recomendação da IA
+            </div>
+            <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: 0 }}>{recomendacaoIA}</p>
+          </div>
+        )}
       </div>
     </div>
   );
