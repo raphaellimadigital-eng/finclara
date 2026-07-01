@@ -23,7 +23,7 @@ import {
   Loader2,
   type LucideIcon,
 } from "lucide-react";
-import { deletarLancamento } from "@/app/dashboard/actions";
+import { deletarLancamento, deletarLancamentoEFuturos } from "@/app/dashboard/actions";
 import type { Lancamento } from "@prisma/client";
 
 const LABEL_CATEGORIA: Record<string, string> = {
@@ -89,12 +89,27 @@ export function ListaLancamentos({ lancamentos }: { lancamentos: Lancamento[] })
     );
   }
 
-  async function handleDeletar(id: string, descricao: string) {
-    if (!confirm(`Remover "${descricao}"?`)) return;
+  async function handleDeletar(id: string, descricao: string, recorrente: boolean) {
+    let excluirFuturos = false;
+
+    if (recorrente) {
+      if (!confirm(`"${descricao}" é recorrente. Excluir este mês e também os meses futuros?`)) {
+        if (!confirm(`Excluir apenas esta ocorrência de "${descricao}" (este mês)?`)) return;
+      } else {
+        excluirFuturos = true;
+      }
+    } else if (!confirm(`Remover "${descricao}"?`)) {
+      return;
+    }
+
     setErro("");
     setDeletando(id);
     try {
-      await deletarLancamento(id);
+      if (excluirFuturos) {
+        await deletarLancamentoEFuturos(id);
+      } else {
+        await deletarLancamento(id);
+      }
     } catch {
       setErro("Não foi possível remover o lançamento. Tente novamente.");
     } finally {
@@ -142,7 +157,7 @@ export function ListaLancamentos({ lancamentos }: { lancamentos: Lancamento[] })
               </span>
 
               <button
-                onClick={() => handleDeletar(l.id, l.descricao)}
+                onClick={() => handleDeletar(l.id, l.descricao, l.recorrente)}
                 disabled={deletando !== null}
                 className="botao-icone"
                 aria-label={`Remover lançamento ${l.descricao}`}

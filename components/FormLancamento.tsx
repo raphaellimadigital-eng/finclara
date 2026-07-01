@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { PlusCircle, TrendingUp, TrendingDown, PiggyBank, Loader2 } from "lucide-react";
+import { PlusCircle, TrendingUp, TrendingDown, PiggyBank, Loader2, Sparkles } from "lucide-react";
 import { criarLancamento } from "@/app/dashboard/actions";
+import { sugerirCategoria } from "@/lib/categorizacao";
 
 const CATEGORIAS_RECEITA = [
   { value: "SALARIO", label: "Salário" },
@@ -51,6 +52,9 @@ const LABEL_TIPO: Record<Tipo, string> = {
 
 export function FormLancamento() {
   const [tipo, setTipo] = useState<Tipo>("DESPESA");
+  const [categoria, setCategoria] = useState("");
+  const [categoriaSugerida, setCategoriaSugerida] = useState(false);
+  const [categoriaEscolhidaManualmente, setCategoriaEscolhidaManualmente] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
@@ -60,6 +64,28 @@ export function FormLancamento() {
 
   // Data padrão = hoje
   const hoje = new Date().toISOString().split("T")[0];
+
+  function handleTipoChange(t: Tipo) {
+    setTipo(t);
+    setCategoria("");
+    setCategoriaSugerida(false);
+    setCategoriaEscolhidaManualmente(false);
+  }
+
+  function handleDescricaoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (categoriaEscolhidaManualmente) return;
+    const sugestao = sugerirCategoria(e.target.value);
+    if (sugestao && categorias.some((c) => c.value === sugestao)) {
+      setCategoria(sugestao);
+      setCategoriaSugerida(true);
+    }
+  }
+
+  function handleCategoriaChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setCategoria(e.target.value);
+    setCategoriaSugerida(false);
+    setCategoriaEscolhidaManualmente(true);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,6 +97,9 @@ export function FormLancamento() {
       await criarLancamento(data);
       formRef.current?.reset();
       setTipo("DESPESA");
+      setCategoria("");
+      setCategoriaSugerida(false);
+      setCategoriaEscolhidaManualmente(false);
     } catch (err: any) {
       setErro(err.message || "Não foi possível salvar. Tente novamente.");
     } finally {
@@ -96,7 +125,7 @@ export function FormLancamento() {
                   type="button"
                   role="radio"
                   aria-checked={tipo === t}
-                  onClick={() => setTipo(t)}
+                  onClick={() => handleTipoChange(t)}
                   className={tipo === t ? CLASSE_ATIVA[t] : ""}
                 >
                   <Icone size={16} aria-hidden="true" />
@@ -111,12 +140,19 @@ export function FormLancamento() {
           {/* Categoria */}
           <div className="campo">
             <label className="rotulo" htmlFor="categoria">Categoria</label>
-            <select id="categoria" name="categoria" required defaultValue="">
+            <select id="categoria" name="categoria" required value={categoria} onChange={handleCategoriaChange}>
               <option value="" disabled>Selecione uma categoria</option>
               {categorias.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
+            {categoriaSugerida && (
+              <span
+                style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--texto-secundario)", marginTop: 4 }}
+              >
+                <Sparkles size={12} aria-hidden="true" /> Categoria sugerida com base na descrição
+              </span>
+            )}
           </div>
 
           {/* Descrição */}
@@ -129,6 +165,7 @@ export function FormLancamento() {
               placeholder="Ex: Mercado, Salário de junho..."
               required
               maxLength={100}
+              onChange={handleDescricaoChange}
             />
           </div>
 
@@ -159,9 +196,13 @@ export function FormLancamento() {
           </div>
 
           {/* Recorrente */}
-          <label style={{ fontSize: 13.5, display: "flex", gap: 8, alignItems: "center", marginBottom: 14, color: "var(--texto-secundario)" }}>
-            <input name="recorrente" type="checkbox" style={{ width: "auto" }} />
-            Esse lançamento se repete todo mês
+          <label style={{ fontSize: 13.5, display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 14, color: "var(--texto-secundario)" }}>
+            <input name="recorrente" type="checkbox" style={{ width: "auto", marginTop: 2 }} />
+            <span>
+              Esse lançamento se repete todo mês
+              <br />
+              <span style={{ fontSize: 12 }}>Criamos automaticamente os próximos 12 meses para você.</span>
+            </span>
           </label>
 
           {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
