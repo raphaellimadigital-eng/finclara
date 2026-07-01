@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Download } from "lucide-react";
 import { getLancamentos } from "./actions";
 import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
@@ -123,6 +124,14 @@ export default async function DashboardPage({ searchParams }: Props) {
       <Suspense>
         <SeletorMes ano={ano} mes={mes} />
       </Suspense>
+
+      <a
+        href={`/dashboard/relatorio?ano=${ano}&mes=${mes}`}
+        className="botao-secundario"
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}
+      >
+        <Download size={16} aria-hidden="true" /> Baixar relatório do mês (PDF)
+      </a>
 
       {/* Resumo */}
       <Resumo
