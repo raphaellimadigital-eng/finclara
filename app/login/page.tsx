@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -40,9 +41,12 @@ export default function LoginPage() {
 
   return (
     <div className="container">
-      <div className="marca">
-        <Logo />
-        <h1>FinClara</h1>
+      <div className="topo">
+        <div className="marca">
+          <Logo />
+          <h1>FinClara</h1>
+        </div>
+        <ThemeToggle />
       </div>
       <p className="slogan" style={{ marginBottom: 24 }}>Finanças simples, decisões claras.</p>
 

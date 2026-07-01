@@ -9,12 +9,42 @@
   --vermelho-clara: #fbe7e5;
   --amarelo: #f4b000;
   --amarelo-clara: #fef3d6;
+  --amarelo-texto: #8a5b00;
 
   --fundo: #f5f7fa;
   --card-bg: #ffffff;
   --borda: #e5e7eb;
   --texto: #111827;
   --texto-secundario: #4b5563;
+
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Marca FinClara — versões mais claras para contraste em fundo escuro */
+  --azul: #5b8def;
+  --azul-escura: #7ea6f2;
+  --azul-clara: rgba(91, 141, 239, 0.2);
+  --verde: #34d399;
+  --verde-clara: rgba(52, 211, 153, 0.16);
+  --vermelho: #f87171;
+  --vermelho-clara: rgba(248, 113, 113, 0.16);
+  --amarelo: #fbbf24;
+  --amarelo-clara: rgba(251, 191, 36, 0.16);
+  --amarelo-texto: #fbbf24;
+
+  --fundo: #0b1220;
+  --card-bg: #141b2e;
+  --borda: #263049;
+  --texto: #e5e7eb;
+  --texto-secundario: #94a3b8;
+}
+
+body,
+.card {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 * {
@@ -135,7 +165,7 @@ h2 {
 
 .badge-saude.atencao {
   background: var(--amarelo-clara);
-  color: #8a5b00;
+  color: var(--amarelo-texto);
 }
 
 .badge-saude.critico {
@@ -167,7 +197,7 @@ button {
   border: 1px solid var(--borda);
   width: 100%;
   font-family: inherit;
-  background: #fff;
+  background: var(--card-bg);
   color: var(--texto);
 }
 

@@ -34,7 +34,7 @@ export function SeletorMes({ ano, mes }: Props) {
   const botaoEstilo = {
     width: "auto",
     padding: "6px 10px",
-    background: "#fff",
+    background: "var(--card-bg)",
     color: "var(--azul)",
     border: "1px solid var(--borda)",
     display: "flex",

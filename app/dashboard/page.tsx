@@ -7,6 +7,7 @@ import { SeletorMes } from "@/components/SeletorMes";
 import { BotaoSair } from "@/components/BotaoSair";
 import { GraficoAlocacao } from "@/components/GraficoAlocacao";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
 import { calcularAlocacao } from "@/lib/financas";
 
@@ -43,7 +44,10 @@ export default async function DashboardPage({ searchParams }: Props) {
           <Logo />
           <h1>FinClara</h1>
         </div>
-        <BotaoSair />
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <ThemeToggle />
+          <BotaoSair />
+        </div>
       </div>
       <p className="saudacao">
         Olá, {user?.email?.split("@")[0]}. Aqui está o resumo de {" "}
