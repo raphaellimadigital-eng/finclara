@@ -4,7 +4,7 @@ import { FormLancamento } from "@/components/FormLancamento";
 import { ListaLancamentos } from "@/components/ListaLancamentos";
 import { Resumo } from "@/components/Resumo";
 import { SeletorMes } from "@/components/SeletorMes";
-import { BotaoSair } from "@/components/BotaoSair";
+import { MenuUsuario } from "@/components/MenuUsuario";
 import { GraficoAlocacao } from "@/components/GraficoAlocacao";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -46,7 +46,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <ThemeToggle />
-          <BotaoSair />
+          <MenuUsuario />
         </div>
       </div>
       <p className="saudacao">

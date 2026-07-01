@@ -10,6 +10,8 @@
   --amarelo: #f4b000;
   --amarelo-clara: #fef3d6;
   --amarelo-texto: #8a5b00;
+  --investimento: #6d5dd3;
+  --investimento-clara: #ece9fb;
 
   --fundo: #f5f7fa;
   --card-bg: #ffffff;
@@ -34,6 +36,8 @@ html[data-theme="dark"] {
   --amarelo: #fbbf24;
   --amarelo-clara: rgba(251, 191, 36, 0.16);
   --amarelo-texto: #fbbf24;
+  --investimento: #a78bfa;
+  --investimento-clara: rgba(167, 139, 250, 0.18);
 
   --fundo: #0b1220;
   --card-bg: #141b2e;
@@ -247,16 +251,20 @@ button:disabled {
 .toggle-tipo button {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
+  padding: 10px 4px;
+  font-size: 12.5px;
+  line-height: 1.2;
   background: var(--fundo);
   color: var(--texto-secundario);
   border: 1px solid var(--borda);
   font-weight: 600;
 }
 
-.toggle-tipo button:hover:not(:disabled) {
+.toggle-tipo button:hover:not(:disabled):not(.ativo-receita):not(.ativo-despesa):not(.ativo-investimento) {
   background: var(--fundo);
   filter: brightness(0.97);
 }
@@ -271,6 +279,18 @@ button:disabled {
   background: var(--vermelho);
   color: #fff;
   border-color: var(--vermelho);
+}
+
+.toggle-tipo button.ativo-investimento {
+  background: var(--investimento);
+  color: #fff;
+  border-color: var(--investimento);
+}
+
+.toggle-tipo button.ativo-receita:hover:not(:disabled),
+.toggle-tipo button.ativo-despesa:hover:not(:disabled),
+.toggle-tipo button.ativo-investimento:hover:not(:disabled) {
+  filter: brightness(0.92);
 }
 
 /* Botão secundário (ghost) */
@@ -350,6 +370,10 @@ button:disabled {
   color: var(--vermelho);
   font-weight: 600;
 }
+.valor-investimento {
+  color: var(--investimento);
+  font-weight: 600;
+}
 
 .categoria-tag {
   display: inline-flex;
@@ -405,4 +429,80 @@ button:disabled {
   line-height: 1.5;
   display: flex;
   gap: 6px;
+}
+
+/* Menu do usuário */
+.menu-usuario {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: var(--card-bg);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.16);
+  padding: 6px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-usuario-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--texto);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-usuario-item:hover:not(:disabled) {
+  background: var(--fundo);
+}
+
+.menu-usuario-divisor {
+  height: 1px;
+  background: var(--borda);
+  margin: 4px 6px;
+}
+
+.menu-usuario-item-perigo {
+  color: var(--vermelho);
+}
+
+.menu-usuario-item-perigo:hover:not(:disabled) {
+  background: var(--vermelho-clara);
+}
+
+/* Spinner de carregamento */
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icone-carregando {
+  animation: girar 0.8s linear infinite;
+}
+
+/* Carregamento de tela inteira (loading.tsx) */
+.tela-carregando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 60vh;
+  color: var(--texto-secundario);
+  font-size: 13.5px;
 }

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { PieChart as PieChartIcone, Lightbulb, Sparkles } from "lucide-react";
+import { PieChart as PieChartIcone, Lightbulb, Sparkles, Loader2 } from "lucide-react";
 import { pedirRecomendacaoIA } from "@/app/dashboard/ai-actions";
+import { DisclaimerFinanceiro } from "@/components/DisclaimerFinanceiro";
 import type { Alocacao } from "@/lib/financas";
 
 // Cores da marca FinClara + um acento de apoio (investimento) que não conflita
@@ -60,8 +61,10 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
   ];
 
   const comparativos = [
-    { label: "Essenciais", atual: atual.essenciais, ideal: ideal.essenciais, cor: CORES.essenciais },
-    { label: "Desejos", atual: atual.desejos, ideal: ideal.desejos, cor: CORES.desejos },
+    { label: "Essenciais", atual: atual.essenciais, ideal: ideal.essenciais, cor: CORES.essenciais, tipo: "gasto" as const },
+    { label: "Desejos", atual: atual.desejos, ideal: ideal.desejos, cor: CORES.desejos, tipo: "gasto" as const },
+    { label: "Reserva de emergência", atual: atual.reserva, ideal: ideal.reserva, cor: CORES.reserva, tipo: "aporte" as const },
+    { label: "Investimentos", atual: atual.investimento, ideal: ideal.investimento, cor: CORES.investimento, tipo: "aporte" as const },
   ];
 
   return (
@@ -70,7 +73,8 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
         <PieChartIcone size={16} aria-hidden="true" /> Sugestão de alocação da renda
       </h2>
       <p className="texto-secundario" style={{ marginTop: -8, marginBottom: 16 }}>
-        Baseado na regra 50/30/20 aplicada à sua receita do mês.
+        Baseado na regra 50/30/20 aplicada à sua receita do mês. As barras comparam o ideal com o
+        que você já lançou (gastos e aportes).
       </p>
 
       <div style={{ width: "100%", height: 220 }}>
@@ -90,12 +94,26 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
       <div style={{ marginTop: 8 }}>
         {comparativos.map((c) => {
           const percentual = c.ideal > 0 ? (c.atual / c.ideal) * 100 : 0;
-          const estourou = c.atual > c.ideal;
+          const excedeu = c.atual > c.ideal;
+          const atingiuMeta = c.atual >= c.ideal;
+
+          // Para gastos (essenciais/desejos), passar do ideal é ruim (vermelho).
+          // Para aportes (reserva/investimento), atingir ou passar do ideal é bom (verde).
+          const corTexto =
+            c.tipo === "gasto"
+              ? excedeu
+                ? "var(--vermelho)"
+                : "var(--verde)"
+              : atingiuMeta
+              ? "var(--verde)"
+              : "var(--texto-secundario)";
+          const corBarra = c.tipo === "gasto" && excedeu ? "var(--vermelho)" : c.cor;
+
           return (
             <div key={c.label} style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
                 <span>{c.label}</span>
-                <span style={{ color: estourou ? "var(--vermelho)" : "var(--verde)" }}>
+                <span style={{ color: corTexto }}>
                   {formatarMoeda(c.atual)} de {formatarMoeda(c.ideal)}
                 </span>
               </div>
@@ -104,7 +122,7 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
                   className="barra-preenchimento"
                   style={{
                     width: `${Math.min(percentual, 100)}%`,
-                    background: estourou ? "var(--vermelho)" : c.cor,
+                    background: corBarra,
                   }}
                 />
               </div>
@@ -119,6 +137,7 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
             <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" /> {dica}
           </p>
         ))}
+        <DisclaimerFinanceiro />
       </div>
 
       <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
@@ -129,7 +148,11 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
             disabled={carregandoIA}
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
           >
-            <Sparkles size={16} aria-hidden="true" />
+            {carregandoIA ? (
+              <Loader2 size={16} className="icone-carregando" aria-hidden="true" />
+            ) : (
+              <Sparkles size={16} aria-hidden="true" />
+            )}
             {carregandoIA ? "Gerando recomendação..." : "Pedir recomendação personalizada (IA)"}
           </button>
         )}
@@ -142,6 +165,7 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
               <Sparkles size={14} aria-hidden="true" /> Recomendação da IA
             </div>
             <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: 0 }}>{recomendacaoIA}</p>
+            <DisclaimerFinanceiro />
           </div>
         )}
       </div>

@@ -16,10 +16,19 @@ export function createClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // Chamado a partir de um Server Component durante a renderização —
+            // o middleware já cuida de renovar o cookie de sessão nesse caso.
+          }
         },
         remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {
+            // Idem: seguro ignorar fora de Server Action/Route Handler.
+          }
         },
       },
     }

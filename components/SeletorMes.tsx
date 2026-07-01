@@ -1,7 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -13,12 +14,15 @@ type Props = { ano: number; mes: number };
 export function SeletorMes({ ano, mes }: Props) {
   const router = useRouter();
   const params = useSearchParams();
+  const [carregando, startTransition] = useTransition();
 
   function navegar(novoAno: number, novoMes: number) {
     const p = new URLSearchParams(params.toString());
     p.set("ano", String(novoAno));
     p.set("mes", String(novoMes));
-    router.push(`/dashboard?${p.toString()}`);
+    startTransition(() => {
+      router.push(`/dashboard?${p.toString()}`);
+    });
   }
 
   function anterior() {
@@ -43,11 +47,14 @@ export function SeletorMes({ ano, mes }: Props) {
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-      <button onClick={anterior} aria-label="Mês anterior" style={botaoEstilo}>
+      <button onClick={anterior} disabled={carregando} aria-label="Mês anterior" style={botaoEstilo}>
         <ChevronLeft size={18} aria-hidden="true" />
       </button>
-      <strong style={{ fontSize: 16 }}>{MESES[mes - 1]} de {ano}</strong>
-      <button onClick={proximo} aria-label="Próximo mês" style={botaoEstilo}>
+      <strong style={{ fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}>
+        {MESES[mes - 1]} de {ano}
+        {carregando && <Loader2 size={14} className="icone-carregando" style={{ color: "var(--texto-secundario)" }} aria-hidden="true" />}
+      </strong>
+      <button onClick={proximo} disabled={carregando} aria-label="Próximo mês" style={botaoEstilo}>
         <ChevronRight size={18} aria-hidden="true" />
       </button>
     </div>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -28,13 +30,13 @@ export default function LoginPage() {
 
     const { error } = await acao;
 
-    setCarregando(false);
-
     if (error) {
+      setCarregando(false);
       setErro(error.message);
       return;
     }
 
+    // Mantém o botão desabilitado/carregando até a navegação acontecer
     router.push("/dashboard");
     router.refresh();
   }
@@ -78,7 +80,12 @@ export default function LoginPage() {
 
         {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13.5, marginTop: 12 }}>{erro}</p>}
 
-        <button type="submit" disabled={carregando} style={{ marginTop: 4 }}>
+        <button
+          type="submit"
+          disabled={carregando}
+          style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+        >
+          {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
           {carregando ? "Aguarde..." : modo === "login" ? "Entrar" : "Criar conta"}
         </button>
       </form>
@@ -87,18 +94,26 @@ export default function LoginPage() {
         {modo === "login" ? (
           <>
             Ainda não tem conta?{" "}
-            <button type="button" className="botao-secundario" onClick={() => setModo("cadastro")}>
+            <button type="button" className="botao-secundario" disabled={carregando} onClick={() => setModo("cadastro")}>
               Criar conta grátis
             </button>
           </>
         ) : (
           <>
             Já tem conta?{" "}
-            <button type="button" className="botao-secundario" onClick={() => setModo("login")}>
+            <button type="button" className="botao-secundario" disabled={carregando} onClick={() => setModo("login")}>
               Entrar
             </button>
           </>
         )}
+      </p>
+
+      <p className="texto-secundario" style={{ textAlign: "center", fontSize: 11.5, marginTop: -8 }}>
+        Ao continuar, você concorda com nossos{" "}
+        <Link href="/termos" style={{ color: "var(--texto-secundario)" }}>
+          Termos de Uso e Privacidade
+        </Link>
+        .
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { PlusCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { PlusCircle, TrendingUp, TrendingDown, PiggyBank, Loader2 } from "lucide-react";
 import { criarLancamento } from "@/app/dashboard/actions";
 
 const CATEGORIAS_RECEITA = [
@@ -21,13 +21,42 @@ const CATEGORIAS_DESPESA = [
   { value: "OUTRAS_DESPESAS", label: "Outras despesas" },
 ];
 
+const CATEGORIAS_INVESTIMENTO = [
+  { value: "RESERVA_EMERGENCIA", label: "Reserva de emergência" },
+  { value: "TESOURO_DIRETO", label: "Tesouro Direto" },
+  { value: "RENDA_VARIAVEL", label: "Renda variável (ações, FIIs...)" },
+  { value: "OUTROS_INVESTIMENTOS", label: "Outros investimentos" },
+];
+
+const TIPOS = ["RECEITA", "DESPESA", "INVESTIMENTO"] as const;
+type Tipo = (typeof TIPOS)[number];
+
+const CLASSE_ATIVA: Record<Tipo, string> = {
+  RECEITA: "ativo-receita",
+  DESPESA: "ativo-despesa",
+  INVESTIMENTO: "ativo-investimento",
+};
+
+const ICONE_TIPO: Record<Tipo, typeof TrendingUp> = {
+  RECEITA: TrendingUp,
+  DESPESA: TrendingDown,
+  INVESTIMENTO: PiggyBank,
+};
+
+const LABEL_TIPO: Record<Tipo, string> = {
+  RECEITA: "Receita",
+  DESPESA: "Despesa",
+  INVESTIMENTO: "Investimento",
+};
+
 export function FormLancamento() {
-  const [tipo, setTipo] = useState<"RECEITA" | "DESPESA">("DESPESA");
+  const [tipo, setTipo] = useState<Tipo>("DESPESA");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  const categorias = tipo === "RECEITA" ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
+  const categorias =
+    tipo === "RECEITA" ? CATEGORIAS_RECEITA : tipo === "DESPESA" ? CATEGORIAS_DESPESA : CATEGORIAS_INVESTIMENTO;
 
   // Data padrão = hoje
   const hoje = new Date().toISOString().split("T")[0];
@@ -56,86 +85,95 @@ export function FormLancamento() {
       </h2>
 
       <form ref={formRef} onSubmit={handleSubmit}>
-        {/* Tipo */}
-        <div className="toggle-tipo" role="radiogroup" aria-label="Tipo de lançamento">
-          {(["RECEITA", "DESPESA"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="radio"
-              aria-checked={tipo === t}
-              onClick={() => setTipo(t)}
-              className={tipo === t ? (t === "RECEITA" ? "ativo-receita" : "ativo-despesa") : ""}
-            >
-              {t === "RECEITA" ? <TrendingUp size={16} aria-hidden="true" /> : <TrendingDown size={16} aria-hidden="true" />}
-              {t === "RECEITA" ? "Receita" : "Despesa"}
-            </button>
-          ))}
-        </div>
+        <fieldset disabled={carregando} style={{ border: "none", padding: 0, margin: 0 }}>
+          {/* Tipo */}
+          <div className="toggle-tipo" role="radiogroup" aria-label="Tipo de lançamento">
+            {TIPOS.map((t) => {
+              const Icone = ICONE_TIPO[t];
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  role="radio"
+                  aria-checked={tipo === t}
+                  onClick={() => setTipo(t)}
+                  className={tipo === t ? CLASSE_ATIVA[t] : ""}
+                >
+                  <Icone size={16} aria-hidden="true" />
+                  {LABEL_TIPO[t]}
+                </button>
+              );
+            })}
+          </div>
 
-        <input type="hidden" name="tipo" value={tipo} />
+          <input type="hidden" name="tipo" value={tipo} />
 
-        {/* Categoria */}
-        <div className="campo">
-          <label className="rotulo" htmlFor="categoria">Categoria</label>
-          <select id="categoria" name="categoria" required defaultValue="">
-            <option value="" disabled>Selecione uma categoria</option>
-            {categorias.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
-        </div>
+          {/* Categoria */}
+          <div className="campo">
+            <label className="rotulo" htmlFor="categoria">Categoria</label>
+            <select id="categoria" name="categoria" required defaultValue="">
+              <option value="" disabled>Selecione uma categoria</option>
+              {categorias.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
 
-        {/* Descrição */}
-        <div className="campo">
-          <label className="rotulo" htmlFor="descricao">Descrição</label>
-          <input
-            id="descricao"
-            name="descricao"
-            type="text"
-            placeholder="Ex: Mercado, Salário de junho..."
-            required
-            maxLength={100}
-          />
-        </div>
+          {/* Descrição */}
+          <div className="campo">
+            <label className="rotulo" htmlFor="descricao">Descrição</label>
+            <input
+              id="descricao"
+              name="descricao"
+              type="text"
+              placeholder="Ex: Mercado, Salário de junho..."
+              required
+              maxLength={100}
+            />
+          </div>
 
-        {/* Valor */}
-        <div className="campo">
-          <label className="rotulo" htmlFor="valor">Valor</label>
-          <input
-            id="valor"
-            name="valor"
-            type="number"
-            placeholder="0,00"
-            step="0.01"
-            min="0.01"
-            required
-          />
-        </div>
+          {/* Valor */}
+          <div className="campo">
+            <label className="rotulo" htmlFor="valor">Valor</label>
+            <input
+              id="valor"
+              name="valor"
+              type="number"
+              placeholder="0,00"
+              step="0.01"
+              min="0.01"
+              required
+            />
+          </div>
 
-        {/* Data */}
-        <div className="campo">
-          <label className="rotulo" htmlFor="data">Data</label>
-          <input
-            id="data"
-            name="data"
-            type="date"
-            defaultValue={hoje}
-            required
-          />
-        </div>
+          {/* Data */}
+          <div className="campo">
+            <label className="rotulo" htmlFor="data">Data</label>
+            <input
+              id="data"
+              name="data"
+              type="date"
+              defaultValue={hoje}
+              required
+            />
+          </div>
 
-        {/* Recorrente */}
-        <label style={{ fontSize: 13.5, display: "flex", gap: 8, alignItems: "center", marginBottom: 14, color: "var(--texto-secundario)" }}>
-          <input name="recorrente" type="checkbox" style={{ width: "auto" }} />
-          Esse lançamento se repete todo mês
-        </label>
+          {/* Recorrente */}
+          <label style={{ fontSize: 13.5, display: "flex", gap: 8, alignItems: "center", marginBottom: 14, color: "var(--texto-secundario)" }}>
+            <input name="recorrente" type="checkbox" style={{ width: "auto" }} />
+            Esse lançamento se repete todo mês
+          </label>
 
-        {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
+          {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
 
-        <button type="submit" disabled={carregando}>
-          {carregando ? "Salvando..." : "Salvar lançamento"}
-        </button>
+          <button
+            type="submit"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
+            {carregando ? "Salvando..." : "Salvar lançamento"}
+          </button>
+        </fieldset>
       </form>
     </div>
   );

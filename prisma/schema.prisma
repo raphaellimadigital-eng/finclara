@@ -14,6 +14,7 @@ datasource db {
 enum TipoLancamento {
   RECEITA
   DESPESA
+  INVESTIMENTO
 }
 
 enum Categoria {
@@ -28,6 +29,10 @@ enum Categoria {
   LAZER
   ASSINATURAS
   OUTRAS_DESPESAS
+  RESERVA_EMERGENCIA
+  TESOURO_DIRETO
+  RENDA_VARIAVEL
+  OUTROS_INVESTIMENTOS
 }
 
 model Usuario {

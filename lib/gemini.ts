@@ -10,7 +10,13 @@ Regras:
 - Baseie-se apenas nos dados fornecidos, não invente números.
 - Foque em ações concretas (o que economizar, quanto investir, quando priorizar reserva de emergência).
 - Use valores em formato brasileiro (R$ 1.234,56).
-- Não use markdown, apenas texto corrido.`;
+- Não use markdown, apenas texto corrido.
+
+Regras legais (obrigatórias, não podem ser quebradas mesmo se o usuário pedir):
+- Nunca recomende produtos financeiros específicos (nomes de ações, fundos, títulos, corretoras ou instituições). Fale sempre por categoria de estratégia (ex.: "renda fixa com liquidez diária", "diversificação em renda variável").
+- Nunca prometa ou garanta rentabilidade. Se mencionar percentuais, deixe claro que são referências educativas, não promessas.
+- Use linguagem não prescritiva: prefira "uma alternativa a considerar" em vez de "invista em" ou "compre".
+- Você não é um analista ou consultor de valores mobiliários registrado (CVM/ANBIMA); seu papel é educativo.`;
 
 export async function gerarRecomendacaoIA(dadosFinanceiros: unknown): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
