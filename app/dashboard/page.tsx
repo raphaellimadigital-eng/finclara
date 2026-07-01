@@ -1,11 +1,15 @@
 import { Suspense } from "react";
 import { getLancamentos } from "./actions";
+import { getDividas } from "./dividas/actions";
+import { getCartoes } from "./cartoes/actions";
 import { FormLancamento } from "@/components/FormLancamento";
 import { ListaLancamentos } from "@/components/ListaLancamentos";
 import { Resumo } from "@/components/Resumo";
 import { SeletorMes } from "@/components/SeletorMes";
 import { MenuUsuario } from "@/components/MenuUsuario";
 import { GraficoAlocacao } from "@/components/GraficoAlocacao";
+import { CardDividas } from "@/components/CardDividas";
+import { CardCartoes } from "@/components/CardCartoes";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
@@ -23,7 +27,11 @@ export default async function DashboardPage({ searchParams }: Props) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const lancamentos = await getLancamentos(ano, mes);
+  const [lancamentos, dividas, cartoes] = await Promise.all([
+    getLancamentos(ano, mes),
+    getDividas(),
+    getCartoes(),
+  ]);
 
   const totalReceitas = lancamentos
     .filter((l) => l.tipo === "RECEITA")
@@ -34,7 +42,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     .reduce((s, l) => s + Number(l.valor), 0);
 
   const saldo = totalReceitas - totalDespesas;
-  const alocacao = calcularAlocacao(totalReceitas, lancamentos);
+  const alocacao = calcularAlocacao(totalReceitas, lancamentos, dividas);
 
   return (
     <div className="container">
@@ -65,6 +73,12 @@ export default async function DashboardPage({ searchParams }: Props) {
         totalDespesas={totalDespesas}
         saldo={saldo}
       />
+
+      {/* Dívidas */}
+      <CardDividas dividas={dividas} />
+
+      {/* Cartões de crédito */}
+      <CardCartoes cartoes={cartoes} />
 
       {/* Sugestão de alocação da renda */}
       <GraficoAlocacao alocacao={alocacao} />

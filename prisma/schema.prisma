@@ -44,6 +44,8 @@ model Usuario {
   criadoEm  DateTime @default(now())
 
   lancamentos Lancamento[]
+  dividas     Divida[]
+  cartoes     CartaoCredito[]
 
   @@map("usuarios")
 }
@@ -65,4 +67,57 @@ model Lancamento {
 
   @@index([usuarioId, data])
   @@map("lancamentos")
+}
+
+model Divida {
+  id           String   @id @default(uuid())
+  usuarioId    String
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  descricao    String
+  valorTotal   Decimal  @db.Decimal(12, 2)
+  valorParcela Decimal  @db.Decimal(12, 2)
+  taxaJuros    Decimal  @db.Decimal(5, 2) // percentual ao mês
+  vencimento   DateTime
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([usuarioId])
+  @@map("dividas")
+}
+
+model CartaoCredito {
+  id            String   @id @default(uuid())
+  usuarioId     String
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  nome          String
+  limite        Decimal  @db.Decimal(12, 2)
+  diaFechamento Int
+  diaVencimento Int
+
+  compras       CompraParcelada[]
+
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+
+  @@index([usuarioId])
+  @@map("cartoes_credito")
+}
+
+model CompraParcelada {
+  id          String        @id @default(uuid())
+  cartaoId    String
+  cartao      CartaoCredito @relation(fields: [cartaoId], references: [id], onDelete: Cascade)
+
+  descricao   String
+  valorTotal  Decimal       @db.Decimal(12, 2)
+  numParcelas Int
+  dataCompra  DateTime
+
+  criadoEm    DateTime      @default(now())
+
+  @@index([cartaoId])
+  @@map("compras_parceladas")
 }

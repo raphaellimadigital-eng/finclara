@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { PieChart as PieChartIcone, Lightbulb, Sparkles, Loader2 } from "lucide-react";
+import { PieChart as PieChartIcone, Lightbulb, Sparkles, Loader2, AlertTriangle } from "lucide-react";
 import { pedirRecomendacaoIA } from "@/app/dashboard/ai-actions";
 import { DisclaimerFinanceiro } from "@/components/DisclaimerFinanceiro";
 import type { Alocacao } from "@/lib/financas";
@@ -21,7 +21,7 @@ function formatarMoeda(valor: number) {
 }
 
 export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
-  const { totalReceitas, atual, ideal, dicas } = alocacao;
+  const { totalReceitas, atual, ideal, dicas, temDividaCara } = alocacao;
   const [recomendacaoIA, setRecomendacaoIA] = useState("");
   const [carregandoIA, setCarregandoIA] = useState(false);
   const [erroIA, setErroIA] = useState("");
@@ -76,6 +76,27 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
         Baseado na regra 50/30/20 aplicada à sua receita do mês. As barras comparam o ideal com o
         que você já lançou (gastos e aportes).
       </p>
+
+      {temDividaCara && (
+        <div
+          role="alert"
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            background: "var(--vermelho-clara)",
+            color: "var(--vermelho)",
+            borderRadius: 10,
+            padding: "10px 12px",
+            fontSize: 13,
+            fontWeight: 500,
+            marginBottom: 16,
+          }}
+        >
+          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+          Você tem dívida com juros altos. Priorize quitá-la antes de investir.
+        </div>
+      )}
 
       <div style={{ width: "100%", height: 220 }}>
         <ResponsiveContainer>

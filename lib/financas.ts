@@ -1,4 +1,5 @@
-import type { Lancamento } from "@prisma/client";
+import type { Divida, Lancamento } from "@prisma/client";
+import { TAXA_JUROS_CARA_AO_MES, temDividaCara } from "./dividas";
 
 // Classificação das categorias de despesa para a regra 50/30/20
 export const CATEGORIAS_ESSENCIAIS = ["MORADIA", "ALIMENTACAO", "TRANSPORTE", "SAUDE", "EDUCACAO"];
@@ -18,14 +19,20 @@ export type Alocacao = {
   atual: { essenciais: number; desejos: number; reserva: number; investimento: number; naoAlocado: number };
   ideal: { essenciais: number; desejos: number; reserva: number; investimento: number };
   dicas: string[];
+  temDividaCara: boolean;
 };
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-// Calcula a alocação ideal da renda (regra 50/30/20) e compara com os gastos e aportes reais do mês
-export function calcularAlocacao(totalReceitas: number, lancamentos: Lancamento[]): Alocacao {
+// Calcula a alocação ideal da renda (regra 50/30/20), compara com os gastos e aportes reais do
+// mês, e aplica a prioridade "quitar dívida cara → formar reserva → investir" quando há dívidas.
+export function calcularAlocacao(
+  totalReceitas: number,
+  lancamentos: Lancamento[],
+  dividas: Divida[] = []
+): Alocacao {
   const despesas = lancamentos.filter((l) => l.tipo === "DESPESA");
   const aportes = lancamentos.filter((l) => l.tipo === "INVESTIMENTO");
 
@@ -54,7 +61,14 @@ export function calcularAlocacao(totalReceitas: number, lancamentos: Lancamento[
     investimento: totalReceitas * PERCENTUAL_INVESTIMENTO,
   };
 
+  const possuiDividaCara = temDividaCara(dividas);
   const dicas: string[] = [];
+
+  if (possuiDividaCara) {
+    dicas.push(
+      `Você tem dívida com juros acima de ${TAXA_JUROS_CARA_AO_MES}% ao mês. Antes de investir, priorize quitar essa dívida — é o retorno mais garantido que você pode ter agora.`
+    );
+  }
 
   if (totalReceitas > 0) {
     const pctEssenciais = essenciais / totalReceitas;
@@ -78,7 +92,7 @@ export function calcularAlocacao(totalReceitas: number, lancamentos: Lancamento[
           : `Faltam ${formatarMoeda(falta)} para atingir a meta de reserva de emergência do mês.`
       );
     }
-    if (investimento < ideal.investimento) {
+    if (!possuiDividaCara && investimento < ideal.investimento) {
       dicas.push(
         investimento === 0
           ? `Você ainda não registrou aporte em investimentos este mês. O ideal seria ${formatarMoeda(ideal.investimento)}.`
@@ -87,19 +101,24 @@ export function calcularAlocacao(totalReceitas: number, lancamentos: Lancamento[
     }
     if (naoAlocado > 0) {
       dicas.push(
-        `Você tem ${formatarMoeda(naoAlocado)} sem destino definido este mês. Considere direcionar para reserva de emergência ou investimentos.`
+        possuiDividaCara
+          ? `Você tem ${formatarMoeda(naoAlocado)} sem destino definido este mês — direcione para acelerar a quitação da dívida cara.`
+          : `Você tem ${formatarMoeda(naoAlocado)} sem destino definido este mês. Considere direcionar para reserva de emergência ou investimentos.`
       );
     }
   }
 
-  dicas.push(
-    "Mantenha uma reserva de emergência equivalente a 3–6 meses dos seus gastos essenciais antes de investir em renda variável."
-  );
+  if (!possuiDividaCara) {
+    dicas.push(
+      "Mantenha uma reserva de emergência equivalente a 3–6 meses dos seus gastos essenciais antes de investir em renda variável."
+    );
+  }
 
   return {
     totalReceitas,
     atual: { essenciais, desejos, reserva, investimento, naoAlocado },
     ideal,
     dicas,
+    temDividaCara: possuiDividaCara,
   };
 }
