@@ -1,0 +1,63 @@
+// Schema do banco de dados - FinClara
+// Etapa 1: Usuário, Receita, Despesa (categorias fixas)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum TipoLancamento {
+  RECEITA
+  DESPESA
+}
+
+enum Categoria {
+  SALARIO
+  FREELANCE
+  OUTRAS_RECEITAS
+  MORADIA
+  ALIMENTACAO
+  TRANSPORTE
+  SAUDE
+  EDUCACAO
+  LAZER
+  ASSINATURAS
+  OUTRAS_DESPESAS
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  // senha não é armazenada aqui: autenticação é feita pelo Supabase Auth,
+  // este id é o mesmo id do usuário no Supabase (auth.users.id)
+  criadoEm  DateTime @default(now())
+
+  lancamentos Lancamento[]
+
+  @@map("usuarios")
+}
+
+model Lancamento {
+  id          String         @id @default(uuid())
+  usuarioId   String
+  usuario     Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  tipo        TipoLancamento
+  categoria   Categoria
+  descricao   String
+  valor       Decimal        @db.Decimal(12, 2)
+  data        DateTime
+  recorrente  Boolean        @default(false)
+
+  criadoEm    DateTime       @default(now())
+  atualizadoEm DateTime      @updatedAt
+
+  @@index([usuarioId, data])
+  @@map("lancamentos")
+}

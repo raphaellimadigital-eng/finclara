@@ -1,0 +1,368 @@
+:root {
+  /* Marca FinClara */
+  --azul: #1f3f75;
+  --azul-escura: #16294f;
+  --azul-clara: #e4e9f4;
+  --verde: #21873b;
+  --verde-clara: #e2f4e6;
+  --vermelho: #d92d20;
+  --vermelho-clara: #fbe7e5;
+  --amarelo: #f4b000;
+  --amarelo-clara: #fef3d6;
+
+  --fundo: #f5f7fa;
+  --card-bg: #ffffff;
+  --borda: #e5e7eb;
+  --texto: #111827;
+  --texto-secundario: #4b5563;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 28px 16px 80px;
+}
+
+/* Cabeçalho */
+.topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--texto);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.slogan {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--texto-secundario);
+}
+
+.saudacao {
+  margin: 4px 0 20px;
+  font-size: 13.5px;
+  color: var(--texto-secundario);
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+  margin-bottom: 16px;
+}
+
+.card-title {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.texto-secundario {
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Saldo */
+.saldo {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.saldo.positivo {
+  color: var(--verde);
+}
+.saldo.negativo {
+  color: var(--vermelho);
+}
+
+/* Indicador de saúde financeira */
+.badge-saude {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.badge-saude.confortavel {
+  background: var(--verde-clara);
+  color: var(--verde);
+}
+
+.badge-saude.atencao {
+  background: var(--amarelo-clara);
+  color: #8a5b00;
+}
+
+.badge-saude.critico {
+  background: var(--vermelho-clara);
+  color: var(--vermelho);
+}
+
+/* Formulário */
+.campo {
+  margin-bottom: 12px;
+}
+
+.rotulo {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--texto-secundario);
+  margin-bottom: 5px;
+}
+
+input,
+select,
+button {
+  font-size: 15px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+  width: 100%;
+  font-family: inherit;
+  background: #fff;
+  color: var(--texto);
+}
+
+input,
+select {
+  margin-bottom: 0;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--azul);
+  box-shadow: 0 0 0 3px var(--azul-clara);
+}
+
+button {
+  background: var(--azul);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-bottom: 0;
+}
+
+button:hover:not(:disabled) {
+  background: var(--azul-escura);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Alternância Receita / Despesa */
+.toggle-tipo {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.toggle-tipo button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--fundo);
+  color: var(--texto-secundario);
+  border: 1px solid var(--borda);
+  font-weight: 600;
+}
+
+.toggle-tipo button:hover:not(:disabled) {
+  background: var(--fundo);
+  filter: brightness(0.97);
+}
+
+.toggle-tipo button.ativo-receita {
+  background: var(--verde);
+  color: #fff;
+  border-color: var(--verde);
+}
+
+.toggle-tipo button.ativo-despesa {
+  background: var(--vermelho);
+  color: #fff;
+  border-color: var(--vermelho);
+}
+
+/* Botão secundário (ghost) */
+.botao-secundario {
+  width: auto;
+  background: none;
+  color: var(--texto-secundario);
+  border: none;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.botao-secundario:hover:not(:disabled) {
+  background: none;
+  color: var(--azul);
+  text-decoration: underline;
+}
+
+/* Botão apenas ícone (ex: excluir) */
+.botao-icone {
+  width: auto;
+  background: none;
+  border: none;
+  padding: 6px;
+  font-size: 16px;
+  color: var(--texto-secundario);
+  line-height: 1;
+}
+
+.botao-icone:hover:not(:disabled) {
+  background: var(--fundo);
+  color: var(--vermelho);
+}
+
+/* Lista de lançamentos */
+.lista-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.lista-item:last-child {
+  border-bottom: none;
+}
+
+.lista-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lista-item-icone {
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fundo);
+  border-radius: 999px;
+}
+
+.valor-receita {
+  color: var(--verde);
+  font-weight: 600;
+}
+.valor-despesa {
+  color: var(--vermelho);
+  font-weight: 600;
+}
+
+.categoria-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--fundo);
+  color: var(--texto-secundario);
+  border: 1px solid var(--borda);
+}
+
+/* Estado vazio */
+.estado-vazio {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.estado-vazio-icone {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+/* Barra de progresso */
+.barra-fundo {
+  background: var(--borda);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.barra-preenchimento {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Dicas financeiras */
+.dicas {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borda);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dica-item {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--texto-secundario);
+  line-height: 1.5;
+  display: flex;
+  gap: 6px;
+}
