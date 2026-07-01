@@ -17,6 +17,15 @@ enum TipoLancamento {
   INVESTIMENTO
 }
 
+enum TipoMeta {
+  RESERVA
+  VIAGEM
+  CARRO
+  FACULDADE
+  APOSENTADORIA
+  OUTRO
+}
+
 enum Categoria {
   SALARIO
   FREELANCE
@@ -46,6 +55,7 @@ model Usuario {
   lancamentos Lancamento[]
   dividas     Divida[]
   cartoes     CartaoCredito[]
+  metas       Meta[]
 
   @@map("usuarios")
 }
@@ -120,4 +130,22 @@ model CompraParcelada {
 
   @@index([cartaoId])
   @@map("compras_parceladas")
+}
+
+model Meta {
+  id           String   @id @default(uuid())
+  usuarioId    String
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  tipo         TipoMeta
+  descricao    String
+  valorAlvo    Decimal  @db.Decimal(12, 2)
+  valorAtual   Decimal  @db.Decimal(12, 2) @default(0)
+  prazo        DateTime
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([usuarioId])
+  @@map("metas")
 }

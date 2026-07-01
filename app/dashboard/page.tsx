@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getLancamentos } from "./actions";
 import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
+import { getMetas } from "./metas/actions";
 import { FormLancamento } from "@/components/FormLancamento";
 import { ListaLancamentos } from "@/components/ListaLancamentos";
 import { Resumo } from "@/components/Resumo";
@@ -10,6 +11,7 @@ import { MenuUsuario } from "@/components/MenuUsuario";
 import { GraficoAlocacao } from "@/components/GraficoAlocacao";
 import { CardDividas } from "@/components/CardDividas";
 import { CardCartoes } from "@/components/CardCartoes";
+import { CardMetas } from "@/components/CardMetas";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
@@ -27,10 +29,11 @@ export default async function DashboardPage({ searchParams }: Props) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const [lancamentos, dividas, cartoes] = await Promise.all([
+  const [lancamentos, dividas, cartoes, metas] = await Promise.all([
     getLancamentos(ano, mes),
     getDividas(),
     getCartoes(),
+    getMetas(),
   ]);
 
   const totalReceitas = lancamentos
@@ -79,6 +82,9 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {/* Cartões de crédito */}
       <CardCartoes cartoes={cartoes} />
+
+      {/* Metas financeiras */}
+      <CardMetas metas={metas} />
 
       {/* Sugestão de alocação da renda */}
       <GraficoAlocacao alocacao={alocacao} />
