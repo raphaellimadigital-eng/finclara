@@ -3,7 +3,7 @@
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase-server";
+import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { Categoria, TipoLancamento } from "@prisma/client";
 
 // Quantidade de meses futuros gerados automaticamente ao marcar um lançamento como
@@ -18,23 +18,6 @@ function adicionarMeses(data: Date, meses: number): Date {
   const ultimoDiaDoMesAlvo = new Date(alvo.getFullYear(), alvo.getMonth() + 1, 0).getDate();
   alvo.setDate(Math.min(dia, ultimoDiaDoMesAlvo));
   return alvo;
-}
-
-// Retorna o usuário logado ou lança erro
-async function getUsuarioLogado() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
-  return user;
-}
-
-// Garante que o registro do usuário existe na tabela "usuarios"
-async function garantirUsuario(id: string, email: string) {
-  await prisma.usuario.upsert({
-    where: { id },
-    update: {},
-    create: { id, email, nome: email.split("@")[0] },
-  });
 }
 
 // Busca todos os lançamentos do mês/ano informado para o usuário logado

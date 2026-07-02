@@ -2,16 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase-server";
+import { getUsuarioLogado } from "@/lib/auth";
 import { calcularPerfil } from "@/lib/perfilInvestidor";
-
-// Retorna o usuário logado ou lança erro
-async function getUsuarioLogado() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
-  return user;
-}
 
 // Busca o registro do usuário (incluindo o perfil de investidor já salvo, se houver)
 export async function getUsuarioAtual() {

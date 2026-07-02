@@ -2,25 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase-server";
+import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { TipoMeta } from "@prisma/client";
-
-// Retorna o usuário logado ou lança erro
-async function getUsuarioLogado() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
-  return user;
-}
-
-// Garante que o registro do usuário existe na tabela "usuarios"
-async function garantirUsuario(id: string, email: string) {
-  await prisma.usuario.upsert({
-    where: { id },
-    update: {},
-    create: { id, email, nome: email.split("@")[0] },
-  });
-}
 
 // Busca todas as metas do usuário logado, ordenadas por prazo (mais próximo primeiro)
 export async function getMetas() {

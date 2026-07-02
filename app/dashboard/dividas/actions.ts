@@ -2,24 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase-server";
-
-// Retorna o usuário logado ou lança erro
-async function getUsuarioLogado() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
-  return user;
-}
-
-// Garante que o registro do usuário existe na tabela "usuarios"
-async function garantirUsuario(id: string, email: string) {
-  await prisma.usuario.upsert({
-    where: { id },
-    update: {},
-    create: { id, email, nome: email.split("@")[0] },
-  });
-}
+import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 
 // Busca todas as dívidas do usuário logado, já ordenadas por prioridade (juros mais altos primeiro)
 export async function getDividas() {

@@ -2,15 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase-server";
-
-// Retorna o usuário logado ou lança erro
-async function getUsuarioLogado() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
-  return user;
-}
+import { getUsuarioLogado } from "@/lib/auth";
 
 // Apaga todos os dados financeiros do usuário (lançamentos, dívidas, cartões, metas, limites e
 // perfil), mantendo o login ativo — direito de exclusão previsto na LGPD (seção 15.2 da proposta).
