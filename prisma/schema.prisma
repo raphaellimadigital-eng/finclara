@@ -58,6 +58,8 @@ model Usuario {
   // este id é o mesmo id do usuário no Supabase (auth.users.id)
   criadoEm  DateTime @default(now())
   perfilInvestidor PerfilInvestidor?
+  telefone  String?
+  endereco  String?
 
   lancamentos Lancamento[]
   dividas     Divida[]

@@ -26,8 +26,20 @@ export default async function PerfilPage() {
 
       <div className="card">
         <div className="campo">
+          <div className="rotulo">Nome</div>
+          <div>{usuario.nome || "-"}</div>
+        </div>
+        <div className="campo">
           <div className="rotulo">E-mail</div>
           <div>{user?.email}</div>
+        </div>
+        <div className="campo">
+          <div className="rotulo">Telefone</div>
+          <div>{usuario.telefone || "-"}</div>
+        </div>
+        <div className="campo">
+          <div className="rotulo">Endereço</div>
+          <div>{usuario.endereco || "-"}</div>
         </div>
         <div className="campo" style={{ marginBottom: 0 }}>
           <div className="rotulo">Conta criada em</div>
