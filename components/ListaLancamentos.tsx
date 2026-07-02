@@ -21,6 +21,8 @@ import {
   LineChart,
   Wallet,
   Loader2,
+  ChevronDown,
+  ChevronUp,
   type LucideIcon,
 } from "lucide-react";
 import { deletarLancamento, deletarLancamentoEFuturos } from "@/app/dashboard/actions";
@@ -70,6 +72,9 @@ function formatarData(data: Date) {
   return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
+// Quantos lançamentos mostrar de cara quando o card está recolhido — o resto só aparece ao expandir
+const QTD_PREVIA = 5;
+
 export function ListaLancamentos({
   lancamentos,
   categoriasEstouradas = new Set(),
@@ -79,6 +84,7 @@ export function ListaLancamentos({
 }) {
   const [deletando, setDeletando] = useState<string | null>(null);
   const [erro, setErro] = useState("");
+  const [expandido, setExpandido] = useState(false);
 
   if (lancamentos.length === 0) {
     return (
@@ -123,11 +129,35 @@ export function ListaLancamentos({
     }
   }
 
+  const visiveis = expandido ? lancamentos : lancamentos.slice(0, QTD_PREVIA);
+  const temMais = lancamentos.length > QTD_PREVIA;
+
   return (
     <div className="card">
-      <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <List size={16} aria-hidden="true" /> Lançamentos do mês
-      </h2>
+      <button
+        type="button"
+        onClick={() => setExpandido((v) => !v)}
+        aria-expanded={expandido}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          background: "none",
+          border: "none",
+          padding: 0,
+          marginBottom: 12,
+          color: "inherit",
+          cursor: "pointer",
+        }}
+      >
+        <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6, margin: 0 }}>
+          <List size={16} aria-hidden="true" />
+          {expandido ? "Lançamentos do mês" : "Lançamentos recentes"}
+          <span className="texto-secundario" style={{ fontWeight: 400 }}>({lancamentos.length})</span>
+        </h2>
+        {expandido ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
+      </button>
 
       {erro && (
         <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>
@@ -135,7 +165,7 @@ export function ListaLancamentos({
         </p>
       )}
 
-      {lancamentos.map((l) => {
+      {visiveis.map((l) => {
         const IconeCategoria = ICONE_CATEGORIA[l.categoria];
         return (
           <div key={l.id} className="lista-item">
@@ -187,6 +217,17 @@ export function ListaLancamentos({
           </div>
         );
       })}
+
+      {!expandido && temMais && (
+        <button
+          type="button"
+          onClick={() => setExpandido(true)}
+          className="botao-secundario"
+          style={{ width: "100%", marginTop: 4 }}
+        >
+          Ver todos os {lancamentos.length} lançamentos
+        </button>
+      )}
     </div>
   );
 }

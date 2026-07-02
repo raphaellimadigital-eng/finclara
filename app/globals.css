@@ -182,6 +182,20 @@ h2 {
   margin-bottom: 12px;
 }
 
+/* Dois campos curtos lado a lado (ex.: Valor + Data), evitando que um campo pequeno
+   fique esticado sozinho numa linha inteira. Volta a empilhar em telas bem estreitas. */
+.campo-linha-dupla {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 360px) {
+  .campo-linha-dupla {
+    grid-template-columns: 1fr;
+  }
+}
+
 .rotulo {
   display: block;
   font-size: 12.5px;

@@ -169,30 +169,30 @@ export function FormLancamento() {
             />
           </div>
 
-          {/* Valor */}
-          <div className="campo">
-            <label className="rotulo" htmlFor="valor">Valor</label>
-            <input
-              id="valor"
-              name="valor"
-              type="number"
-              placeholder="0,00"
-              step="0.01"
-              min="0.01"
-              required
-            />
-          </div>
-
-          {/* Data */}
-          <div className="campo">
-            <label className="rotulo" htmlFor="data">Data</label>
-            <input
-              id="data"
-              name="data"
-              type="date"
-              defaultValue={hoje}
-              required
-            />
+          {/* Valor e Data lado a lado — evita o campo de data ficar esticado sozinho numa linha */}
+          <div className="campo campo-linha-dupla">
+            <div>
+              <label className="rotulo" htmlFor="valor">Valor</label>
+              <input
+                id="valor"
+                name="valor"
+                type="number"
+                placeholder="0,00"
+                step="0.01"
+                min="0.01"
+                required
+              />
+            </div>
+            <div>
+              <label className="rotulo" htmlFor="data">Data</label>
+              <input
+                id="data"
+                name="data"
+                type="date"
+                defaultValue={hoje}
+                required
+              />
+            </div>
           </div>
 
           {/* Recorrente */}
