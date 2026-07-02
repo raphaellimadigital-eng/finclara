@@ -64,7 +64,7 @@ export function calcularOrientacao({
 
   const textoPerfil = perfilInvestidor
     ? TEXTOS_PERFIL[perfilInvestidor]
-    : "Responda o questionário de perfil de investidor em Dados cadastrais para receber uma orientação mais precisa.";
+    : "Responda o questionário de perfil de investidor no menu Perfil de investidor para receber uma orientação mais precisa.";
 
   return {
     prioridade: "INVESTIR",

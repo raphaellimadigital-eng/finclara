@@ -1,14 +1,18 @@
 import Link from "next/link";
-import { ChevronLeft, UserRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, UserRound, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 import { getUsuarioAtual } from "./actions";
-import { QuestionarioPerfil } from "@/components/QuestionarioPerfil";
-import { LABEL_PERFIL, DESCRICAO_PERFIL } from "@/lib/perfilInvestidor";
+import { FormDadosCadastrais } from "@/components/FormDadosCadastrais";
+import { LABEL_PERFIL } from "@/lib/perfilInvestidor";
 
 export default async function PerfilPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const usuario = await getUsuarioAtual();
+
+  const criadoEm = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
+    : "-";
 
   return (
     <div className="container">
@@ -24,50 +28,30 @@ export default async function PerfilPage() {
         <UserRound size={20} aria-hidden="true" /> Dados cadastrais
       </h1>
 
-      <div className="card">
-        <div className="campo">
-          <div className="rotulo">Nome</div>
-          <div>{usuario.nome || "-"}</div>
-        </div>
-        <div className="campo">
-          <div className="rotulo">E-mail</div>
-          <div>{user?.email}</div>
-        </div>
-        <div className="campo">
-          <div className="rotulo">Telefone</div>
-          <div>{usuario.telefone || "-"}</div>
-        </div>
-        <div className="campo">
-          <div className="rotulo">Endereço</div>
-          <div>{usuario.endereco || "-"}</div>
-        </div>
-        <div className="campo" style={{ marginBottom: 0 }}>
-          <div className="rotulo">Conta criada em</div>
+      <FormDadosCadastrais
+        email={user?.email ?? ""}
+        criadoEm={criadoEm}
+        nome={usuario.nome ?? ""}
+        telefone={usuario.telefone ?? ""}
+        endereco={usuario.endereco ?? ""}
+      />
+
+      <Link
+        href="/dashboard/perfil-investidor"
+        className="card"
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", color: "inherit" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <TrendingUp size={18} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
           <div>
-            {user?.created_at
-              ? new Date(user.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
-              : "-"}
+            <div style={{ fontWeight: 600, fontSize: 14.5 }}>Perfil de investidor</div>
+            <div className="texto-secundario" style={{ fontSize: 12 }}>
+              {usuario.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "Ainda não definido"}
+            </div>
           </div>
         </div>
-      </div>
-
-      <p className="texto-secundario" style={{ marginTop: -8, marginBottom: 16 }}>
-        Edição de nome, telefone e outros dados chega em breve.
-      </p>
-
-      {usuario.perfilInvestidor && (
-        <div className="card">
-          <div className="rotulo">Seu perfil de investidor atual</div>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
-            {LABEL_PERFIL[usuario.perfilInvestidor]}
-          </div>
-          <p className="texto-secundario" style={{ margin: 0 }}>
-            {DESCRICAO_PERFIL[usuario.perfilInvestidor]}
-          </p>
-        </div>
-      )}
-
-      <QuestionarioPerfil />
+        <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
+      </Link>
     </div>
   );
 }

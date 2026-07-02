@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ClipboardList, Loader2 } from "lucide-react";
-import { salvarPerfilInvestidor } from "@/app/dashboard/perfil/actions";
+import { salvarPerfilInvestidor } from "@/app/dashboard/perfil-investidor/actions";
 import { PERGUNTAS_PERFIL } from "@/lib/perfilInvestidor";
 
 export function QuestionarioPerfil() {
