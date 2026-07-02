@@ -7,7 +7,7 @@ import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 // Busca todas as dívidas do usuário logado, já ordenadas por prioridade (juros mais altos primeiro)
 export async function getDividas() {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   return prisma.divida.findMany({
     where: { usuarioId: user.id },
@@ -18,7 +18,7 @@ export async function getDividas() {
 // Cria uma nova dívida
 export async function criarDivida(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   const descricao = formData.get("descricao") as string;
   const valorTotal = parseFloat(formData.get("valorTotal") as string);

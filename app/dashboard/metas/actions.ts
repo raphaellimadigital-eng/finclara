@@ -8,7 +8,7 @@ import { TipoMeta } from "@prisma/client";
 // Busca todas as metas do usuário logado, ordenadas por prazo (mais próximo primeiro)
 export async function getMetas() {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   return prisma.meta.findMany({
     where: { usuarioId: user.id },
@@ -19,7 +19,7 @@ export async function getMetas() {
 // Cria uma nova meta
 export async function criarMeta(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   const tipo = formData.get("tipo") as TipoMeta;
   const descricao = formData.get("descricao") as string;

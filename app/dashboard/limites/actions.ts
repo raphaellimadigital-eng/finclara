@@ -8,7 +8,7 @@ import { Categoria } from "@prisma/client";
 // Busca todos os limites de categoria do usuário logado
 export async function getLimites() {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   return prisma.limiteCategoria.findMany({
     where: { usuarioId: user.id },
@@ -19,7 +19,7 @@ export async function getLimites() {
 // Cria ou atualiza o limite de uma categoria (uma categoria só tem um limite por usuário)
 export async function salvarLimite(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   const categoria = formData.get("categoria") as Categoria;
   const valorLimite = parseFloat(formData.get("valorLimite") as string);

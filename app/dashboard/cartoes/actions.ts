@@ -7,7 +7,7 @@ import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 // Busca todos os cartões do usuário logado, com as compras parceladas de cada um
 export async function getCartoes() {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   return prisma.cartaoCredito.findMany({
     where: { usuarioId: user.id },
@@ -19,7 +19,7 @@ export async function getCartoes() {
 // Cria um novo cartão de crédito
 export async function criarCartao(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   const nome = formData.get("nome") as string;
   const limite = parseFloat(formData.get("limite") as string);

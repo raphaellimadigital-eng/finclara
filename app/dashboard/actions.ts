@@ -23,7 +23,7 @@ function adicionarMeses(data: Date, meses: number): Date {
 // Busca todos os lançamentos do mês/ano informado para o usuário logado
 export async function getLancamentos(ano: number, mes: number) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   const inicio = new Date(ano, mes - 1, 1);
   const fim = new Date(ano, mes, 0, 23, 59, 59);
@@ -40,7 +40,7 @@ export async function getLancamentos(ano: number, mes: number) {
 // Cria um novo lançamento
 export async function criarLancamento(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user.id, user.email!);
+  await garantirUsuario(user);
 
   const tipo = formData.get("tipo") as TipoLancamento;
   const categoria = formData.get("categoria") as Categoria;
