@@ -4,4 +4,5 @@ node_modules/
 .env
 *.env
 *.tsbuildinfo
+coverage/
 FinClara_Proposta.docx

@@ -1,0 +1,38 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  # Placeholders — o build/testes não tocam no banco real, só precisam de valores presentes
+  DATABASE_URL: "postgresql://user:password@localhost:5432/finclara_ci"
+  DIRECT_URL: "postgresql://user:password@localhost:5432/finclara_ci"
+  NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key"
+  GEMINI_API_KEY: "placeholder-gemini-key"
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "20.x"
+    displayName: "Instalar Node.js 20"
+
+  - script: npm ci
+    displayName: "Instalar dependências"
+
+  - script: npx tsc --noEmit
+    displayName: "Checagem de tipos"
+
+  - script: npm run test
+    displayName: "Testes unitários"
+
+  - script: npm run build
+    displayName: "Build de produção"
