@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { Download } from "lucide-react";
+import Link from "next/link";
+import { FileText, ChevronRight } from "lucide-react";
 import { getLancamentos } from "./actions";
 import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
@@ -8,7 +9,7 @@ import { getUsuarioAtual } from "./perfil/actions";
 import { getLimites } from "./limites/actions";
 import { FormLancamento } from "@/components/FormLancamento";
 import { ListaLancamentos } from "@/components/ListaLancamentos";
-import { Resumo } from "@/components/Resumo";
+import { Resumo, type MetaResumo } from "@/components/Resumo";
 import { SeletorMes } from "@/components/SeletorMes";
 import { MenuUsuario } from "@/components/MenuUsuario";
 import { GraficoAlocacao } from "@/components/GraficoAlocacao";
@@ -22,8 +23,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
 import { calcularAlocacao, CATEGORIAS_ESSENCIAIS } from "@/lib/financas";
 import { calcularOrientacao } from "@/lib/orientacao";
-import { valorFaturaNoMes } from "@/lib/cartoes";
-import { totalParcelasMensais } from "@/lib/dividas";
+import { valorFaturaNoMes, limiteDisponivel } from "@/lib/cartoes";
+import { totalParcelasMensais, totalDevedor as calcularTotalDevedor } from "@/lib/dividas";
+import { calcularProjecao, ordenarPorPrazo } from "@/lib/metas";
 import { calcularProgressoLimites, categoriasEstouradas } from "@/lib/limites";
 import { alertasLimites, alertasCartoes, alertasDividas, alertasMetas, ordenarPorSeveridade } from "@/lib/alertas";
 
@@ -41,6 +43,22 @@ const LABEL_CATEGORIA: Record<string, string> = {
 type Props = {
   searchParams: { ano?: string; mes?: string };
 };
+
+// Escolhe a meta a destacar no resumo do mês: a mais próxima do prazo entre as ainda não
+// concluídas, ou a primeira cadastrada se todas já estiverem concluídas.
+function calcularMetaPrincipal(metas: Awaited<ReturnType<typeof getMetas>>): MetaResumo | null {
+  if (metas.length === 0) return null;
+
+  const ordenadas = ordenarPorPrazo(metas);
+  const escolhida = ordenadas.find((m) => !calcularProjecao(m).concluida) ?? ordenadas[0];
+  const projecao = calcularProjecao(escolhida);
+
+  return {
+    descricao: escolhida.descricao,
+    percentual: projecao.percentual,
+    situacao: projecao.concluida ? "concluida" : projecao.atrasada ? "atrasada" : "em_dia",
+  };
+}
 
 export default async function DashboardPage({ searchParams }: Props) {
   const agora = new Date();
@@ -92,6 +110,10 @@ export default async function DashboardPage({ searchParams }: Props) {
   const parcelasDividaMes = totalParcelasMensais(dividas);
   const poupancaRecomendada = Math.max(totalReceitas - essenciaisMensal, 0);
 
+  const disponivelCartoes = cartoes.reduce((soma, c) => soma + limiteDisponivel(c, c.compras), 0);
+  const totalDevedor = calcularTotalDevedor(dividas);
+  const metaPrincipal = calcularMetaPrincipal(metas);
+
   const progressoLimites = calcularProgressoLimites(lancamentos, limites);
   const estouradas = categoriasEstouradas(progressoLimites);
 
@@ -125,15 +147,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <SeletorMes ano={ano} mes={mes} />
       </Suspense>
 
-      <a
-        href={`/dashboard/relatorio?ano=${ano}&mes=${mes}`}
-        className="botao-secundario"
-        style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}
-      >
-        <Download size={16} aria-hidden="true" /> Baixar relatório do mês (PDF)
-      </a>
-
-      {/* Resumo */}
+      {/* 1. Resumo do mês (já traz cartões, dívidas e meta principal integrados) */}
       <Resumo
         totalReceitas={totalReceitas}
         totalDespesas={totalDespesas}
@@ -141,19 +155,25 @@ export default async function DashboardPage({ searchParams }: Props) {
         parcelasCartaoMes={parcelasCartaoMes}
         parcelasDividaMes={parcelasDividaMes}
         poupancaRecomendada={poupancaRecomendada}
+        qtdCartoes={cartoes.length}
+        disponivelCartoes={disponivelCartoes}
+        qtdDividas={dividas.length}
+        totalDevedor={totalDevedor}
+        metaPrincipal={metaPrincipal}
       />
 
-      {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) */}
+      {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) — vem logo após o
+          resumo por ser a informação mais urgente/acionável */}
       <CardAlertas alertas={alertas} />
 
-      {/* Dívidas */}
-      <CardDividas dividas={dividas} />
-
-      {/* Cartões de crédito */}
-      <CardCartoes cartoes={cartoes} />
-
-      {/* Metas financeiras */}
+      {/* 2. Meta financeira */}
       <CardMetas metas={metas} />
+
+      {/* 3. Cartões */}
+      <CardCartoes cartoes={cartoes} mes={mes} ano={ano} />
+
+      {/* 4. Dívidas */}
+      <CardDividas dividas={dividas} />
 
       {/* Orientação financeira (dívida → reserva → investir) */}
       <CardOrientacao orientacao={orientacao} />
@@ -164,8 +184,21 @@ export default async function DashboardPage({ searchParams }: Props) {
       {/* Formulário de novo lançamento */}
       <FormLancamento />
 
-      {/* Lista de lançamentos */}
+      {/* 5. Lançamentos recentes (card recolhível) */}
       <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />
+
+      {/* 6. Acesso rápido a relatórios */}
+      <Link
+        href="/dashboard/relatorios"
+        className="card"
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", color: "inherit" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <FileText size={18} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
+          <span style={{ fontWeight: 600, fontSize: 14.5 }}>Relatórios</span>
+        </div>
+        <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
+      </Link>
     </div>
   );
 }

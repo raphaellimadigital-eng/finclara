@@ -9,9 +9,9 @@ const MESES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 
-type Props = { ano: number; mes: number };
+type Props = { ano: number; mes: number; baseHref?: string };
 
-export function SeletorMes({ ano, mes }: Props) {
+export function SeletorMes({ ano, mes, baseHref = "/dashboard" }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const [carregando, startTransition] = useTransition();
@@ -21,7 +21,7 @@ export function SeletorMes({ ano, mes }: Props) {
     p.set("ano", String(novoAno));
     p.set("mes", String(novoMes));
     startTransition(() => {
-      router.push(`/dashboard?${p.toString()}`);
+      router.push(`${baseHref}?${p.toString()}`);
     });
   }
 

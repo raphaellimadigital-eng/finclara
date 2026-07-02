@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Menu, UserRound, Settings, LifeBuoy, LogOut, Loader2 } from "lucide-react";
+import { Menu, UserRound, Settings, FileText, LifeBuoy, LogOut, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
 
 export function MenuUsuario() {
@@ -66,6 +66,14 @@ export function MenuUsuario() {
             onClick={() => setAberto(false)}
           >
             <UserRound size={16} aria-hidden="true" /> Dados cadastrais
+          </Link>
+          <Link
+            href="/dashboard/relatorios"
+            role="menuitem"
+            className="menu-usuario-item"
+            onClick={() => setAberto(false)}
+          >
+            <FileText size={16} aria-hidden="true" /> Relatórios
           </Link>
           <Link
             href="/dashboard/configuracoes"
