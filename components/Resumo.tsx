@@ -1,4 +1,10 @@
-import { BarChart3, CheckCircle2, AlertTriangle, AlertOctagon, PiggyBank } from "lucide-react";
+import { BarChart3, CheckCircle2, AlertTriangle, AlertOctagon, PiggyBank, CreditCard, Landmark, Target } from "lucide-react";
+
+export type MetaResumo = {
+  descricao: string;
+  percentual: number;
+  situacao: "concluida" | "atrasada" | "em_dia";
+};
 
 type Props = {
   totalReceitas: number;
@@ -7,6 +13,23 @@ type Props = {
   parcelasCartaoMes: number;
   parcelasDividaMes: number;
   poupancaRecomendada: number;
+  qtdCartoes: number;
+  disponivelCartoes: number;
+  qtdDividas: number;
+  totalDevedor: number;
+  metaPrincipal: MetaResumo | null;
+};
+
+const COR_SITUACAO_META: Record<MetaResumo["situacao"], string> = {
+  concluida: "var(--verde)",
+  atrasada: "var(--vermelho)",
+  em_dia: "var(--texto)",
+};
+
+const TEXTO_SITUACAO_META: Record<MetaResumo["situacao"], string> = {
+  concluida: "concluída",
+  atrasada: "atrasada",
+  em_dia: "no prazo",
 };
 
 function formatarMoeda(valor: number) {
@@ -30,6 +53,11 @@ export function Resumo({
   parcelasCartaoMes,
   parcelasDividaMes,
   poupancaRecomendada,
+  qtdCartoes,
+  disponivelCartoes,
+  qtdDividas,
+  totalDevedor,
+  metaPrincipal,
 }: Props) {
   // Comprometimento da renda considera despesas do mês + faturas de cartão + parcelas de
   // dívidas (regra 9.1) — cartões e dívidas continuam sendo cadastrados à parte, mas entram
@@ -94,6 +122,49 @@ export function Resumo({
             Despesas {formatarMoeda(totalDespesas)} + faturas de cartão {formatarMoeda(parcelasCartaoMes)} + parcelas de dívida {formatarMoeda(parcelasDividaMes)}
           </div>
         )}
+      </div>
+
+      {/* Visão geral: cartões, dívidas e meta principal, integrados ao resumo do mês */}
+      <div
+        style={{
+          marginTop: 16,
+          paddingTop: 16,
+          borderTop: "1px solid var(--borda)",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+          gap: 12,
+        }}
+      >
+        <div>
+          <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
+            <CreditCard size={12} aria-hidden="true" /> Cartões
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>
+            {qtdCartoes === 0 ? "Nenhum" : `${formatarMoeda(disponivelCartoes)} disp.`}
+          </div>
+        </div>
+
+        <div>
+          <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
+            <Landmark size={12} aria-hidden="true" /> Dívidas
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>
+            {qtdDividas === 0 ? "Nenhuma" : formatarMoeda(totalDevedor)}
+          </div>
+        </div>
+
+        <div>
+          <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
+            <Target size={12} aria-hidden="true" /> Meta
+          </div>
+          {metaPrincipal ? (
+            <div style={{ fontWeight: 700, fontSize: 14, color: COR_SITUACAO_META[metaPrincipal.situacao] }}>
+              {Math.round(metaPrincipal.percentual)}% · {TEXTO_SITUACAO_META[metaPrincipal.situacao]}
+            </div>
+          ) : (
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Nenhuma</div>
+          )}
+        </div>
       </div>
 
       {poupancaRecomendada > 0 && (
