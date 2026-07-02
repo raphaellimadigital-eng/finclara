@@ -13,10 +13,10 @@
   --investimento: #6d5dd3;
   --investimento-clara: #ece9fb;
 
-  /* Acentos da marca (logo + wordmark "FinClara" + slogan) — fixos entre os temas,
-     não usar para status/valores (isso é --verde, --vermelho etc. acima) */
+  /* Acento de marca (gradiente do logo) — fixo entre os temas. O verde da marca (logo,
+     "Clara" e "claras") reaproveita --verde de propósito, para bater com o mesmo tom usado
+     em valores positivos no resto do app. */
   --marca-ciano: #38d5e8;
-  --marca-verde: #16a34a;
 
   --fundo: #f5f7fa;
   --card-bg: #ffffff;

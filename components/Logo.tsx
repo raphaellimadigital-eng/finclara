@@ -1,8 +1,9 @@
 type Props = { size?: number };
 
 // Marca da FinClara: "C" (de FinClara) + linha de gráfico ascendente + brilho de clareza,
-// em gradiente azul -> ciano. Usa as variáveis de tema (--azul, --marca-ciano, --marca-verde)
-// em vez de hex fixo, para o logo acompanhar o mesmo azul usado no resto do app em cada tema.
+// em gradiente azul -> ciano. Usa as variáveis de tema (--azul, --marca-ciano) para o gradiente
+// acompanhar o resto do app; a linha do gráfico usa um verde bandeira fixo (mais escuro/saturado
+// que o --verde padrão), que se destaca melhor contra o gradiente do que o verde claro.
 export function Logo({ size = 32 }: Props) {
   return (
     <svg
@@ -23,7 +24,7 @@ export function Logo({ size = 32 }: Props) {
       />
       <path
         d="M17 27L21 23L24 26L30 19"
-        stroke="var(--marca-verde)"
+        stroke="#009c3b"
         strokeWidth={2.4}
         strokeLinecap="round"
         strokeLinejoin="round"

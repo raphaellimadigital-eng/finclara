@@ -136,13 +136,13 @@ export default function LoginPage() {
       <div className="topo">
         <div className="marca">
           <Logo />
-          <h1>Fin<span style={{ color: "var(--azul)" }}>Clara</span></h1>
+          <h1>Fin<span style={{ color: "var(--verde)" }}>Clara</span></h1>
         </div>
         <ThemeToggle />
       </div>
       <p className="slogan" style={{ marginBottom: 24 }}>
         Finanças simples, decisões{" "}
-        <span style={{ color: "var(--marca-verde)", fontWeight: 700, fontStyle: "italic" }}>claras</span>
+        <span style={{ color: "var(--verde)", fontWeight: 700, fontStyle: "italic" }}>claras</span>
         .
       </p>
 

@@ -11,9 +11,17 @@ type Props = {
   nome: string;
   telefone: string;
   endereco: string;
+  perfilInvestidor: string;
 };
 
-export function FormDadosCadastrais({ email, criadoEm, nome: nomeInicial, telefone: telefoneInicial, endereco: enderecoInicial }: Props) {
+export function FormDadosCadastrais({
+  email,
+  criadoEm,
+  nome: nomeInicial,
+  telefone: telefoneInicial,
+  endereco: enderecoInicial,
+  perfilInvestidor,
+}: Props) {
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(nomeInicial);
   const [telefone, setTelefone] = useState(telefoneInicial);
@@ -100,6 +108,10 @@ export function FormDadosCadastrais({ email, criadoEm, nome: nomeInicial, telefo
         <div className="campo">
           <div className="rotulo">Endereço</div>
           <div>{enderecoInicial || "-"}</div>
+        </div>
+        <div className="campo">
+          <div className="rotulo">Perfil de investidor</div>
+          <div>{perfilInvestidor}</div>
         </div>
         <div className="campo" style={{ marginBottom: 0 }}>
           <div className="rotulo">Conta criada em</div>

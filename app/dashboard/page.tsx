@@ -118,7 +118,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       <div className="topo">
         <div className="marca">
           <Logo />
-          <h1>Fin<span style={{ color: "var(--azul)" }}>Clara</span></h1>
+          <h1>Fin<span style={{ color: "var(--verde)" }}>Clara</span></h1>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <ThemeToggle />

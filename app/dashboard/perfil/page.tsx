@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, UserRound, TrendingUp } from "lucide-react";
+import { ChevronLeft, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 import { getUsuarioAtual } from "./actions";
 import { FormDadosCadastrais } from "@/components/FormDadosCadastrais";
@@ -34,24 +34,8 @@ export default async function PerfilPage() {
         nome={usuario.nome ?? ""}
         telefone={usuario.telefone ?? ""}
         endereco={usuario.endereco ?? ""}
+        perfilInvestidor={usuario.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "Ainda não definido"}
       />
-
-      <Link
-        href="/dashboard/perfil-investidor"
-        className="card"
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", color: "inherit" }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <TrendingUp size={18} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 14.5 }}>Perfil de investidor</div>
-            <div className="texto-secundario" style={{ fontSize: 12 }}>
-              {usuario.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "Ainda não definido"}
-            </div>
-          </div>
-        </div>
-        <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
-      </Link>
     </div>
   );
 }
