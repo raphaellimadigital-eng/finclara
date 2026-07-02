@@ -27,6 +27,8 @@ import { calcularProjecao, ordenarPorPrazo } from "@/lib/metas";
 import { calcularProgressoLimites, categoriasEstouradas } from "@/lib/limites";
 import { alertasLimites, alertasCartoes, alertasDividas, alertasMetas, ordenarPorSeveridade } from "@/lib/alertas";
 import { LABEL_CATEGORIA } from "@/lib/categorias";
+import { registrarSnapshotPatrimonio, getHistoricoPatrimonio } from "./evolucao-patrimonial/actions";
+import { GraficoEvolucaoPatrimonial } from "@/components/GraficoEvolucaoPatrimonial";
 
 type Props = {
   searchParams: { ano?: string; mes?: string };
@@ -63,7 +65,13 @@ export default async function DashboardPage({ searchParams }: Props) {
     getMetas(),
     getUsuarioAtual(),
     getLimites(),
+    // Registra a "foto" do patrimônio do mês corrente para acumular histórico ao longo do
+    // tempo (usado no gráfico e no relatório de Evolução Patrimonial). Não bloqueia nada se falhar.
+    registrarSnapshotPatrimonio().catch(() => {}),
   ]);
+
+  const snapshotsPatrimonio = await getHistoricoPatrimonio();
+  const historicoPatrimonio = snapshotsPatrimonio.map((s) => ({ ano: s.ano, mes: s.mes, patrimonio: Number(s.patrimonio) }));
 
   const totalReceitas = lancamentos
     .filter((l) => l.tipo === "RECEITA")
@@ -73,7 +81,13 @@ export default async function DashboardPage({ searchParams }: Props) {
     .filter((l) => l.tipo === "DESPESA")
     .reduce((s, l) => s + Number(l.valor), 0);
 
-  const saldo = totalReceitas - totalDespesas;
+  const totalInvestimentos = lancamentos
+    .filter((l) => l.tipo === "INVESTIMENTO")
+    .reduce((s, l) => s + Number(l.valor), 0);
+
+  // Dinheiro que ainda não tem destino: o que sobrou depois de pagar despesas e já ter
+  // investido/guardado. Dinheiro já investido não é mais "livre", por isso sai da conta.
+  const saldo = totalReceitas - totalDespesas - totalInvestimentos;
   const alocacao = calcularAlocacao(totalReceitas, lancamentos, dividas);
 
   const essenciaisMensal = lancamentos
@@ -96,7 +110,10 @@ export default async function DashboardPage({ searchParams }: Props) {
     0
   );
   const parcelasDividaMes = totalParcelasMensais(dividas);
-  const poupancaRecomendada = Math.max(totalReceitas - essenciaisMensal, 0);
+  // Parte do saldo disponível que ainda sobra depois de reservar para pagar cartão e dívida
+  // deste mês. Precisa partir do saldo (que já descontou despesas e investimentos), nunca da
+  // receita bruta, senão o valor sugerido pode ficar maior que o próprio saldo disponível.
+  const poupancaRecomendada = Math.max(saldo - parcelasCartaoMes - parcelasDividaMes, 0);
 
   const disponivelCartoes = cartoes.reduce((soma, c) => soma + limiteDisponivel(c, c.compras), 0);
   const totalDevedor = calcularTotalDevedor(dividas);
@@ -139,6 +156,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       <Resumo
         totalReceitas={totalReceitas}
         totalDespesas={totalDespesas}
+        totalInvestimentos={totalInvestimentos}
         saldo={saldo}
         parcelasCartaoMes={parcelasCartaoMes}
         parcelasDividaMes={parcelasDividaMes}
@@ -150,8 +168,14 @@ export default async function DashboardPage({ searchParams }: Props) {
         metaPrincipal={metaPrincipal}
       />
 
-      {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) — vem logo após o
-          resumo por ser a informação mais urgente/acionável */}
+      {/* Orientação financeira (dívida → reserva → investir), logo abaixo do resumo pra
+          ajudar a explicar os números acima */}
+      <CardOrientacao orientacao={orientacao} />
+
+      {/* Evolução patrimonial (metas acumuladas menos dívidas, mês a mês) */}
+      <GraficoEvolucaoPatrimonial historico={historicoPatrimonio} />
+
+      {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) */}
       <CardAlertas alertas={alertas} />
 
       {/* 2. Meta financeira */}
@@ -163,14 +187,11 @@ export default async function DashboardPage({ searchParams }: Props) {
       {/* 4. Dívidas */}
       <CardDividas dividas={dividas} />
 
-      {/* Orientação financeira (dívida → reserva → investir) */}
-      <CardOrientacao orientacao={orientacao} />
-
       {/* Sugestão de alocação da renda */}
       <GraficoAlocacao alocacao={alocacao} />
 
       {/* Formulário de novo lançamento */}
-      <FormLancamento />
+      <FormLancamento key={`${ano}-${mes}`} ano={ano} mes={mes} />
 
       {/* 5. Lançamentos recentes (card recolhível) */}
       <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />

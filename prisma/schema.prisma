@@ -66,6 +66,7 @@ model Usuario {
   cartoes     CartaoCredito[]
   metas       Meta[]
   limitesCategoria LimiteCategoria[]
+  patrimonioSnapshots PatrimonioSnapshot[]
 
   @@map("usuarios")
 }
@@ -177,4 +178,21 @@ model LimiteCategoria {
 
   @@unique([usuarioId, categoria])
   @@map("limites_categoria")
+}
+
+model PatrimonioSnapshot {
+  id         String   @id @default(uuid())
+  usuarioId  String
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  ano        Int
+  mes        Int
+  patrimonio Decimal  @db.Decimal(12, 2)
+
+  criadoEm   DateTime @default(now())
+
+  // Uma "foto" por usuário por mês — registrada automaticamente quando o usuário acessa o
+  // dashboard no mês corrente, para acumular histórico ao longo do tempo.
+  @@unique([usuarioId, ano, mes])
+  @@map("patrimonio_snapshots")
 }

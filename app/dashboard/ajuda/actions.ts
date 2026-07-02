@@ -3,7 +3,8 @@
 import { Resend } from "resend";
 import { getUsuarioLogado } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { LIMITE_CARACTERES_MENSAGEM } from "@/lib/suporte";
+import { LIMITE_CARACTERES_MENSAGEM, LIMITE_CARACTERES_PERGUNTA_IA } from "@/lib/suporte";
+import { responderPerguntaAjuda } from "@/lib/gemini";
 
 const EMAIL_SUPORTE = "raphaellima.digital@gmail.com";
 
@@ -48,4 +49,20 @@ export async function enviarMensagemSuporte(formData: FormData) {
   if (error) {
     throw new Error("Não foi possível enviar sua mensagem agora. Tente novamente ou use o WhatsApp.");
   }
+}
+
+// Responde uma pergunta de "como usar o FinClara" com IA (Gemini) — exige login, mas não
+// depende de nenhum dado financeiro do usuário, só do conhecimento fixo sobre o app.
+export async function perguntarIA(formData: FormData) {
+  await getUsuarioLogado();
+
+  const pergunta = (formData.get("pergunta") as string ?? "").trim();
+  if (!pergunta) {
+    throw new Error("Escreva sua pergunta antes de enviar.");
+  }
+  if (pergunta.length > LIMITE_CARACTERES_PERGUNTA_IA) {
+    throw new Error(`Sua pergunta passou de ${LIMITE_CARACTERES_PERGUNTA_IA} caracteres. Resuma um pouco e tente de novo.`);
+  }
+
+  return responderPerguntaAjuda(pergunta);
 }

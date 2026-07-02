@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, ScrollText } from "lucide-react";
 
 export const metadata = {
-  title: "Termos de Uso e Privacidade — FinClara",
+  title: "Termos de Uso e Privacidade | FinClara",
 };
 
 export default function TermosPage() {
@@ -46,7 +46,7 @@ export default function TermosPage() {
           <p className="texto-secundario">
             Seus dados financeiros são tratados de acordo com a Lei Geral de Proteção de Dados
             (LGPD), com a finalidade exclusiva de operar o FinClara para você. Seus lançamentos são
-            isolados por conta — nenhum outro usuário tem acesso a eles. Você pode exportar ou
+            isolados por conta. Nenhum outro usuário tem acesso a eles. Você pode exportar ou
             excluir todos os seus dados financeiros a qualquer momento, diretamente na página de
             Configurações.
           </p>

@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
+import { parseDataLocal } from "@/lib/data";
 import { Categoria, TipoLancamento } from "@prisma/client";
 
 // Quantidade de meses futuros gerados automaticamente ao marcar um lançamento como
@@ -46,7 +47,7 @@ export async function criarLancamento(formData: FormData) {
   const categoria = formData.get("categoria") as Categoria;
   const descricao = formData.get("descricao") as string;
   const valor = parseFloat(formData.get("valor") as string);
-  const data = new Date(formData.get("data") as string);
+  const data = parseDataLocal(formData.get("data") as string);
   const recorrente = formData.get("recorrente") === "on";
 
   if (!descricao || isNaN(valor) || valor <= 0) {

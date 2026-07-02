@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, LifeBuoy, MessageCircle } from "lucide-react";
 import { FormContatoSuporte } from "@/components/FormContatoSuporte";
+import { PerguntaIA } from "@/components/PerguntaIA";
 
 const WHATSAPP_SUPORTE = "5521982232973";
 
@@ -19,6 +20,8 @@ export default function AjudaPage() {
         <LifeBuoy size={20} aria-hidden="true" /> Ajuda ou suporte
       </h1>
 
+      <PerguntaIA />
+
       <div className="card">
         <p style={{ marginTop: 0 }}>
           <strong>Como lançar uma receita ou despesa?</strong>
@@ -31,10 +34,18 @@ export default function AjudaPage() {
           É baseada na regra 50/30/20 aplicada à sua receita do mês, e você também pode pedir uma
           recomendação personalizada por IA.
         </p>
-        <p style={{ marginBottom: 0 }}>
-          <strong>Precisa de mais ajuda?</strong>
+        <p>
+          <strong>Como baixar um relatório?</strong>
           <br />
-          Fale direto com a gente pelos canais abaixo.
+          No menu do usuário, toque em &quot;Relatórios&quot;: lá tem o Relatório Mensal, o Diagnóstico
+          Financeiro (com IA), o Extrato de Lançamentos (Excel/CSV), o Comparativo Mensal e a
+          Evolução Patrimonial, cada um com seu próprio botão de download.
+        </p>
+        <p style={{ marginBottom: 0 }}>
+          <strong>Como faço um lançamento se repetir todo mês?</strong>
+          <br />
+          Ao cadastrar o lançamento, marque a opção &quot;esse lançamento se repete todo mês&quot;: o
+          FinClara já cria os próximos 12 meses automaticamente.
         </p>
       </div>
 
@@ -48,7 +59,7 @@ export default function AjudaPage() {
         <MessageCircle size={18} aria-hidden="true" style={{ color: "var(--verde)", flexShrink: 0 }} />
         <div>
           <div style={{ fontWeight: 600, fontSize: 14.5 }}>WhatsApp</div>
-          <div className="texto-secundario" style={{ fontSize: 12 }}>Resposta mais rápida por aqui</div>
+          <div className="texto-secundario" style={{ fontSize: 12 }}>Precisa de ajuda? Chame por aqui</div>
         </div>
       </a>
 

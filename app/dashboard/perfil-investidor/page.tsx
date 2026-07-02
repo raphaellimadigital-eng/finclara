@@ -22,7 +22,7 @@ export default async function PerfilInvestidorPage() {
       </h1>
 
       <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 16 }}>
-        Essa avaliação mede sua tolerância a risco e seu horizonte de tempo — ela ajusta o tom da
+        Essa avaliação mede sua tolerância a risco e seu horizonte de tempo, ajustando o tom da
         orientação financeira do FinClara, sem indicar produtos específicos nem prometer
         rentabilidade. Você pode refazer o questionário sempre que sua situação mudar.
       </p>

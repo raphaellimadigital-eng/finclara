@@ -5,6 +5,7 @@ import { Resumo } from "./Resumo";
 const PROPS_BASE = {
   totalReceitas: 5000,
   totalDespesas: 2000,
+  totalInvestimentos: 0,
   saldo: 3000,
   parcelasCartaoMes: 0,
   parcelasDividaMes: 0,
@@ -38,7 +39,19 @@ describe("Resumo", () => {
 
   it("mostra o detalhamento de cartão/dívida quando existem outros compromissos", () => {
     render(<Resumo {...PROPS_BASE} parcelasCartaoMes={100} parcelasDividaMes={50} />);
-    expect(screen.getByText(/faturas de cartão/)).toBeInTheDocument();
+    expect(screen.getByText(/Cartões:/)).toBeInTheDocument();
+    expect(screen.getByText(/Dívidas:/)).toBeInTheDocument();
+  });
+
+  it("mostra o valor investido no detalhamento", () => {
+    render(<Resumo {...PROPS_BASE} totalInvestimentos={500} />);
+    expect(screen.getByText("Investido")).toBeInTheDocument();
+    expect(screen.getByText(/R\$\s?500,00/)).toBeInTheDocument();
+  });
+
+  it("avisa que cartões e dívidas não entram no saldo disponível", () => {
+    render(<Resumo {...PROPS_BASE} />);
+    expect(screen.getByText(/não são descontados do saldo disponível/)).toBeInTheDocument();
   });
 
   it("mostra 'Nenhum'/'Nenhuma' quando não há cartões, dívidas ou metas", () => {

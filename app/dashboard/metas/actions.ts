@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
+import { parseDataLocal } from "@/lib/data";
 import { TipoMeta } from "@prisma/client";
 
 // Busca todas as metas do usuário logado, ordenadas por prazo (mais próximo primeiro)
@@ -24,7 +25,7 @@ export async function criarMeta(formData: FormData) {
   const tipo = formData.get("tipo") as TipoMeta;
   const descricao = formData.get("descricao") as string;
   const valorAlvo = parseFloat(formData.get("valorAlvo") as string);
-  const prazo = new Date(formData.get("prazo") as string);
+  const prazo = parseDataLocal(formData.get("prazo") as string);
 
   if (!descricao || isNaN(valorAlvo) || valorAlvo <= 0) {
     throw new Error("Preencha todos os campos corretamente.");

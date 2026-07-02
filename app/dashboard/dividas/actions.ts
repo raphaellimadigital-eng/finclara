@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
+import { parseDataLocal } from "@/lib/data";
 
 // Busca todas as dívidas do usuário logado, já ordenadas por prioridade (juros mais altos primeiro)
 export async function getDividas() {
@@ -24,7 +25,7 @@ export async function criarDivida(formData: FormData) {
   const valorTotal = parseFloat(formData.get("valorTotal") as string);
   const valorParcela = parseFloat(formData.get("valorParcela") as string);
   const taxaJuros = parseFloat(formData.get("taxaJuros") as string);
-  const vencimento = new Date(formData.get("vencimento") as string);
+  const vencimento = parseDataLocal(formData.get("vencimento") as string);
 
   if (
     !descricao ||

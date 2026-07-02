@@ -26,7 +26,7 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
           <p className="texto-secundario" style={{ margin: 0 }}>
             Nenhuma dívida cadastrada.
             <br />
-            Ótimo se for verdade — ou cadastre a primeira no formulário acima.
+            Ótimo se for verdade, ou cadastre a primeira no formulário acima.
           </p>
         </div>
       </div>

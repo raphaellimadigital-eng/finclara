@@ -9,6 +9,7 @@ export type MetaResumo = {
 type Props = {
   totalReceitas: number;
   totalDespesas: number;
+  totalInvestimentos: number;
   saldo: number;
   parcelasCartaoMes: number;
   parcelasDividaMes: number;
@@ -49,6 +50,7 @@ function situacaoFinanceira(percentualGasto: number) {
 export function Resumo({
   totalReceitas,
   totalDespesas,
+  totalInvestimentos,
   saldo,
   parcelasCartaoMes,
   parcelasDividaMes,
@@ -81,24 +83,34 @@ export function Resumo({
         </span>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 4 }}>
         <div className="texto-secundario" style={{ marginBottom: 4 }}>Saldo disponível</div>
         <div className={`saldo ${saldo >= 0 ? "positivo" : "negativo"}`}>
           {formatarMoeda(saldo)}
         </div>
+        <div className="texto-secundario" style={{ fontSize: 11.5, marginTop: 2 }}>
+          Receitas menos despesas e menos o que você já investiu este mês: é o que ainda não tem
+          destino.
+        </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, margin: "16px 0" }}>
         <div>
-          <div className="texto-secundario">Receitas</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--verde)" }}>
+          <div className="texto-secundario" style={{ fontSize: 12 }}>Receitas</div>
+          <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--verde)" }}>
             {formatarMoeda(totalReceitas)}
           </div>
         </div>
         <div>
-          <div className="texto-secundario">Despesas</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--vermelho)" }}>
+          <div className="texto-secundario" style={{ fontSize: 12 }}>Despesas</div>
+          <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--vermelho)" }}>
             {formatarMoeda(totalDespesas)}
+          </div>
+        </div>
+        <div>
+          <div className="texto-secundario" style={{ fontSize: 12 }}>Investido</div>
+          <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--investimento)" }}>
+            {formatarMoeda(totalInvestimentos)}
           </div>
         </div>
       </div>
@@ -108,6 +120,10 @@ export function Resumo({
         <div className="texto-secundario" style={{ marginBottom: 4 }}>
           Renda comprometida: <strong style={{ color: situacao.cor }}>{percentualGasto}%</strong>
         </div>
+        <p className="texto-secundario" style={{ fontSize: 11.5, margin: "0 0 6px" }}>
+          Quanto da sua renda já está tomado por despesas, faturas de cartão e parcelas de dívida
+          este mês.
+        </p>
         <div className="barra-fundo" role="progressbar" aria-valuenow={percentualGasto} aria-valuemin={0} aria-valuemax={100}>
           <div
             className="barra-preenchimento"
@@ -118,8 +134,10 @@ export function Resumo({
           />
         </div>
         {temOutrosCompromissos && (
-          <div className="texto-secundario" style={{ fontSize: 11.5, marginTop: 4 }}>
-            Despesas {formatarMoeda(totalDespesas)} + faturas de cartão {formatarMoeda(parcelasCartaoMes)} + parcelas de dívida {formatarMoeda(parcelasDividaMes)}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11.5, marginTop: 6 }}>
+            <span className="texto-secundario">Despesas: <strong style={{ color: "var(--texto)" }}>{formatarMoeda(totalDespesas)}</strong></span>
+            <span className="texto-secundario">Cartões: <strong style={{ color: "var(--texto)" }}>{formatarMoeda(parcelasCartaoMes)}</strong></span>
+            <span className="texto-secundario">Dívidas: <strong style={{ color: "var(--texto)" }}>{formatarMoeda(parcelasDividaMes)}</strong></span>
           </div>
         )}
       </div>
@@ -167,6 +185,11 @@ export function Resumo({
         </div>
       </div>
 
+      <p className="texto-secundario" style={{ fontSize: 11, margin: "8px 0 0" }}>
+        Cartões e dívidas são controlados à parte e não são descontados do saldo disponível acima.
+        Acompanhe e pague cada um nas telas próprias.
+      </p>
+
       {poupancaRecomendada > 0 && (
         <div
           style={{
@@ -181,7 +204,9 @@ export function Resumo({
           }}
         >
           <PiggyBank size={15} style={{ color: "var(--verde)", flexShrink: 0 }} aria-hidden="true" />
-          Você pode guardar com segurança até <strong style={{ color: "var(--texto)" }}>{formatarMoeda(poupancaRecomendada)}</strong> este mês (renda menos despesas essenciais).
+          Do saldo disponível acima, depois de reservar para o cartão e as dívidas deste mês, você
+          pode guardar com segurança até{" "}
+          <strong style={{ color: "var(--texto)" }}>{formatarMoeda(poupancaRecomendada)}</strong>.
         </div>
       )}
     </div>

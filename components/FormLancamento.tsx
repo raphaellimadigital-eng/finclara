@@ -27,7 +27,19 @@ const LABEL_TIPO: Record<Tipo, string> = {
   INVESTIMENTO: "Investimento",
 };
 
-export function FormLancamento() {
+// Data padrão do formulário: mesmo dia de hoje, mas dentro do mês/ano que está sendo visto na
+// Home (ajustado para o último dia do mês-alvo quando ele for mais curto). Assim, se o usuário
+// navegar para um mês passado ou futuro antes de lançar algo, o campo de data já acompanha.
+function calcularDataPadrao(ano: number, mes: number): string {
+  const hoje = new Date();
+  const ultimoDiaDoMesAlvo = new Date(ano, mes, 0).getDate();
+  const dia = Math.min(hoje.getDate(), ultimoDiaDoMesAlvo);
+  const mesStr = String(mes).padStart(2, "0");
+  const diaStr = String(dia).padStart(2, "0");
+  return `${ano}-${mesStr}-${diaStr}`;
+}
+
+export function FormLancamento({ ano, mes }: { ano: number; mes: number }) {
   const [tipo, setTipo] = useState<Tipo>("DESPESA");
   const [categoria, setCategoria] = useState("");
   const [categoriaSugerida, setCategoriaSugerida] = useState(false);
@@ -39,8 +51,7 @@ export function FormLancamento() {
   const categorias =
     tipo === "RECEITA" ? CATEGORIAS_RECEITA : tipo === "DESPESA" ? CATEGORIAS_DESPESA : CATEGORIAS_INVESTIMENTO;
 
-  // Data padrão = hoje
-  const hoje = new Date().toISOString().split("T")[0];
+  const dataPadrao = calcularDataPadrao(ano, mes);
 
   function handleTipoChange(t: Tipo) {
     setTipo(t);
@@ -166,7 +177,7 @@ export function FormLancamento() {
                 id="data"
                 name="data"
                 type="date"
-                defaultValue={hoje}
+                defaultValue={dataPadrao}
                 required
               />
             </div>

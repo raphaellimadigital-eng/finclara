@@ -184,7 +184,7 @@ export function FormDadosCadastrais({
             <input
               id="enderecoEdit"
               type="text"
-              placeholder="Preenchido pelo CEP — complete com número e complemento"
+              placeholder="Preenchido pelo CEP, complete com número e complemento"
               value={endereco}
               onChange={(e) => setEndereco(e.target.value)}
             />

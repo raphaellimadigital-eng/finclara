@@ -25,7 +25,7 @@ export const PERGUNTAS_PERFIL: PerguntaPerfil[] = [
     opcoes: [
       { valor: 1, texto: "Venderia tudo para evitar mais perdas" },
       { valor: 2, texto: "Ficaria preocupado, mas esperaria melhorar" },
-      { valor: 3, texto: "Manteria ou aumentaria os aportes — é normal" },
+      { valor: 3, texto: "Manteria ou aumentaria os aportes, é normal" },
     ],
   },
   {

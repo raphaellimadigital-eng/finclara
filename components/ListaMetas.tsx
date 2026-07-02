@@ -90,7 +90,7 @@ function ItemMeta({ meta }: { meta: Meta }) {
           <>
             <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
             No ritmo atual, você está atrasado
-            {projecao.dataProjetada ? ` — previsão: ${formatarData(projecao.dataProjetada)}` : ""}
+            {projecao.dataProjetada ? ` (previsão: ${formatarData(projecao.dataProjetada)})` : ""}
           </>
         ) : projecao.dataProjetada ? (
           <>

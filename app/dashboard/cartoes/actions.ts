@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
+import { parseDataLocal } from "@/lib/data";
 
 // Busca todos os cartões do usuário logado, com as compras parceladas de cada um
 export async function getCartoes() {
@@ -69,7 +70,7 @@ export async function criarCompraParcelada(formData: FormData) {
   const descricao = formData.get("descricao") as string;
   const valorTotal = parseFloat(formData.get("valorTotal") as string);
   const numParcelas = parseInt(formData.get("numParcelas") as string, 10);
-  const dataCompra = new Date(formData.get("dataCompra") as string);
+  const dataCompra = parseDataLocal(formData.get("dataCompra") as string);
 
   if (
     !descricao ||

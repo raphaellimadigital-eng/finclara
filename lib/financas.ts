@@ -66,7 +66,7 @@ export function calcularAlocacao(
 
   if (possuiDividaCara) {
     dicas.push(
-      `Você tem dívida com juros acima de ${TAXA_JUROS_CARA_AO_MES}% ao mês. Antes de investir, priorize quitar essa dívida — é o retorno mais garantido que você pode ter agora.`
+      `Você tem dívida com juros acima de ${TAXA_JUROS_CARA_AO_MES}% ao mês. Antes de investir, priorize quitar essa dívida: é o retorno mais garantido que você pode ter agora.`
     );
   }
 
@@ -76,12 +76,12 @@ export function calcularAlocacao(
 
     if (pctEssenciais > PERCENTUAL_ESSENCIAIS) {
       dicas.push(
-        `Seus gastos essenciais consomem ${Math.round(pctEssenciais * 100)}% da renda — acima dos 50% recomendados. Vale revisar moradia, transporte e alimentação.`
+        `Seus gastos essenciais consomem ${Math.round(pctEssenciais * 100)}% da renda, acima dos 50% recomendados. Vale revisar moradia, transporte e alimentação.`
       );
     }
     if (pctDesejos > PERCENTUAL_DESEJOS) {
       dicas.push(
-        `Gastos com desejos (lazer, assinaturas) estão em ${Math.round(pctDesejos * 100)}% da renda — o ideal é até 30%.`
+        `Gastos com desejos (lazer, assinaturas) estão em ${Math.round(pctDesejos * 100)}% da renda. O ideal é até 30%.`
       );
     }
     if (reserva < ideal.reserva) {
@@ -102,7 +102,7 @@ export function calcularAlocacao(
     if (naoAlocado > 0) {
       dicas.push(
         possuiDividaCara
-          ? `Você tem ${formatarMoeda(naoAlocado)} sem destino definido este mês — direcione para acelerar a quitação da dívida cara.`
+          ? `Você tem ${formatarMoeda(naoAlocado)} sem destino definido este mês. Direcione para acelerar a quitação da dívida cara.`
           : `Você tem ${formatarMoeda(naoAlocado)} sem destino definido este mês. Considere direcionar para reserva de emergência ou investimentos.`
       );
     }

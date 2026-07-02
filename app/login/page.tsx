@@ -152,10 +152,10 @@ export default function LoginPage() {
           <h2 className="card-title" style={{ justifyContent: "center" }}>Confirme seu e-mail</h2>
           <p className="texto-secundario" style={{ fontSize: 13.5, lineHeight: 1.6 }}>
             Enviamos um link de confirmação para <strong>{email}</strong>. Abra sua caixa de
-            entrada e clique no link para ativar sua conta — depois é só voltar aqui e entrar.
+            entrada e clique no link para ativar sua conta. Depois é só voltar aqui e entrar.
           </p>
           <p className="texto-secundario" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-            Não encontrou o e-mail? Confira também a caixa de spam ou lixo eletrônico — às vezes
+            Não encontrou o e-mail? Confira também a caixa de spam ou lixo eletrônico, às vezes
             e-mails automáticos caem lá.
           </p>
           <button
@@ -288,7 +288,7 @@ export default function LoginPage() {
                   <input
                     id="endereco"
                     type="text"
-                    placeholder="Preenchido pelo CEP — complete com número e complemento"
+                    placeholder="Preenchido pelo CEP, complete com número e complemento"
                     value={endereco}
                     onChange={(e) => setEndereco(e.target.value)}
                   />

@@ -52,9 +52,9 @@ export function calcularProjecao(
 // perfil de investidor do usuário — isso chega numa fase futura).
 export function estrategiaSugerida(prazo: Date): string {
   const meses = (new Date(prazo).getTime() - Date.now()) / (DIA_MS * 30);
-  if (meses <= 12) return "Prazo curto — estratégia conservadora e com liquidez";
-  if (meses <= 60) return "Prazo médio — estratégia equilibrada";
-  return "Prazo longo — estratégia diversificada, conforme seu perfil";
+  if (meses <= 12) return "Prazo curto: estratégia conservadora e com liquidez";
+  if (meses <= 60) return "Prazo médio: estratégia equilibrada";
+  return "Prazo longo: estratégia diversificada, conforme seu perfil";
 }
 
 export function ordenarPorPrazo(metas: Meta[]): Meta[] {

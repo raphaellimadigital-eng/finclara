@@ -44,7 +44,7 @@ export function calcularOrientacao({
       prioridade: "QUITAR_DIVIDA",
       titulo: "Quite suas dívidas caras primeiro",
       explicacao:
-        "Você tem dívida com juros altos. Quitar essa dívida é o retorno mais garantido que você pode ter agora — nenhum investimento supera isso com segurança. Deixe investimentos para depois de resolver isso.",
+        "Você tem dívida com juros altos. Quitar essa dívida é o retorno mais garantido que você pode ter agora, nenhum investimento supera isso com segurança. Deixe investimentos para depois de resolver isso.",
       reservaAtual,
       reservaAlvo,
       mesesReserva,

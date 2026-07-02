@@ -45,7 +45,7 @@ export default async function DividasPage() {
           </div>
           {possuiCara && (
             <p className="texto-secundario" style={{ fontSize: 12.5, marginTop: 12, marginBottom: 0, color: "var(--vermelho)" }}>
-              Você tem dívida com juros altos — priorize quitá-la antes de investir.
+              Você tem dívida com juros altos. Priorize quitá-la antes de investir.
             </p>
           )}
         </div>
