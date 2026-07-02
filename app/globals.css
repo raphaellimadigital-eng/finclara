@@ -1,8 +1,8 @@
 :root {
-  /* Marca FinClara */
-  --azul: #1f3f75;
-  --azul-escura: #16294f;
-  --azul-clara: #e4e9f4;
+  /* Marca FinClara — azul vibrante do logo, consistente com o modo escuro */
+  --azul: #5b8def;
+  --azul-escura: #1f3f75;
+  --azul-clara: rgba(91, 141, 239, 0.15);
   --verde: #21873b;
   --verde-clara: #e2f4e6;
   --vermelho: #d92d20;
@@ -12,6 +12,11 @@
   --amarelo-texto: #8a5b00;
   --investimento: #6d5dd3;
   --investimento-clara: #ece9fb;
+
+  /* Acentos da marca (logo + wordmark "FinClara" + slogan) — fixos entre os temas,
+     não usar para status/valores (isso é --verde, --vermelho etc. acima) */
+  --marca-ciano: #38d5e8;
+  --marca-verde: #16a34a;
 
   --fundo: #f5f7fa;
   --card-bg: #ffffff;
@@ -38,6 +43,9 @@ html[data-theme="dark"] {
   --amarelo-texto: #fbbf24;
   --investimento: #a78bfa;
   --investimento-clara: rgba(167, 139, 250, 0.18);
+
+  --marca-ciano: #38d5e8;
+  --marca-verde: #16a34a;
 
   --fundo: #0b1220;
   --card-bg: #141b2e;
