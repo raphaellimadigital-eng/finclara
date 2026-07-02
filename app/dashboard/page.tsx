@@ -1,6 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { FileText, ChevronRight } from "lucide-react";
 import { getLancamentos } from "./actions";
 import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
@@ -120,7 +118,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       <div className="topo">
         <div className="marca">
           <Logo />
-          <h1>FinClara</h1>
+          <h1>Fin<span style={{ color: "var(--azul)" }}>Clara</span></h1>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <ThemeToggle />
@@ -128,7 +126,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
       </div>
       <p className="saudacao">
-        Olá, {user?.email?.split("@")[0]}. Aqui está o resumo de {" "}
+        Olá, {usuario.nome?.split(" ")[0] || user?.email?.split("@")[0]}. Aqui está o resumo de {" "}
         {new Date(ano, mes - 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}.
       </p>
 
@@ -176,19 +174,6 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {/* 5. Lançamentos recentes (card recolhível) */}
       <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />
-
-      {/* 6. Acesso rápido a relatórios */}
-      <Link
-        href="/dashboard/relatorios"
-        className="card"
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", color: "inherit" }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <FileText size={18} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
-          <span style={{ fontWeight: 600, fontSize: 14.5 }}>Relatórios</span>
-        </div>
-        <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
-      </Link>
     </div>
   );
 }
