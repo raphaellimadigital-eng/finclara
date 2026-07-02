@@ -1,16 +1,6 @@
 import type { Lancamento, Meta } from "@prisma/client";
 import { calcularProjecao, LABEL_TIPO_META } from "./metas";
-
-const LABEL_CATEGORIA_DESPESA: Record<string, string> = {
-  MORADIA: "Moradia",
-  ALIMENTACAO: "Alimentação",
-  TRANSPORTE: "Transporte",
-  SAUDE: "Saúde",
-  EDUCACAO: "Educação",
-  LAZER: "Lazer",
-  ASSINATURAS: "Assinaturas",
-  OUTRAS_DESPESAS: "Outras despesas",
-};
+import { LABEL_CATEGORIA } from "./categorias";
 
 export type GastoCategoria = {
   categoria: string;
@@ -61,7 +51,7 @@ export function gerarDadosRelatorio(
   const gastosPorCategoria: GastoCategoria[] = Array.from(porCategoria.entries())
     .map(([categoria, valor]) => ({
       categoria,
-      label: LABEL_CATEGORIA_DESPESA[categoria] ?? categoria,
+      label: LABEL_CATEGORIA[categoria] ?? categoria,
       valor,
       percentual: totalDespesas > 0 ? (valor / totalDespesas) * 100 : 0,
     }))

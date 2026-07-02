@@ -26,25 +26,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { deletarLancamento, deletarLancamentoEFuturos } from "@/app/dashboard/actions";
+import { LABEL_CATEGORIA } from "@/lib/categorias";
 import type { Lancamento } from "@prisma/client";
-
-const LABEL_CATEGORIA: Record<string, string> = {
-  SALARIO: "Salário",
-  FREELANCE: "Freelance",
-  OUTRAS_RECEITAS: "Outras receitas",
-  MORADIA: "Moradia",
-  ALIMENTACAO: "Alimentação",
-  TRANSPORTE: "Transporte",
-  SAUDE: "Saúde",
-  EDUCACAO: "Educação",
-  LAZER: "Lazer",
-  ASSINATURAS: "Assinaturas",
-  OUTRAS_DESPESAS: "Outras despesas",
-  RESERVA_EMERGENCIA: "Reserva de emergência",
-  TESOURO_DIRETO: "Tesouro Direto",
-  RENDA_VARIAVEL: "Renda variável",
-  OUTROS_INVESTIMENTOS: "Outros investimentos",
-};
 
 const ICONE_CATEGORIA: Record<string, LucideIcon> = {
   SALARIO: Banknote,

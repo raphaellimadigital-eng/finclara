@@ -8,17 +8,7 @@ import { getMetas } from "../metas/actions";
 import { calcularProgressoLimites } from "@/lib/limites";
 import { alertasLimites, alertasCartoes, alertasDividas, alertasMetas, ordenarPorSeveridade } from "@/lib/alertas";
 import type { Alerta } from "@/lib/alertas";
-
-const LABEL_CATEGORIA: Record<string, string> = {
-  MORADIA: "Moradia",
-  ALIMENTACAO: "Alimentação",
-  TRANSPORTE: "Transporte",
-  SAUDE: "Saúde",
-  EDUCACAO: "Educação",
-  LAZER: "Lazer",
-  ASSINATURAS: "Assinaturas",
-  OUTRAS_DESPESAS: "Outras despesas",
-};
+import { LABEL_CATEGORIA } from "@/lib/categorias";
 
 const ICONE_SEVERIDADE: Record<Alerta["severidade"], typeof AlertOctagon> = {
   estouro: AlertOctagon,

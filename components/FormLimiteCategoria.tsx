@@ -3,17 +3,7 @@
 import { useRef, useState } from "react";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { salvarLimite } from "@/app/dashboard/limites/actions";
-
-const CATEGORIAS_DESPESA = [
-  { value: "MORADIA", label: "Moradia (aluguel, luz, água)" },
-  { value: "ALIMENTACAO", label: "Alimentação" },
-  { value: "TRANSPORTE", label: "Transporte / Combustível" },
-  { value: "SAUDE", label: "Saúde / Farmácia" },
-  { value: "EDUCACAO", label: "Educação / Colégio" },
-  { value: "LAZER", label: "Lazer" },
-  { value: "ASSINATURAS", label: "Assinaturas" },
-  { value: "OUTRAS_DESPESAS", label: "Outras despesas" },
-];
+import { CATEGORIAS_DESPESA } from "@/lib/categorias";
 
 export function FormLimiteCategoria() {
   const [carregando, setCarregando] = useState(false);

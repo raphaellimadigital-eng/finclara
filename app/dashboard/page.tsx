@@ -28,17 +28,7 @@ import { totalParcelasMensais, totalDevedor as calcularTotalDevedor } from "@/li
 import { calcularProjecao, ordenarPorPrazo } from "@/lib/metas";
 import { calcularProgressoLimites, categoriasEstouradas } from "@/lib/limites";
 import { alertasLimites, alertasCartoes, alertasDividas, alertasMetas, ordenarPorSeveridade } from "@/lib/alertas";
-
-const LABEL_CATEGORIA: Record<string, string> = {
-  MORADIA: "Moradia",
-  ALIMENTACAO: "Alimentação",
-  TRANSPORTE: "Transporte",
-  SAUDE: "Saúde",
-  EDUCACAO: "Educação",
-  LAZER: "Lazer",
-  ASSINATURAS: "Assinaturas",
-  OUTRAS_DESPESAS: "Outras despesas",
-};
+import { LABEL_CATEGORIA } from "@/lib/categorias";
 
 type Props = {
   searchParams: { ano?: string; mes?: string };

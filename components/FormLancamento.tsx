@@ -4,30 +4,7 @@ import { useRef, useState } from "react";
 import { PlusCircle, TrendingUp, TrendingDown, PiggyBank, Loader2, Sparkles } from "lucide-react";
 import { criarLancamento } from "@/app/dashboard/actions";
 import { sugerirCategoria } from "@/lib/categorizacao";
-
-const CATEGORIAS_RECEITA = [
-  { value: "SALARIO", label: "Salário" },
-  { value: "FREELANCE", label: "Freelance / Bico" },
-  { value: "OUTRAS_RECEITAS", label: "Outras receitas" },
-];
-
-const CATEGORIAS_DESPESA = [
-  { value: "MORADIA", label: "Moradia (aluguel, luz, água)" },
-  { value: "ALIMENTACAO", label: "Alimentação" },
-  { value: "TRANSPORTE", label: "Transporte / Combustível" },
-  { value: "SAUDE", label: "Saúde / Farmácia" },
-  { value: "EDUCACAO", label: "Educação / Colégio" },
-  { value: "LAZER", label: "Lazer" },
-  { value: "ASSINATURAS", label: "Assinaturas" },
-  { value: "OUTRAS_DESPESAS", label: "Outras despesas" },
-];
-
-const CATEGORIAS_INVESTIMENTO = [
-  { value: "RESERVA_EMERGENCIA", label: "Reserva de emergência" },
-  { value: "TESOURO_DIRETO", label: "Tesouro Direto" },
-  { value: "RENDA_VARIAVEL", label: "Renda variável (ações, FIIs...)" },
-  { value: "OUTROS_INVESTIMENTOS", label: "Outros investimentos" },
-];
+import { CATEGORIAS_RECEITA, CATEGORIAS_DESPESA, CATEGORIAS_INVESTIMENTO } from "@/lib/categorias";
 
 const TIPOS = ["RECEITA", "DESPESA", "INVESTIMENTO"] as const;
 type Tipo = (typeof TIPOS)[number];

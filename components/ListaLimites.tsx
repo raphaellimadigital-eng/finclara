@@ -4,17 +4,7 @@ import { useState } from "react";
 import { Inbox, Trash2, Loader2, AlertTriangle, AlertOctagon } from "lucide-react";
 import { deletarLimite } from "@/app/dashboard/limites/actions";
 import type { ProgressoLimite } from "@/lib/limites";
-
-const LABEL_CATEGORIA: Record<string, string> = {
-  MORADIA: "Moradia",
-  ALIMENTACAO: "Alimentação",
-  TRANSPORTE: "Transporte",
-  SAUDE: "Saúde",
-  EDUCACAO: "Educação",
-  LAZER: "Lazer",
-  ASSINATURAS: "Assinaturas",
-  OUTRAS_DESPESAS: "Outras despesas",
-};
+import { LABEL_CATEGORIA } from "@/lib/categorias";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
