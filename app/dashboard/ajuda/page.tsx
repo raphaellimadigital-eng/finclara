@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { ChevronLeft, LifeBuoy } from "lucide-react";
+import { ChevronLeft, LifeBuoy, MessageCircle } from "lucide-react";
+import { FormContatoSuporte } from "@/components/FormContatoSuporte";
+
+const WHATSAPP_SUPORTE = "5521982232973";
 
 export default function AjudaPage() {
   return (
@@ -31,9 +34,25 @@ export default function AjudaPage() {
         <p style={{ marginBottom: 0 }}>
           <strong>Precisa de mais ajuda?</strong>
           <br />
-          Em breve você poderá falar com o suporte diretamente por aqui.
+          Fale direto com a gente pelos canais abaixo.
         </p>
       </div>
+
+      <a
+        href={`https://wa.me/${WHATSAPP_SUPORTE}?text=${encodeURIComponent("Olá! Vim do FinClara e preciso de ajuda.")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="card"
+        style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "inherit" }}
+      >
+        <MessageCircle size={18} aria-hidden="true" style={{ color: "var(--verde)", flexShrink: 0 }} />
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 14.5 }}>WhatsApp</div>
+          <div className="texto-secundario" style={{ fontSize: 12 }}>Resposta mais rápida por aqui</div>
+        </div>
+      </a>
+
+      <FormContatoSuporte />
 
       <p className="texto-secundario" style={{ fontSize: 12.5 }}>
         Veja também nossos{" "}

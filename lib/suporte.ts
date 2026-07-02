@@ -1,0 +1,1 @@
+export const LIMITE_CARACTERES_MENSAGEM = 1000;
