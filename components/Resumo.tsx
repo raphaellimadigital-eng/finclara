@@ -9,7 +9,10 @@ import { DisclaimerFinanceiro } from "@/components/DisclaimerFinanceiro";
 import { PromptUpgrade } from "@/components/PromptUpgrade";
 import { mensagemPaywall } from "@/lib/assinatura";
 
-function MarcaFinClara() {
+// Sobre fundo azul (botão), "Clara" em --verde não tem contraste suficiente no tema claro (fica
+// quase ilegível) — nesse contexto usa branco puro, sem sombra, herdando a cor do botão.
+function MarcaFinClara({ branco = false }: { branco?: boolean }) {
+  if (branco) return <>FinClara</>;
   return (
     <span style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.35)" }}>
       Fin<span style={{ color: "var(--verde)" }}>Clara</span>
@@ -267,7 +270,7 @@ export function Resumo({
                 "Gerando sugestão..."
               ) : (
                 <>
-                  Pedir sugestão personalizada da <MarcaFinClara />
+                  Pedir sugestão personalizada da <MarcaFinClara branco />
                 </>
               )}
             </button>
