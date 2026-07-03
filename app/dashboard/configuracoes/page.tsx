@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TrocarSenha } from "@/components/TrocarSenha";
 import { ConfiguracaoDoisFatores } from "@/components/ConfiguracaoDoisFatores";
 import { ExportarExcluirDados } from "@/components/ExportarExcluirDados";
 
@@ -26,6 +27,8 @@ export default function ConfiguracoesPage() {
         </div>
         <ThemeToggle />
       </div>
+
+      <TrocarSenha />
 
       <ConfiguracaoDoisFatores />
 
