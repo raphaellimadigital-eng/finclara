@@ -34,28 +34,40 @@ export async function POST(request: Request) {
   const jaProcessado = await prisma.eventoWebhookAssinatura.findUnique({ where: { mpEventoId } });
   if (jaProcessado) return new Response(null, { status: 200 });
 
-  const usuario = await prisma.usuario.findUnique({ where: { mpAssinaturaId: dataId } });
+  let usuario = await prisma.usuario.findUnique({ where: { mpAssinaturaId: dataId } });
 
-  if (usuario && tipo === "subscription_preapproval") {
+  if (tipo === "subscription_preapproval") {
     // Nunca confiamos só no corpo da notificação — buscamos o estado canônico da assinatura.
     const preApproval = new PreApproval(new MercadoPagoConfig({ accessToken }));
     const assinatura = await preApproval.get({ id: dataId });
-    const statusAssinatura = mapearStatusMercadoPago(assinatura.status ?? "pending");
 
-    await prisma.usuario.update({
-      where: { id: usuario.id },
-      data: {
-        statusAssinatura,
-        plano: statusAssinatura === "ATIVA" || statusAssinatura === "PAUSADA" ? "PRO" : usuario.plano,
-        // periodoAtualFim só avança enquanto a assinatura segue cobrando; depois de cancelada o
-        // Mercado Pago não manda mais next_payment_date novo, então o valor fica congelado no
-        // último ciclo já pago — é isso que garante acesso até o fim do período (ver
-        // lib/assinatura.ts:temAcessoCompleto).
-        periodoAtualFim: assinatura.next_payment_date
-          ? new Date(assinatura.next_payment_date)
-          : usuario.periodoAtualFim,
-      },
-    });
+    // O checkout usa o link hospedado do próprio plano (sem chamar a API no clique de "Assinar",
+    // já que isso exigiria coletar o cartão no back-end) — então ainda não sabemos qual usuário
+    // corresponde a esse mpAssinaturaId até essa primeira notificação chegar. Faz o link agora
+    // pelo e-mail do pagador (único na tabela de usuários).
+    if (!usuario && assinatura.payer_email) {
+      usuario = await prisma.usuario.findUnique({ where: { email: assinatura.payer_email } });
+    }
+
+    if (usuario) {
+      const statusAssinatura = mapearStatusMercadoPago(assinatura.status ?? "pending");
+
+      await prisma.usuario.update({
+        where: { id: usuario.id },
+        data: {
+          mpAssinaturaId: dataId,
+          statusAssinatura,
+          plano: statusAssinatura === "ATIVA" || statusAssinatura === "PAUSADA" ? "PRO" : usuario.plano,
+          // periodoAtualFim só avança enquanto a assinatura segue cobrando; depois de cancelada o
+          // Mercado Pago não manda mais next_payment_date novo, então o valor fica congelado no
+          // último ciclo já pago — é isso que garante acesso até o fim do período (ver
+          // lib/assinatura.ts:temAcessoCompleto).
+          periodoAtualFim: assinatura.next_payment_date
+            ? new Date(assinatura.next_payment_date)
+            : usuario.periodoAtualFim,
+        },
+      });
+    }
   }
 
   await prisma.eventoWebhookAssinatura.create({

@@ -12,10 +12,14 @@ function clienteMercadoPago() {
   return new MercadoPagoConfig({ accessToken });
 }
 
-// Inicia o checkout de assinatura Pro: cria o preapproval vinculado ao plano configurado e
-// redireciona o usuário para o checkout hospedado do Mercado Pago (init_point) — sem coletar
-// dados de cartão no FinClara. O status só vira ATIVA quando o webhook confirmar a autorização;
-// até lá fica PENDENTE (ainda gateado como Free, ver lib/assinatura.ts).
+// Inicia o checkout de assinatura Pro redirecionando pro link hospedado do próprio plano — sem
+// coletar dados de cartão no FinClara. Esse link é o mesmo pra qualquer assinante (não muda por
+// usuário), então NÃO chama a API do Mercado Pago aqui: criar a assinatura via POST /preapproval
+// exige card_token_id (tokenizar o cartão no back-end), que é justamente o que queremos evitar.
+// O Mercado Pago cria a assinatura de verdade quando o próprio usuário termina o checkout na
+// página dele — ainda não sabemos o id dessa assinatura nesse momento, só quando o webhook avisa
+// (ver app/api/mercadopago/webhook/route.ts, que faz esse vínculo pelo e-mail na primeira
+// notificação). Até lá o status fica PENDENTE (ainda gateado como Free, ver lib/assinatura.ts).
 export async function criarAssinatura() {
   const user = await getUsuarioLogado();
   const usuario = await garantirUsuario(user);
@@ -23,26 +27,12 @@ export async function criarAssinatura() {
   const planId = process.env.MERCADOPAGO_PLAN_ID;
   if (!planId) throw new Error("Mercado Pago não configurado (MERCADOPAGO_PLAN_ID ausente).");
 
-  const preApproval = new PreApproval(clienteMercadoPago());
-  const assinatura = await preApproval.create({
-    body: {
-      preapproval_plan_id: planId,
-      payer_email: usuario.email,
-      external_reference: usuario.id,
-      back_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/assinatura?sucesso=1`,
-    },
-  });
-
-  if (!assinatura.id || !assinatura.init_point) {
-    throw new Error("Não foi possível iniciar a assinatura no Mercado Pago.");
-  }
-
   await prisma.usuario.update({
     where: { id: usuario.id },
-    data: { mpAssinaturaId: assinatura.id, statusAssinatura: "PENDENTE" },
+    data: { statusAssinatura: "PENDENTE" },
   });
 
-  redirect(assinatura.init_point);
+  redirect(`https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=${planId}`);
 }
 
 // Cancela a assinatura Pro no Mercado Pago. O acesso Pro continua valendo até

@@ -18,12 +18,15 @@ async function main() {
   const client = new MercadoPagoConfig({ accessToken });
   const preApprovalPlan = new PreApprovalPlan(client);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   // Sem free_trial aqui de propósito: o trial de 7 dias já é controlado inteiramente pelo
   // FinClara (Usuario.trialEndsAt) — um free_trial também no Mercado Pago geraria um segundo
   // período grátis para quem assina durante o trial do FinClara.
   const plano = await preApprovalPlan.create({
     body: {
       reason: "FinClara Pro",
+      back_url: `${siteUrl}/dashboard/assinatura`,
       auto_recurring: {
         frequency: 1,
         frequency_type: "months",
