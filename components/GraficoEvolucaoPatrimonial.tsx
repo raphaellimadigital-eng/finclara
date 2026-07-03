@@ -2,6 +2,10 @@
 
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { TrendingUp } from "lucide-react";
+import { InfoTooltip } from "@/components/InfoTooltip";
+
+const TEXTO_INFO =
+  "Metas acumuladas menos dívidas ativas. Um retrato é salvo automaticamente por mês, toda vez que você abre o app. O gráfico aparece a partir do segundo mês registrado.";
 
 const NOME_MES_ABREV = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez",
@@ -17,8 +21,11 @@ export function GraficoEvolucaoPatrimonial({ historico }: { historico: Ponto[] }
   if (historico.length === 0) {
     return (
       <div className="card">
-        <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <TrendingUp size={16} aria-hidden="true" /> Evolução patrimonial
+        <h2 className="card-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <TrendingUp size={16} aria-hidden="true" /> Evolução patrimonial
+          </span>
+          <InfoTooltip texto={TEXTO_INFO} />
         </h2>
         <p className="texto-secundario" style={{ margin: 0 }}>
           Ainda não há dados suficientes. O FinClara passa a registrar um retrato do seu
@@ -31,8 +38,11 @@ export function GraficoEvolucaoPatrimonial({ historico }: { historico: Ponto[] }
   if (historico.length === 1) {
     return (
       <div className="card">
-        <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <TrendingUp size={16} aria-hidden="true" /> Evolução patrimonial
+        <h2 className="card-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <TrendingUp size={16} aria-hidden="true" /> Evolução patrimonial
+          </span>
+          <InfoTooltip texto={TEXTO_INFO} />
         </h2>
         <div style={{ fontSize: 22, fontWeight: 700, color: historico[0].patrimonio >= 0 ? "var(--verde)" : "var(--vermelho)" }}>
           {formatarMoeda(historico[0].patrimonio)}
@@ -55,8 +65,11 @@ export function GraficoEvolucaoPatrimonial({ historico }: { historico: Ponto[] }
 
   return (
     <div className="card">
-      <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <TrendingUp size={16} aria-hidden="true" /> Evolução patrimonial
+      <h2 className="card-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <TrendingUp size={16} aria-hidden="true" /> Evolução patrimonial
+        </span>
+        <InfoTooltip texto={TEXTO_INFO} />
       </h2>
       <p className="texto-secundario" style={{ marginTop: -8, marginBottom: 14 }}>
         Metas acumuladas menos dívidas, mês a mês.

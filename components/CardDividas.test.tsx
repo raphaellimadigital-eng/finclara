@@ -8,10 +8,13 @@ function divida(overrides: Partial<Divida> = {}): Divida {
     id: Math.random().toString(),
     usuarioId: "u1",
     descricao: "Dívida",
+    valorOriginal: 1000 as any,
     valorTotal: 1000 as any,
     valorParcela: 100 as any,
     taxaJuros: 1 as any,
     vencimento: new Date(),
+    quitada: false,
+    quitadaEm: null,
     criadoEm: new Date(),
     atualizadoEm: new Date(),
     ...overrides,
@@ -22,6 +25,11 @@ describe("CardDividas", () => {
   it("mostra estado vazio quando não há dívidas", () => {
     render(<CardDividas dividas={[]} />);
     expect(screen.getByText("Sem dívidas cadastradas")).toBeInTheDocument();
+  });
+
+  it("mostra o nome do card, mesmo sem dívidas cadastradas", () => {
+    render(<CardDividas dividas={[]} />);
+    expect(screen.getByText("Dívidas")).toBeInTheDocument();
   });
 
   it("mostra o total devedor", () => {

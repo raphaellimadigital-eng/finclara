@@ -5,6 +5,7 @@ import { PlusCircle, TrendingUp, TrendingDown, PiggyBank, Loader2, Sparkles } fr
 import { criarLancamento } from "@/app/dashboard/actions";
 import { sugerirCategoria } from "@/lib/categorizacao";
 import { CATEGORIAS_RECEITA, CATEGORIAS_DESPESA, CATEGORIAS_INVESTIMENTO } from "@/lib/categorias";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 const TIPOS = ["RECEITA", "DESPESA", "INVESTIMENTO"] as const;
 type Tipo = (typeof TIPOS)[number];
@@ -184,14 +185,13 @@ export function FormLancamento({ ano, mes }: { ano: number; mes: number }) {
           </div>
 
           {/* Recorrente */}
-          <label style={{ fontSize: 13.5, display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 14, color: "var(--texto-secundario)" }}>
-            <input name="recorrente" type="checkbox" style={{ width: "auto", marginTop: 2 }} />
-            <span>
-              Esse lançamento se repete todo mês
-              <br />
-              <span style={{ fontSize: 12 }}>Criamos automaticamente os próximos 12 meses para você.</span>
-            </span>
-          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "var(--texto-secundario)" }}>
+              <input name="recorrente" type="checkbox" />
+              Repetir todo mês
+            </label>
+            <InfoTooltip texto="Lançamos os próximos 12 meses automaticamente." />
+          </div>
 
           {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
 

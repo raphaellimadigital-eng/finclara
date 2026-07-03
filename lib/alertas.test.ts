@@ -25,10 +25,13 @@ function divida(vencimento: Date): Divida {
     id: "d1",
     usuarioId: "u1",
     descricao: "Dívida",
+    valorOriginal: 1000 as any,
     valorTotal: 1000 as any,
     valorParcela: 100 as any,
     taxaJuros: 1 as any,
     vencimento,
+    quitada: false,
+    quitadaEm: null,
     criadoEm: new Date(),
     atualizadoEm: new Date(),
   };

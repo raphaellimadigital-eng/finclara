@@ -11,9 +11,10 @@ function formatarMoeda(valor: number) {
 
 export default async function DividasPage() {
   const dividas = await getDividas();
-  const devedor = totalDevedor(dividas);
-  const parcelas = totalParcelasMensais(dividas);
-  const possuiCara = temDividaCara(dividas);
+  const dividasAtivas = dividas.filter((d) => !d.quitada);
+  const devedor = totalDevedor(dividasAtivas);
+  const parcelas = totalParcelasMensais(dividasAtivas);
+  const possuiCara = temDividaCara(dividasAtivas);
 
   return (
     <div className="container">
@@ -25,11 +26,15 @@ export default async function DividasPage() {
         <ChevronLeft size={16} aria-hidden="true" /> Voltar
       </Link>
 
-      <h1 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, marginBottom: 16 }}>
+      <h1 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, marginBottom: 4 }}>
         <Landmark size={20} aria-hidden="true" /> Dívidas
       </h1>
+      <p className="texto-secundario" style={{ fontSize: 12.5, marginBottom: 16 }}>
+        Use esta tela para dívidas que não são de cartão: empréstimo, financiamento, dívida com
+        alguém etc. Compra parcelada no cartão já é controlada em Cartões.
+      </p>
 
-      {dividas.length > 0 && (
+      {dividasAtivas.length > 0 && (
         <div className="card">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>

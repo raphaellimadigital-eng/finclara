@@ -39,6 +39,11 @@ describe("CardCartoes", () => {
     expect(screen.getByText("Sem cartões cadastrados")).toBeInTheDocument();
   });
 
+  it("mostra o nome do card, mesmo sem cartões cadastrados", () => {
+    render(<CardCartoes cartoes={[]} mes={7} ano={2026} />);
+    expect(screen.getByText("Cartões")).toBeInTheDocument();
+  });
+
   it("mostra a quantidade de cartões cadastrados", () => {
     render(<CardCartoes cartoes={[cartao(), cartao()]} mes={7} ano={2026} />);
     expect(screen.getByText("2 cartões cadastrados")).toBeInTheDocument();
@@ -69,5 +74,10 @@ describe("CardCartoes", () => {
   it("não mostra o destaque de risco quando há apenas um cartão", () => {
     render(<CardCartoes cartoes={[cartao()]} mes={7} ano={2026} />);
     expect(screen.queryByText(/está com/)).not.toBeInTheDocument();
+  });
+
+  it("mostra um botão de informação explicando disponível x fatura do mês", () => {
+    render(<CardCartoes cartoes={[cartao()]} mes={7} ano={2026} />);
+    expect(screen.getByRole("button", { name: /Mais informações/ })).toBeInTheDocument();
   });
 });

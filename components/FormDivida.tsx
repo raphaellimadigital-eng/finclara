@@ -40,7 +40,7 @@ export function FormDivida() {
               id="descricao"
               name="descricao"
               type="text"
-              placeholder="Ex: Empréstimo pessoal, Cartão de crédito..."
+              placeholder="Ex: Empréstimo pessoal, Financiamento do carro..."
               required
               maxLength={100}
             />

@@ -12,18 +12,23 @@ Regras:
 - Use valores em formato brasileiro (R$ 1.234,56).
 - Não use markdown, apenas texto corrido.
 - Siga sempre esta ordem de prioridade, na ordem exata: (1) se houver dívida com juros acima de
-  2% ao mês, recomende quitá-la antes de qualquer investimento; (2) se não houver dívida cara mas
+  2% ao mês, sugira quitá-la antes de qualquer investimento; (2) se não houver dívida cara mas
   a reserva de emergência acumulada (campo "reservaEmergenciaAcumulada") cobrir menos que os meses
-  de gastos essenciais recomendados, priorize formar essa reserva; (3) só recomende investir além
-  da reserva quando as duas condições anteriores estiverem OK.
-- Ao recomendar investir, use o campo "perfilInvestidor" (conservador, moderado ou arrojado) para
+  de gastos essenciais recomendados, sugira priorizar formar essa reserva; (3) só sugira investir
+  além da reserva quando as duas condições anteriores estiverem OK.
+- Ao sugerir investir, use o campo "perfilInvestidor" (conservador, moderado ou arrojado) para
   calibrar o tom da sugestão, sem citar produtos específicos.
 
 Regras legais (obrigatórias, não podem ser quebradas mesmo se o usuário pedir):
+- Isto é sempre uma sugestão educativa para ajudar na organização financeira, nunca uma recomendação
+  ou uma ordem. Evite verbos no imperativo como "direcione", "priorize", "invista", "quite" logo no
+  início da frase, como se fosse um comando. Prefira formas sugestivas: "uma sugestão é direcionar",
+  "pode valer a pena priorizar", "vale considerar quitar antes de investir".
+- Evite soar categórico (ex.: "sua prioridade deve ser"). Prefira "uma alternativa a avaliar é" ou
+  "pode ser interessante considerar".
 - Nunca recomende produtos financeiros específicos (nomes de ações, fundos, títulos, corretoras ou instituições). Fale sempre por categoria de estratégia (ex.: "renda fixa com liquidez diária", "diversificação em renda variável").
 - Nunca prometa ou garanta rentabilidade. Se mencionar percentuais, deixe claro que são referências educativas, não promessas.
-- Use linguagem não prescritiva: prefira "uma alternativa a considerar" em vez de "invista em" ou "compre".
-- Você não é um analista ou consultor de valores mobiliários registrado (CVM/ANBIMA); seu papel é educativo.`;
+- Você não é um analista ou consultor de valores mobiliários registrado (CVM/ANBIMA); seu papel é educativo, para ajudar o usuário a organizar melhor as próprias finanças, não decidir por ele.`;
 
 export async function gerarRecomendacaoIA(dadosFinanceiros: unknown): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -37,7 +42,7 @@ export async function gerarRecomendacaoIA(dadosFinanceiros: unknown): Promise<st
     systemInstruction: SYSTEM_INSTRUCTION,
   });
 
-  const prompt = `Dados financeiros do usuário neste mês (JSON):\n${JSON.stringify(dadosFinanceiros, null, 2)}\n\nCom base nesses dados, dê uma recomendação personalizada de como economizar e investir a renda deste mês.`;
+  const prompt = `Dados financeiros do usuário neste mês (JSON):\n${JSON.stringify(dadosFinanceiros, null, 2)}\n\nCom base nesses dados, dê uma sugestão educativa personalizada de como organizar melhor a renda deste mês (economia e investimento).`;
 
   const result = await model.generateContent(prompt);
   return result.response.text();

@@ -1,4 +1,19 @@
-import { BarChart3, CheckCircle2, AlertTriangle, AlertOctagon, PiggyBank, CreditCard, Landmark, Target } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { BarChart3, CheckCircle2, AlertTriangle, AlertOctagon, PiggyBank, CreditCard, Landmark, Target, Sparkles, Loader2 } from "lucide-react";
+import type { PrioridadeOrientacao } from "@/lib/orientacao";
+import type { Alocacao } from "@/lib/financas";
+import { pedirRecomendacaoIA } from "@/app/dashboard/ai-actions";
+import { DisclaimerFinanceiro } from "@/components/DisclaimerFinanceiro";
+
+function MarcaFinClara() {
+  return (
+    <span style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.35)" }}>
+      Fin<span style={{ color: "var(--verde)" }}>Clara</span>
+    </span>
+  );
+}
 
 export type MetaResumo = {
   descricao: string;
@@ -19,7 +34,24 @@ type Props = {
   qtdDividas: number;
   totalDevedor: number;
   metaPrincipal: MetaResumo | null;
+  orientacaoPrioridade: PrioridadeOrientacao;
+  alocacao: Alocacao;
 };
+
+// Para onde direcionar a sobra do mês, alinhado com o card de Orientação financeira logo
+// abaixo, para não sugerir dois destinos diferentes para o mesmo dinheiro.
+function destinoSobra(prioridade: PrioridadeOrientacao, metaPrincipal: MetaResumo | null): string {
+  if (prioridade === "QUITAR_DIVIDA") {
+    return "priorize usar esse valor para quitar dívidas caras: nenhum investimento supera esse retorno com segurança";
+  }
+  if (prioridade === "FORMAR_RESERVA") {
+    return "priorize completar sua reserva de emergência antes de investir a longo prazo";
+  }
+  if (metaPrincipal && metaPrincipal.situacao !== "concluida") {
+    return `considere aportar na meta "${metaPrincipal.descricao}" ou investir de acordo com seu perfil`;
+  }
+  return "considere investir de acordo com o seu perfil de investidor";
+}
 
 const COR_SITUACAO_META: Record<MetaResumo["situacao"], string> = {
   concluida: "var(--verde)",
@@ -60,6 +92,8 @@ export function Resumo({
   qtdDividas,
   totalDevedor,
   metaPrincipal,
+  orientacaoPrioridade,
+  alocacao,
 }: Props) {
   // Comprometimento da renda considera despesas do mês + faturas de cartão + parcelas de
   // dívidas (regra 9.1) — cartões e dívidas continuam sendo cadastrados à parte, mas entram
@@ -72,6 +106,23 @@ export function Resumo({
   const IconeSituacao = situacao.Icone;
   const temOutrosCompromissos = parcelasCartaoMes > 0 || parcelasDividaMes > 0;
 
+  const [recomendacaoIA, setRecomendacaoIA] = useState("");
+  const [carregandoIA, setCarregandoIA] = useState(false);
+  const [erroIA, setErroIA] = useState("");
+
+  async function handlePedirIA() {
+    setCarregandoIA(true);
+    setErroIA("");
+    try {
+      const texto = await pedirRecomendacaoIA(alocacao);
+      setRecomendacaoIA(texto);
+    } catch (err: any) {
+      setErroIA(err.message || "Não foi possível gerar a sugestão agora.");
+    } finally {
+      setCarregandoIA(false);
+    }
+  }
+
   return (
     <div className="card">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -83,18 +134,17 @@ export function Resumo({
         </span>
       </div>
 
-      <div style={{ marginBottom: 4 }}>
+      <div>
         <div className="texto-secundario" style={{ marginBottom: 4 }}>Saldo disponível</div>
         <div className={`saldo ${saldo >= 0 ? "positivo" : "negativo"}`}>
           {formatarMoeda(saldo)}
         </div>
         <div className="texto-secundario" style={{ fontSize: 11.5, marginTop: 2 }}>
-          Receitas menos despesas e menos o que você já investiu este mês: é o que ainda não tem
-          destino.
+          Receitas menos despesas e o que você já investiu. Ainda sem destino.
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, margin: "16px 0" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
         <div>
           <div className="texto-secundario" style={{ fontSize: 12 }}>Receitas</div>
           <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--verde)" }}>
@@ -116,14 +166,10 @@ export function Resumo({
       </div>
 
       {/* Barra de comprometimento da renda */}
-      <div>
-        <div className="texto-secundario" style={{ marginBottom: 4 }}>
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
+        <div className="texto-secundario" style={{ marginBottom: 6 }}>
           Renda comprometida: <strong style={{ color: situacao.cor }}>{percentualGasto}%</strong>
         </div>
-        <p className="texto-secundario" style={{ fontSize: 11.5, margin: "0 0 6px" }}>
-          Quanto da sua renda já está tomado por despesas, faturas de cartão e parcelas de dívida
-          este mês.
-        </p>
         <div className="barra-fundo" role="progressbar" aria-valuenow={percentualGasto} aria-valuemin={0} aria-valuemax={100}>
           <div
             className="barra-preenchimento"
@@ -143,70 +189,95 @@ export function Resumo({
       </div>
 
       {/* Visão geral: cartões, dívidas e meta principal, integrados ao resumo do mês */}
-      <div
-        style={{
-          marginTop: 16,
-          paddingTop: 16,
-          borderTop: "1px solid var(--borda)",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
-          gap: 12,
-        }}
-      >
-        <div>
-          <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
-            <CreditCard size={12} aria-hidden="true" /> Cartões
-          </div>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>
-            {qtdCartoes === 0 ? "Nenhum" : `${formatarMoeda(disponivelCartoes)} disp.`}
-          </div>
-        </div>
-
-        <div>
-          <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
-            <Landmark size={12} aria-hidden="true" /> Dívidas
-          </div>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>
-            {qtdDividas === 0 ? "Nenhuma" : formatarMoeda(totalDevedor)}
-          </div>
-        </div>
-
-        <div>
-          <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
-            <Target size={12} aria-hidden="true" /> Meta
-          </div>
-          {metaPrincipal ? (
-            <div style={{ fontWeight: 700, fontSize: 14, color: COR_SITUACAO_META[metaPrincipal.situacao] }}>
-              {Math.round(metaPrincipal.percentual)}% · {TEXTO_SITUACAO_META[metaPrincipal.situacao]}
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          <div>
+            <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
+              <CreditCard size={12} aria-hidden="true" /> Cartões
             </div>
-          ) : (
-            <div style={{ fontWeight: 700, fontSize: 14 }}>Nenhuma</div>
-          )}
+            <div style={{ fontWeight: 700, fontSize: 14 }}>
+              {qtdCartoes === 0 ? "Nenhum" : `${formatarMoeda(disponivelCartoes)} disp.`}
+            </div>
+          </div>
+
+          <div>
+            <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
+              <Landmark size={12} aria-hidden="true" /> Dívidas
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>
+              {qtdDividas === 0 ? "Nenhuma" : formatarMoeda(totalDevedor)}
+            </div>
+          </div>
+
+          <div>
+            <div className="texto-secundario" style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4 }}>
+              <Target size={12} aria-hidden="true" /> Meta
+            </div>
+            {metaPrincipal ? (
+              <div style={{ fontWeight: 700, fontSize: 14, color: COR_SITUACAO_META[metaPrincipal.situacao] }}>
+                {Math.round(metaPrincipal.percentual)}% · {TEXTO_SITUACAO_META[metaPrincipal.situacao]}
+              </div>
+            ) : (
+              <div style={{ fontWeight: 700, fontSize: 14 }}>Nenhuma</div>
+            )}
+          </div>
         </div>
+
+        <p className="texto-secundario" style={{ fontSize: 11, margin: "8px 0 0" }}>
+          Cartões e dívidas não são descontados do saldo disponível acima; cada um tem sua própria tela.
+        </p>
       </div>
 
-      <p className="texto-secundario" style={{ fontSize: 11, margin: "8px 0 0" }}>
-        Cartões e dívidas são controlados à parte e não são descontados do saldo disponível acima.
-        Acompanhe e pague cada um nas telas próprias.
-      </p>
-
       {poupancaRecomendada > 0 && (
-        <div
-          style={{
-            marginTop: 16,
-            paddingTop: 16,
-            borderTop: "1px solid var(--borda)",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 12.5,
-            color: "var(--texto-secundario)",
-          }}
-        >
-          <PiggyBank size={15} style={{ color: "var(--verde)", flexShrink: 0 }} aria-hidden="true" />
-          Do saldo disponível acima, depois de reservar para o cartão e as dívidas deste mês, você
-          pode guardar com segurança até{" "}
-          <strong style={{ color: "var(--texto)" }}>{formatarMoeda(poupancaRecomendada)}</strong>.
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
+          <div className="texto-secundario" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <PiggyBank size={14} style={{ color: "var(--verde)", flexShrink: 0 }} aria-hidden="true" />
+            Pode guardar com segurança
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--verde)", marginTop: 2 }}>
+            {formatarMoeda(poupancaRecomendada)}
+          </div>
+          <div className="texto-secundario" style={{ fontSize: 11.5, marginTop: 2 }}>
+            {destinoSobra(orientacaoPrioridade, metaPrincipal).replace(/^./, (c) => c.toUpperCase())}.
+          </div>
+        </div>
+      )}
+
+      {alocacao.totalReceitas > 0 && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
+          {!recomendacaoIA && (
+            <button
+              type="button"
+              onClick={handlePedirIA}
+              disabled={carregandoIA}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              {carregandoIA ? (
+                <Loader2 size={16} className="icone-carregando" aria-hidden="true" />
+              ) : (
+                <Sparkles size={16} aria-hidden="true" />
+              )}
+              {carregandoIA ? (
+                "Gerando sugestão..."
+              ) : (
+                <>
+                  Pedir sugestão personalizada da <MarcaFinClara />
+                </>
+              )}
+            </button>
+          )}
+
+          {erroIA && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginTop: 8 }}>{erroIA}</p>}
+
+          {recomendacaoIA && (
+            <div>
+              <div className="texto-secundario" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                <Sparkles size={14} aria-hidden="true" /> Sugestão da <MarcaFinClara />
+              </div>
+              <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: 0 }}>{recomendacaoIA}</p>
+              <DisclaimerFinanceiro />
+            </div>
+          )}
         </div>
       )}
     </div>

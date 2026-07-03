@@ -24,6 +24,11 @@ describe("CardMetas", () => {
     expect(screen.getByText("Sem metas cadastradas")).toBeInTheDocument();
   });
 
+  it("mostra o nome do card, mesmo sem metas cadastradas", () => {
+    render(<CardMetas metas={[]} />);
+    expect(screen.getByText("Metas")).toBeInTheDocument();
+  });
+
   it("mostra a quantidade de metas cadastradas", () => {
     render(<CardMetas metas={[meta(), meta()]} />);
     expect(screen.getByText("2 metas cadastradas")).toBeInTheDocument();

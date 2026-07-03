@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { PieChart as PieChartIcone, Lightbulb, Sparkles, Loader2, AlertTriangle } from "lucide-react";
-import { pedirRecomendacaoIA } from "@/app/dashboard/ai-actions";
+import { PieChart as PieChartIcone, Lightbulb, AlertTriangle } from "lucide-react";
 import { DisclaimerFinanceiro } from "@/components/DisclaimerFinanceiro";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import type { Alocacao } from "@/lib/financas";
 
-// Cores da marca FinClara + um acento de apoio (investimento) que não conflita
-// com os significados de receita (verde) e despesa (vermelho)
+const TEXTO_INFO = [
+  "Essenciais: gastos fixos necessários, como moradia, alimentação, transporte, saúde e educação.",
+  "Desejos: gastos não essenciais, como lazer, assinaturas e outras despesas.",
+  "Reserva: dinheiro guardado para imprevistos (reserva de emergência).",
+  "Investimentos: aportes visando crescimento no longo prazo (tesouro direto, renda variável, outros).",
+];
+
+// Cores do próprio tema do app (se adaptam a claro/escuro automaticamente, ao contrário de um
+// hex fixo). Reserva usa o verde do tema e investimento a cor de investimento já usada no Resumo.
 const CORES = {
-  essenciais: "#1f3f75",
-  desejos: "#f4b000",
-  reserva: "#21873b",
-  investimento: "#6d5dd3",
+  essenciais: "var(--azul)",
+  desejos: "var(--amarelo)",
+  reserva: "var(--verde)",
+  investimento: "var(--investimento)",
 };
 
 function formatarMoeda(valor: number) {
@@ -22,22 +28,6 @@ function formatarMoeda(valor: number) {
 
 export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
   const { totalReceitas, atual, ideal, dicas, temDividaCara } = alocacao;
-  const [recomendacaoIA, setRecomendacaoIA] = useState("");
-  const [carregandoIA, setCarregandoIA] = useState(false);
-  const [erroIA, setErroIA] = useState("");
-
-  async function handlePedirIA() {
-    setCarregandoIA(true);
-    setErroIA("");
-    try {
-      const texto = await pedirRecomendacaoIA(alocacao);
-      setRecomendacaoIA(texto);
-    } catch (err: any) {
-      setErroIA(err.message || "Não foi possível gerar a recomendação agora.");
-    } finally {
-      setCarregandoIA(false);
-    }
-  }
 
   if (totalReceitas <= 0) {
     return (
@@ -69,8 +59,11 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
 
   return (
     <div className="card">
-      <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <PieChartIcone size={16} aria-hidden="true" /> Sugestão de alocação da renda
+      <h2 className="card-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <PieChartIcone size={16} aria-hidden="true" /> Sugestão de alocação da renda
+        </span>
+        <InfoTooltip texto={TEXTO_INFO} />
       </h2>
       <p className="texto-secundario" style={{ marginTop: -8, marginBottom: 16 }}>
         Baseado na regra 50/30/20 aplicada à sua receita do mês. As barras comparam o ideal com o
@@ -107,88 +100,73 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
               ))}
             </Pie>
             <Tooltip formatter={(v) => formatarMoeda(Number(v))} />
-            <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: 12 }} />
+            <Legend verticalAlign="bottom" height={32} iconSize={9} wrapperStyle={{ fontSize: 11.5 }} />
           </PieChart>
         </ResponsiveContainer>
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        {comparativos.map((c) => {
-          const percentual = c.ideal > 0 ? (c.atual / c.ideal) * 100 : 0;
-          const excedeu = c.atual > c.ideal;
-          const atingiuMeta = c.atual >= c.ideal;
+      {(["gasto", "aporte"] as const).map((tipoGrupo, i) => (
+        <div
+          key={tipoGrupo}
+          style={{
+            marginTop: i === 0 ? 8 : 16,
+            paddingTop: i === 0 ? 0 : 16,
+            borderTop: i === 0 ? "none" : "1px solid var(--borda)",
+          }}
+        >
+          <div className="texto-secundario" style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
+            {tipoGrupo === "gasto" ? "Gastos" : "Aportes"}
+          </div>
 
-          // Para gastos (essenciais/desejos), passar do ideal é ruim (vermelho).
-          // Para aportes (reserva/investimento), atingir ou passar do ideal é bom (verde).
-          const corTexto =
-            c.tipo === "gasto"
-              ? excedeu
-                ? "var(--vermelho)"
-                : "var(--verde)"
-              : atingiuMeta
-              ? "var(--verde)"
-              : "var(--texto-secundario)";
-          const corBarra = c.tipo === "gasto" && excedeu ? "var(--vermelho)" : c.cor;
+          {comparativos
+            .filter((c) => c.tipo === tipoGrupo)
+            .map((c) => {
+              const percentual = c.ideal > 0 ? (c.atual / c.ideal) * 100 : 0;
+              const excedeu = c.atual > c.ideal;
+              const atingiuMeta = c.atual >= c.ideal;
 
-          return (
-            <div key={c.label} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-                <span>{c.label}</span>
-                <span style={{ color: corTexto }}>
-                  {formatarMoeda(c.atual)} de {formatarMoeda(c.ideal)}
-                </span>
-              </div>
-              <div className="barra-fundo">
-                <div
-                  className="barra-preenchimento"
-                  style={{
-                    width: `${Math.min(percentual, 100)}%`,
-                    background: corBarra,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              // Para gastos (essenciais/desejos), passar do ideal é ruim (vermelho).
+              // Para aportes (reserva/investimento), atingir ou passar do ideal é bom (verde).
+              const corTexto =
+                c.tipo === "gasto"
+                  ? excedeu
+                    ? "var(--vermelho)"
+                    : "var(--verde)"
+                  : atingiuMeta
+                  ? "var(--verde)"
+                  : "var(--texto-secundario)";
+              const corBarra = c.tipo === "gasto" && excedeu ? "var(--vermelho)" : c.cor;
+
+              return (
+                <div key={c.label} style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+                    <span>{c.label}</span>
+                    <span style={{ color: corTexto }}>
+                      {formatarMoeda(c.atual)} de {formatarMoeda(c.ideal)}
+                    </span>
+                  </div>
+                  <div className="barra-fundo">
+                    <div
+                      className="barra-preenchimento"
+                      style={{
+                        width: `${Math.min(percentual, 100)}%`,
+                        background: corBarra,
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      ))}
 
       <div className="dicas">
         {dicas.map((dica, i) => (
-          <p key={i} className="dica-item">
+          <p key={i} className="dica-item" style={{ color: "var(--texto)" }}>
             <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" /> {dica}
           </p>
         ))}
         <DisclaimerFinanceiro />
-      </div>
-
-      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
-        {!recomendacaoIA && (
-          <button
-            type="button"
-            onClick={handlePedirIA}
-            disabled={carregandoIA}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-          >
-            {carregandoIA ? (
-              <Loader2 size={16} className="icone-carregando" aria-hidden="true" />
-            ) : (
-              <Sparkles size={16} aria-hidden="true" />
-            )}
-            {carregandoIA ? "Gerando recomendação..." : "Pedir recomendação personalizada (IA)"}
-          </button>
-        )}
-
-        {erroIA && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginTop: 8 }}>{erroIA}</p>}
-
-        {recomendacaoIA && (
-          <div>
-            <div className="texto-secundario" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <Sparkles size={14} aria-hidden="true" /> Recomendação da IA
-            </div>
-            <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: 0 }}>{recomendacaoIA}</p>
-            <DisclaimerFinanceiro />
-          </div>
-        )}
       </div>
     </div>
   );

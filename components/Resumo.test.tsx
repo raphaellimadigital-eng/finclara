@@ -1,6 +1,22 @@
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Resumo } from "./Resumo";
+import type { Alocacao } from "@/lib/financas";
+
+const pedirRecomendacaoIAMock = vi.fn().mockResolvedValue("Recomendação de teste da IA.");
+
+vi.mock("@/app/dashboard/ai-actions", () => ({
+  pedirRecomendacaoIA: (...args: unknown[]) => pedirRecomendacaoIAMock(...args),
+}));
+
+const ALOCACAO_SEM_RECEITA: Alocacao = {
+  totalReceitas: 0,
+  atual: { essenciais: 0, desejos: 0, reserva: 0, investimento: 0, naoAlocado: 0 },
+  ideal: { essenciais: 0, desejos: 0, reserva: 0, investimento: 0 },
+  dicas: [],
+  temDividaCara: false,
+};
 
 const PROPS_BASE = {
   totalReceitas: 5000,
@@ -15,9 +31,15 @@ const PROPS_BASE = {
   qtdDividas: 0,
   totalDevedor: 0,
   metaPrincipal: null,
+  orientacaoPrioridade: "INVESTIR" as const,
+  alocacao: ALOCACAO_SEM_RECEITA,
 };
 
 describe("Resumo", () => {
+  beforeEach(() => {
+    pedirRecomendacaoIAMock.mockClear();
+  });
+
   it("mostra situação confortável quando o comprometimento é baixo", () => {
     render(<Resumo {...PROPS_BASE} />);
     expect(screen.getByText("Situação confortável")).toBeInTheDocument();
@@ -79,5 +101,63 @@ describe("Resumo", () => {
   it("não mostra a poupança recomendada quando zero", () => {
     render(<Resumo {...PROPS_BASE} poupancaRecomendada={0} />);
     expect(screen.queryByText(/guardar com segurança/)).not.toBeInTheDocument();
+  });
+
+  it("orienta quitar dívidas caras quando essa é a prioridade", () => {
+    render(<Resumo {...PROPS_BASE} poupancaRecomendada={500} orientacaoPrioridade="QUITAR_DIVIDA" />);
+    expect(screen.getByText(/quitar dívidas caras/)).toBeInTheDocument();
+  });
+
+  it("orienta formar a reserva de emergência quando essa é a prioridade", () => {
+    render(<Resumo {...PROPS_BASE} poupancaRecomendada={500} orientacaoPrioridade="FORMAR_RESERVA" />);
+    expect(screen.getByText(/reserva de emergência/)).toBeInTheDocument();
+  });
+
+  it("sugere aportar na meta em andamento quando pronto para investir", () => {
+    render(
+      <Resumo
+        {...PROPS_BASE}
+        poupancaRecomendada={500}
+        orientacaoPrioridade="INVESTIR"
+        metaPrincipal={{ descricao: "Viagem", percentual: 10, situacao: "em_dia" }}
+      />
+    );
+    expect(screen.getByText(/aportar na meta "Viagem"/)).toBeInTheDocument();
+  });
+
+  it("sugere investir de acordo com o perfil quando não há meta em andamento", () => {
+    render(<Resumo {...PROPS_BASE} poupancaRecomendada={500} orientacaoPrioridade="INVESTIR" />);
+    expect(screen.getByText(/investir de acordo com o seu perfil/)).toBeInTheDocument();
+  });
+
+  it("não mostra o botão de recomendação da IA quando não há receita registrada", () => {
+    render(<Resumo {...PROPS_BASE} alocacao={ALOCACAO_SEM_RECEITA} />);
+    expect(screen.queryByRole("button", { name: /Pedir sugestão personalizada/ })).not.toBeInTheDocument();
+  });
+
+  it("pede e mostra a recomendação da IA ao clicar no botão", async () => {
+    const user = userEvent.setup();
+    const alocacaoComReceita: Alocacao = { ...ALOCACAO_SEM_RECEITA, totalReceitas: 5000 };
+    render(<Resumo {...PROPS_BASE} alocacao={alocacaoComReceita} />);
+
+    await user.click(screen.getByRole("button", { name: /Pedir sugestão personalizada/ }));
+
+    expect(pedirRecomendacaoIAMock).toHaveBeenCalledWith(alocacaoComReceita);
+    await waitFor(() => {
+      expect(screen.getByText("Recomendação de teste da IA.")).toBeInTheDocument();
+    });
+  });
+
+  it("mostra erro quando a recomendação da IA falha", async () => {
+    pedirRecomendacaoIAMock.mockRejectedValueOnce(new Error("Falhou"));
+    const user = userEvent.setup();
+    const alocacaoComReceita: Alocacao = { ...ALOCACAO_SEM_RECEITA, totalReceitas: 5000 };
+    render(<Resumo {...PROPS_BASE} alocacao={alocacaoComReceita} />);
+
+    await user.click(screen.getByRole("button", { name: /Pedir sugestão personalizada/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Falhou")).toBeInTheDocument();
+    });
   });
 });

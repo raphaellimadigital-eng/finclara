@@ -70,6 +70,10 @@ export default async function DashboardPage({ searchParams }: Props) {
     registrarSnapshotPatrimonio().catch(() => {}),
   ]);
 
+  // Dívidas quitadas não entram em nenhum cálculo financeiro (saldo devedor, parcela do mês,
+  // dívida cara, alertas): já foram pagas. Só aparecem na lista para o usuário ver o histórico.
+  const dividasAtivas = dividas.filter((d) => !d.quitada);
+
   const snapshotsPatrimonio = await getHistoricoPatrimonio();
   const historicoPatrimonio = snapshotsPatrimonio.map((s) => ({ ano: s.ano, mes: s.mes, patrimonio: Number(s.patrimonio) }));
 
@@ -88,7 +92,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   // Dinheiro que ainda não tem destino: o que sobrou depois de pagar despesas e já ter
   // investido/guardado. Dinheiro já investido não é mais "livre", por isso sai da conta.
   const saldo = totalReceitas - totalDespesas - totalInvestimentos;
-  const alocacao = calcularAlocacao(totalReceitas, lancamentos, dividas);
+  const alocacao = calcularAlocacao(totalReceitas, lancamentos, dividasAtivas);
 
   const essenciaisMensal = lancamentos
     .filter((l) => l.tipo === "DESPESA" && CATEGORIAS_ESSENCIAIS.includes(l.categoria))
@@ -109,14 +113,14 @@ export default async function DashboardPage({ searchParams }: Props) {
     (soma, c) => soma + valorFaturaNoMes(c.compras, c.diaFechamento, mes, ano),
     0
   );
-  const parcelasDividaMes = totalParcelasMensais(dividas);
+  const parcelasDividaMes = totalParcelasMensais(dividasAtivas);
   // Parte do saldo disponível que ainda sobra depois de reservar para pagar cartão e dívida
   // deste mês. Precisa partir do saldo (que já descontou despesas e investimentos), nunca da
   // receita bruta, senão o valor sugerido pode ficar maior que o próprio saldo disponível.
   const poupancaRecomendada = Math.max(saldo - parcelasCartaoMes - parcelasDividaMes, 0);
 
   const disponivelCartoes = cartoes.reduce((soma, c) => soma + limiteDisponivel(c, c.compras), 0);
-  const totalDevedor = calcularTotalDevedor(dividas);
+  const totalDevedor = calcularTotalDevedor(dividasAtivas);
   const metaPrincipal = calcularMetaPrincipal(metas);
 
   const progressoLimites = calcularProgressoLimites(lancamentos, limites);
@@ -125,7 +129,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const alertas = ordenarPorSeveridade([
     ...alertasLimites(progressoLimites, LABEL_CATEGORIA),
     ...alertasCartoes(cartoes),
-    ...alertasDividas(dividas),
+    ...alertasDividas(dividasAtivas),
     ...alertasMetas(metas),
   ]);
 
@@ -163,9 +167,11 @@ export default async function DashboardPage({ searchParams }: Props) {
         poupancaRecomendada={poupancaRecomendada}
         qtdCartoes={cartoes.length}
         disponivelCartoes={disponivelCartoes}
-        qtdDividas={dividas.length}
+        qtdDividas={dividasAtivas.length}
         totalDevedor={totalDevedor}
         metaPrincipal={metaPrincipal}
+        orientacaoPrioridade={orientacao.prioridade}
+        alocacao={alocacao}
       />
 
       {/* Orientação financeira (dívida → reserva → investir), logo abaixo do resumo pra
@@ -185,7 +191,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       <CardCartoes cartoes={cartoes} mes={mes} ano={ano} />
 
       {/* 4. Dívidas */}
-      <CardDividas dividas={dividas} />
+      <CardDividas dividas={dividasAtivas} />
 
       {/* Sugestão de alocação da renda */}
       <GraficoAlocacao alocacao={alocacao} />

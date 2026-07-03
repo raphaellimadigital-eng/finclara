@@ -232,6 +232,17 @@ select {
   margin-bottom: 0;
 }
 
+/* A regra genérica de input acima (padding/min-height/width:100%) é pensada para campos de
+   texto; sem isso, um checkbox vira um quadrado enorme em vez de uma caixinha de marcação. */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--azul);
+}
+
 input:focus,
 select:focus {
   outline: none;

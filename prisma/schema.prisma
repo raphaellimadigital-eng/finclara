@@ -95,18 +95,23 @@ model Lancamento {
 }
 
 model Divida {
-  id           String   @id @default(uuid())
-  usuarioId    String
-  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  id            String    @id @default(uuid())
+  usuarioId     String
+  usuario       Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
-  descricao    String
-  valorTotal   Decimal  @db.Decimal(12, 2)
-  valorParcela Decimal  @db.Decimal(12, 2)
-  taxaJuros    Decimal  @db.Decimal(5, 2) // percentual ao mês
-  vencimento   DateTime
+  descricao     String
+  // Valor total no momento do cadastro, preservado para calcular o percentual já quitado
+  // (valorTotal vai sendo abatido a cada pagamento, valorOriginal nunca muda).
+  valorOriginal Decimal   @default(0) @db.Decimal(12, 2)
+  valorTotal    Decimal   @db.Decimal(12, 2)
+  valorParcela  Decimal   @db.Decimal(12, 2)
+  taxaJuros     Decimal   @db.Decimal(5, 2) // percentual ao mês
+  vencimento    DateTime
+  quitada       Boolean   @default(false)
+  quitadaEm     DateTime?
 
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  criadoEm      DateTime  @default(now())
+  atualizadoEm  DateTime  @updatedAt
 
   @@index([usuarioId])
   @@map("dividas")

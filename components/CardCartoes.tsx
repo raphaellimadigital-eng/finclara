@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { CreditCard, ChevronRight, AlertTriangle, AlertOctagon } from "lucide-react";
 import { limiteComprometido, limiteDisponivel, valorFaturaNoMes } from "@/lib/cartoes";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import type { CartaoCredito, CompraParcelada } from "@prisma/client";
+
+const TEXTO_INFO = [
+  "Disponível: quanto ainda sobra do limite dos seus cartões, considerando as parcelas futuras já comprometidas.",
+  "Fatura deste mês: quanto você precisa pagar agora, somando a fatura de todos os cartões.",
+];
 
 type CartaoComCompras = CartaoCredito & { compras: CompraParcelada[] };
 
@@ -23,7 +29,12 @@ export function CardCartoes({ cartoes, mes, ano }: { cartoes: CartaoComCompras[]
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <CreditCard size={18} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
-          <span className="texto-secundario">Sem cartões cadastrados</span>
+          <div>
+            <div className="texto-secundario" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+              Cartões
+            </div>
+            <span className="texto-secundario">Sem cartões cadastrados</span>
+          </div>
         </div>
         <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
       </Link>
@@ -52,11 +63,19 @@ export function CardCartoes({ cartoes, mes, ano }: { cartoes: CartaoComCompras[]
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
           <Icone size={18} aria-hidden="true" style={{ color: cor, flexShrink: 0 }} />
-          <span style={{ fontWeight: 600, fontSize: 14.5 }}>
-            {cartoes.length} {cartoes.length === 1 ? "cartão cadastrado" : "cartões cadastrados"}
-          </span>
+          <div>
+            <div className="texto-secundario" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+              Cartões
+            </div>
+            <span style={{ fontWeight: 600, fontSize: 14.5 }}>
+              {cartoes.length} {cartoes.length === 1 ? "cartão cadastrado" : "cartões cadastrados"}
+            </span>
+          </div>
         </div>
-        <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+          <InfoTooltip texto={TEXTO_INFO} />
+          <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)" }} />
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
