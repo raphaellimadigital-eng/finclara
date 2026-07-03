@@ -4,7 +4,9 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
-import { parseDataLocal } from "@/lib/data";
+import { avancarMeses, maisTardio, parseDataLocal, type MesAno } from "@/lib/data";
+import { ultimoMesProjetado } from "@/lib/dividas";
+import { gerarParcelas } from "@/lib/cartoes";
 import { Categoria, TipoLancamento } from "@prisma/client";
 
 // Quantidade de meses futuros gerados automaticamente ao marcar um lançamento como
@@ -36,6 +38,48 @@ export async function getLancamentos(ano: number, mes: number) {
     },
     orderBy: { data: "desc" },
   });
+}
+
+// Até onde o calendário (SeletorMes) deixa navegar no futuro: sempre pelo menos o próximo mês
+// (pra dar pra espiar o que já está programado), e mais além disso se já existir algo lançado
+// lá na frente — lançamento recorrente já gerado, parcela de dívida ainda não paga ou parcela de
+// compra no cartão. Assim o calendário nunca esconde um compromisso financeiro que o usuário já
+// tem registrado, mas também não libera anos vazios pra navegar à toa.
+export async function getLimiteFuturoCalendario(): Promise<MesAno> {
+  const user = await getUsuarioLogado();
+  await garantirUsuario(user);
+
+  const agora = new Date();
+  const proximoMes = avancarMeses({ mes: agora.getMonth() + 1, ano: agora.getFullYear() }, 1);
+
+  const [ultimoLancamento, dividasAtivas, cartoes] = await Promise.all([
+    prisma.lancamento.findFirst({
+      where: { usuarioId: user.id, data: { gt: agora } },
+      orderBy: { data: "desc" },
+    }),
+    prisma.divida.findMany({ where: { usuarioId: user.id, quitada: false } }),
+    prisma.cartaoCredito.findMany({ where: { usuarioId: user.id }, include: { compras: true } }),
+  ]);
+
+  const pontos: MesAno[] = [proximoMes];
+
+  if (ultimoLancamento) {
+    pontos.push({ mes: ultimoLancamento.data.getMonth() + 1, ano: ultimoLancamento.data.getFullYear() });
+  }
+
+  for (const divida of dividasAtivas) {
+    pontos.push(ultimoMesProjetado(divida));
+  }
+
+  for (const cartao of cartoes) {
+    for (const compra of cartao.compras) {
+      const parcelas = gerarParcelas(compra, cartao.diaFechamento);
+      const ultima = parcelas[parcelas.length - 1];
+      if (ultima) pontos.push({ mes: ultima.mes, ano: ultima.ano });
+    }
+  }
+
+  return maisTardio(pontos);
 }
 
 // Cria um novo lançamento

@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronLeft, FileText, Download, Sparkles, Table, GitCompare, LineChart, Crown } from "lucide-react";
 import { SeletorMes } from "@/components/SeletorMes";
+import { GridMosaico } from "@/components/GridMosaico";
 import { getHistoricoPatrimonio } from "../evolucao-patrimonial/actions";
+import { getLimiteFuturoCalendario } from "../actions";
 import { getStatusAssinatura } from "@/lib/auth";
 import { podeUsarFeature } from "@/lib/assinatura";
 
@@ -26,14 +28,16 @@ export default async function RelatoriosPage({ searchParams }: Props) {
   const ano = Number(searchParams.ano) || agora.getFullYear();
   const mes = Number(searchParams.mes) || agora.getMonth() + 1;
 
-  const historicoPatrimonio = await getHistoricoPatrimonio();
+  const [historicoPatrimonio, usuario, limiteFuturoCalendario] = await Promise.all([
+    getHistoricoPatrimonio(),
+    getStatusAssinatura(),
+    getLimiteFuturoCalendario(),
+  ]);
   const mesesFaltando = Math.max(2 - historicoPatrimonio.length, 0);
-
-  const usuario = await getStatusAssinatura();
   const temAcessoRelatorios = podeUsarFeature(usuario, "relatorios_pdf");
 
   return (
-    <div className="container">
+    <div className="container container-largo">
       <Link
         href="/dashboard"
         className="botao-secundario"
@@ -47,9 +51,16 @@ export default async function RelatoriosPage({ searchParams }: Props) {
       </h1>
 
       <Suspense>
-        <SeletorMes ano={ano} mes={mes} baseHref="/dashboard/relatorios" />
+        <SeletorMes
+          ano={ano}
+          mes={mes}
+          baseHref="/dashboard/relatorios"
+          anoMinimo={usuario.criadoEm.getFullYear()}
+          limiteFuturo={limiteFuturoCalendario}
+        />
       </Suspense>
 
+      <GridMosaico>
       <div className="card">
         <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           Relatório Mensal {!temAcessoRelatorios && <BadgePro />}
@@ -143,6 +154,7 @@ export default async function RelatoriosPage({ searchParams }: Props) {
           <Download size={16} aria-hidden="true" /> Baixar Evolução Patrimonial (PDF)
         </a>
       </div>
+      </GridMosaico>
     </div>
   );
 }

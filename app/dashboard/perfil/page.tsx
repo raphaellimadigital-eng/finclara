@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server";
 import { getUsuarioAtual } from "./actions";
 import { FormDadosCadastrais } from "@/components/FormDadosCadastrais";
 import { AssinaturaCard } from "@/components/AssinaturaCard";
+import { GridMosaico } from "@/components/GridMosaico";
 import { LABEL_PERFIL } from "@/lib/perfilInvestidor";
 
 export default async function PerfilPage() {
@@ -16,7 +17,7 @@ export default async function PerfilPage() {
     : "-";
 
   return (
-    <div className="container">
+    <div className="container container-largo">
       <Link
         href="/dashboard"
         className="botao-secundario"
@@ -29,22 +30,24 @@ export default async function PerfilPage() {
         <UserRound size={20} aria-hidden="true" /> Perfil
       </h1>
 
-      <AssinaturaCard usuario={usuario} />
+      <GridMosaico>
+        <AssinaturaCard usuario={usuario} />
 
-      <FormDadosCadastrais
-        email={user?.email ?? ""}
-        criadoEm={criadoEm}
-        nome={usuario.nome ?? ""}
-        telefone={usuario.telefone ?? ""}
-        endereco={usuario.endereco ?? ""}
-        cpf={usuario.cpf ?? ""}
-        dataNascimento={
-          usuario.dataNascimento
-            ? new Date(usuario.dataNascimento).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
-            : ""
-        }
-        perfilInvestidor={usuario.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "Ainda não definido"}
-      />
+        <FormDadosCadastrais
+          email={user?.email ?? ""}
+          criadoEm={criadoEm}
+          nome={usuario.nome ?? ""}
+          telefone={usuario.telefone ?? ""}
+          endereco={usuario.endereco ?? ""}
+          cpf={usuario.cpf ?? ""}
+          dataNascimento={
+            usuario.dataNascimento
+              ? new Date(usuario.dataNascimento).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
+              : ""
+          }
+          perfilInvestidor={usuario.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "Ainda não definido"}
+        />
+      </GridMosaico>
     </div>
   );
 }

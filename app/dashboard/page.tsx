@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getLancamentos } from "./actions";
+import { getLancamentos, getLimiteFuturoCalendario } from "./actions";
 import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
 import { getMetas } from "./metas/actions";
@@ -16,6 +16,7 @@ import { CardCartoes } from "@/components/CardCartoes";
 import { CardMetas } from "@/components/CardMetas";
 import { CardOrientacao } from "@/components/CardOrientacao";
 import { CardAlertas } from "@/components/CardAlertas";
+import { GridMosaico } from "@/components/GridMosaico";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
@@ -58,13 +59,14 @@ export default async function DashboardPage({ searchParams }: Props) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const [lancamentos, dividas, cartoes, metas, usuario, limites] = await Promise.all([
+  const [lancamentos, dividas, cartoes, metas, usuario, limites, limiteFuturoCalendario] = await Promise.all([
     getLancamentos(ano, mes),
     getDividas(),
     getCartoes(),
     getMetas(),
     getUsuarioAtual(),
     getLimites(),
+    getLimiteFuturoCalendario(),
     // Registra a "foto" do patrimônio do mês corrente para acumular histórico ao longo do
     // tempo (usado no gráfico e no relatório de Evolução Patrimonial). Não bloqueia nada se falhar.
     registrarSnapshotPatrimonio().catch(() => {}),
@@ -134,7 +136,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="container">
+    <div className="container container-largo">
       {/* Cabeçalho */}
       <div className="topo">
         <div className="marca">
@@ -153,7 +155,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {/* Seletor de mês */}
       <Suspense>
-        <SeletorMes ano={ano} mes={mes} />
+        <SeletorMes ano={ano} mes={mes} anoMinimo={usuario.criadoEm.getFullYear()} limiteFuturo={limiteFuturoCalendario} />
       </Suspense>
 
       {/* 1. Resumo do mês (já traz cartões, dívidas e meta principal integrados) */}
@@ -174,33 +176,35 @@ export default async function DashboardPage({ searchParams }: Props) {
         alocacao={alocacao}
       />
 
-      {/* Orientação financeira (dívida → reserva → investir), logo abaixo do resumo pra
-          ajudar a explicar os números acima */}
-      <CardOrientacao orientacao={orientacao} />
+      <GridMosaico>
+        {/* Orientação financeira (dívida → reserva → investir), logo abaixo do resumo pra
+            ajudar a explicar os números acima */}
+        <CardOrientacao orientacao={orientacao} />
 
-      {/* Evolução patrimonial (metas acumuladas menos dívidas, mês a mês) */}
-      <GraficoEvolucaoPatrimonial historico={historicoPatrimonio} />
+        {/* Evolução patrimonial (metas acumuladas menos dívidas, mês a mês) */}
+        <GraficoEvolucaoPatrimonial historico={historicoPatrimonio} />
 
-      {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) */}
-      <CardAlertas alertas={alertas} />
+        {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) */}
+        <CardAlertas alertas={alertas} />
 
-      {/* 2. Meta financeira */}
-      <CardMetas metas={metas} />
+        {/* 2. Meta financeira */}
+        <CardMetas metas={metas} />
 
-      {/* 3. Cartões */}
-      <CardCartoes cartoes={cartoes} mes={mes} ano={ano} />
+        {/* 3. Cartões */}
+        <CardCartoes cartoes={cartoes} mes={mes} ano={ano} />
 
-      {/* 4. Dívidas */}
-      <CardDividas dividas={dividasAtivas} />
+        {/* 4. Dívidas */}
+        <CardDividas dividas={dividasAtivas} />
 
-      {/* Sugestão de alocação da renda */}
-      <GraficoAlocacao alocacao={alocacao} />
+        {/* Sugestão de alocação da renda */}
+        <GraficoAlocacao alocacao={alocacao} />
 
-      {/* Formulário de novo lançamento */}
-      <FormLancamento key={`${ano}-${mes}`} ano={ano} mes={mes} />
+        {/* Formulário de novo lançamento */}
+        <FormLancamento key={`${ano}-${mes}`} ano={ano} mes={mes} />
 
-      {/* 5. Lançamentos recentes (card recolhível) */}
-      <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />
+        {/* 5. Lançamentos recentes (card recolhível) */}
+        <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />
+      </GridMosaico>
     </div>
   );
 }

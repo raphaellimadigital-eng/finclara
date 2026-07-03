@@ -1,4 +1,5 @@
 import type { Divida } from "@prisma/client";
+import { avancarMeses, type MesAno } from "./data";
 
 // Acima desse percentual ao mês, a dívida é considerada "cara" e o motor de
 // recomendação passa a priorizar a quitação antes de qualquer investimento
@@ -86,4 +87,17 @@ export function desfazerPagamento(
   const vencimento = divida.quitada ? new Date(divida.vencimento) : recuarUmMes(new Date(divida.vencimento));
 
   return { valorTotal, vencimento, quitada: false };
+}
+
+// Estima até quando uma dívida ainda vai ter parcela, a partir de quantas parcelas do tamanho
+// atual faltam pra quitar o saldo (vencimento já é a data da próxima parcela — por isso o -1).
+// É uma estimativa: se o valor da parcela mudar no meio do caminho, a data real muda também.
+export function ultimoMesProjetado(
+  divida: Pick<Divida, "vencimento" | "valorTotal" | "valorParcela">
+): MesAno {
+  const valorParcela = Number(divida.valorParcela);
+  const mesesRestantes = valorParcela > 0 ? Math.max(1, Math.ceil(Number(divida.valorTotal) / valorParcela)) : 1;
+  const vencimento = new Date(divida.vencimento);
+
+  return avancarMeses({ mes: vencimento.getMonth() + 1, ano: vencimento.getFullYear() }, mesesRestantes - 1);
 }

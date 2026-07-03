@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { maiorDeIdade, parseDataLocal } from "./data";
+import { avancarMeses, compararMesAno, maiorDeIdade, maisTardio, parseDataLocal } from "./data";
 
 describe("parseDataLocal", () => {
   it("interpreta o valor de um <input type=date> como data local, não UTC", () => {
@@ -46,5 +46,52 @@ describe("maiorDeIdade", () => {
   it("respeita uma idade mínima diferente de 18", () => {
     expect(maiorDeIdade(new Date(2010, 6, 2), 16, agora)).toBe(true);
     expect(maiorDeIdade(new Date(2012, 6, 2), 16, agora)).toBe(false);
+  });
+});
+
+describe("avancarMeses", () => {
+  it("soma meses dentro do mesmo ano", () => {
+    expect(avancarMeses({ mes: 3, ano: 2026 }, 2)).toEqual({ mes: 5, ano: 2026 });
+  });
+
+  it("vira o ano ao passar de dezembro", () => {
+    expect(avancarMeses({ mes: 11, ano: 2026 }, 3)).toEqual({ mes: 2, ano: 2027 });
+  });
+
+  it("soma exatamente 12 meses cai no mesmo mês do ano seguinte", () => {
+    expect(avancarMeses({ mes: 7, ano: 2026 }, 12)).toEqual({ mes: 7, ano: 2027 });
+  });
+
+  it("aceita quantidade negativa (recuar meses)", () => {
+    expect(avancarMeses({ mes: 2, ano: 2026 }, -3)).toEqual({ mes: 11, ano: 2025 });
+  });
+
+  it("quantidade 0 retorna o mesmo mês/ano", () => {
+    expect(avancarMeses({ mes: 6, ano: 2026 }, 0)).toEqual({ mes: 6, ano: 2026 });
+  });
+});
+
+describe("compararMesAno", () => {
+  it("positivo quando o primeiro é depois", () => {
+    expect(compararMesAno({ mes: 1, ano: 2027 }, { mes: 12, ano: 2026 })).toBeGreaterThan(0);
+  });
+
+  it("negativo quando o primeiro é antes", () => {
+    expect(compararMesAno({ mes: 1, ano: 2026 }, { mes: 2, ano: 2026 })).toBeLessThan(0);
+  });
+
+  it("zero quando são iguais", () => {
+    expect(compararMesAno({ mes: 5, ano: 2026 }, { mes: 5, ano: 2026 })).toBe(0);
+  });
+});
+
+describe("maisTardio", () => {
+  it("acha o mais tardio numa lista com meses de anos diferentes", () => {
+    const pontos = [{ mes: 12, ano: 2026 }, { mes: 3, ano: 2027 }, { mes: 6, ano: 2026 }];
+    expect(maisTardio(pontos)).toEqual({ mes: 3, ano: 2027 });
+  });
+
+  it("com um único ponto, retorna ele mesmo", () => {
+    expect(maisTardio([{ mes: 8, ano: 2026 }])).toEqual({ mes: 8, ano: 2026 });
   });
 });

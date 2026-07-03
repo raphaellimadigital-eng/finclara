@@ -20,3 +20,24 @@ export function maiorDeIdade(dataNascimento: Date, idadeMinima = 18, agora = new
   if (aniversarioEsteAno > agora) idade -= 1;
   return idade >= idadeMinima;
 }
+
+export type MesAno = { mes: number; ano: number };
+
+// Soma (ou subtrai, com quantidade negativa) meses a um {mes, ano} — usado pra projetar até
+// quando um compromisso futuro (parcela de dívida ou de cartão, lançamento recorrente) se
+// estende, sem precisar montar um Date só pra isso.
+export function avancarMeses(base: MesAno, quantidade: number): MesAno {
+  const totalMeses = base.mes - 1 + quantidade;
+  return { ano: base.ano + Math.floor(totalMeses / 12), mes: (((totalMeses % 12) + 12) % 12) + 1 };
+}
+
+// Compara dois {mes, ano}: positivo se `a` é depois de `b`, negativo se antes, 0 se igual.
+export function compararMesAno(a: MesAno, b: MesAno): number {
+  return a.ano !== b.ano ? a.ano - b.ano : a.mes - b.mes;
+}
+
+// O mais tardio entre uma lista de {mes, ano} — usado pra achar até quando o calendário deve
+// liberar navegação, dado vários compromissos futuros com datas-limite diferentes.
+export function maisTardio(pontos: MesAno[]): MesAno {
+  return pontos.reduce((maisTarde, atual) => (compararMesAno(atual, maisTarde) > 0 ? atual : maisTarde));
+}

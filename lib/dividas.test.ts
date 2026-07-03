@@ -11,6 +11,7 @@ import {
   temDividaCara,
   totalDevedor,
   totalParcelasMensais,
+  ultimoMesProjetado,
 } from "./dividas";
 import type { Divida } from "@prisma/client";
 
@@ -216,5 +217,35 @@ describe("desfazerPagamento", () => {
     expect(resultado.valorTotal).toBe(200);
     expect(resultado.vencimento).toEqual(new Date(2026, 7, 10));
     expect(resultado.quitada).toBe(false);
+  });
+});
+
+describe("ultimoMesProjetado", () => {
+  it("com o saldo cabendo em 1 parcela, o último mês é o do próprio vencimento", () => {
+    const d = divida({
+      valorTotal: 200 as any,
+      valorParcela: 200 as any,
+      vencimento: new Date(2026, 7, 10), // agosto/2026 (mês 7 = agosto, 0-indexado)
+    });
+    expect(ultimoMesProjetado(d)).toEqual({ mes: 8, ano: 2026 });
+  });
+
+  it("projeta várias parcelas à frente (30 parcelas de uma dívida grande)", () => {
+    const d = divida({
+      valorTotal: 30000 as any,
+      valorParcela: 1000 as any, // 30 parcelas
+      vencimento: new Date(2026, 0, 10), // janeiro/2026
+    });
+    // 30 parcelas a partir de janeiro/2026 (inclusive) termina em junho/2028
+    expect(ultimoMesProjetado(d)).toEqual({ mes: 6, ano: 2028 });
+  });
+
+  it("arredonda pra cima quando a última parcela é menor (resto da divisão)", () => {
+    const d = divida({
+      valorTotal: 250 as any,
+      valorParcela: 100 as any, // 2 parcelas cheias + 1 parcela menor = 3 meses
+      vencimento: new Date(2026, 5, 10), // junho/2026
+    });
+    expect(ultimoMesProjetado(d)).toEqual({ mes: 8, ano: 2026 });
   });
 });

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { ChevronLeft, LifeBuoy, MessageCircle } from "lucide-react";
 import { FormContatoSuporte } from "@/components/FormContatoSuporte";
 import { PerguntaIA } from "@/components/PerguntaIA";
+import { GridMosaico } from "@/components/GridMosaico";
 
 const WHATSAPP_SUPORTE = "5521982232973";
 
 export default function AjudaPage() {
   return (
-    <div className="container">
+    <div className="container container-largo">
       <Link
         href="/dashboard"
         className="botao-secundario"
@@ -20,6 +21,7 @@ export default function AjudaPage() {
         <LifeBuoy size={20} aria-hidden="true" /> Ajuda ou suporte
       </h1>
 
+      <GridMosaico>
       <PerguntaIA />
 
       <div className="card">
@@ -64,6 +66,7 @@ export default function AjudaPage() {
       </a>
 
       <FormContatoSuporte />
+      </GridMosaico>
 
       <p className="texto-secundario" style={{ fontSize: 12.5 }}>
         Veja também nossos{" "}
