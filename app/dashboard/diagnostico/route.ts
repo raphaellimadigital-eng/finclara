@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { getLancamentos } from "../actions";
@@ -9,11 +10,18 @@ import { calcularOrientacao } from "@/lib/orientacao";
 import { gerarRecomendacaoIA } from "@/lib/gemini";
 import { LABEL_PERFIL } from "@/lib/perfilInvestidor";
 import { DiagnosticoDocument } from "./DiagnosticoDocument";
+import { getStatusAssinatura } from "@/lib/auth";
+import { podeUsarFeature } from "@/lib/assinatura";
 
 // Gera o "Diagnóstico Financeiro" em PDF: a prioridade atual (dívida cara -> reserva ->
 // investir) mais uma análise personalizada por IA (Gemini), reaproveitando a mesma lógica já
 // usada no motor de orientação e na recomendação do dashboard.
 export async function GET(request: Request) {
+  const statusAssinatura = await getStatusAssinatura();
+  if (!podeUsarFeature(statusAssinatura, "relatorios_pdf")) {
+    return NextResponse.redirect(new URL("/dashboard/assinatura?bloqueado=relatorio", request.url));
+  }
+
   const { searchParams } = new URL(request.url);
   const agora = new Date();
   const ano = Number(searchParams.get("ano")) || agora.getFullYear();

@@ -3,6 +3,7 @@ import { ChevronLeft, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 import { getUsuarioAtual } from "./actions";
 import { FormDadosCadastrais } from "@/components/FormDadosCadastrais";
+import { AssinaturaCard } from "@/components/AssinaturaCard";
 import { LABEL_PERFIL } from "@/lib/perfilInvestidor";
 
 export default async function PerfilPage() {
@@ -25,8 +26,10 @@ export default async function PerfilPage() {
       </Link>
 
       <h1 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, marginBottom: 16 }}>
-        <UserRound size={20} aria-hidden="true" /> Dados cadastrais
+        <UserRound size={20} aria-hidden="true" /> Perfil
       </h1>
+
+      <AssinaturaCard usuario={usuario} />
 
       <FormDadosCadastrais
         email={user?.email ?? ""}
@@ -34,6 +37,12 @@ export default async function PerfilPage() {
         nome={usuario.nome ?? ""}
         telefone={usuario.telefone ?? ""}
         endereco={usuario.endereco ?? ""}
+        cpf={usuario.cpf ?? ""}
+        dataNascimento={
+          usuario.dataNascimento
+            ? new Date(usuario.dataNascimento).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
+            : ""
+        }
         perfilInvestidor={usuario.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "Ainda não definido"}
       />
     </div>

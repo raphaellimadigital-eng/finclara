@@ -32,6 +32,19 @@ enum TipoMeta {
   OUTRO
 }
 
+enum PlanoUsuario {
+  FREE
+  PRO
+}
+
+enum StatusAssinatura {
+  SEM_ASSINATURA
+  PENDENTE
+  ATIVA
+  PAUSADA
+  CANCELADA
+}
+
 enum Categoria {
   SALARIO
   FREELANCE
@@ -60,6 +73,19 @@ model Usuario {
   perfilInvestidor PerfilInvestidor?
   telefone  String?
   endereco  String?
+  // Só dígitos, sem máscara (validação de dígito verificador em lib/cpf.ts). Único: também trava
+  // criação de contas repetidas com CPFs diferentes só para reaproveitar o trial de 7 dias.
+  cpf              String?           @unique
+  dataNascimento   DateTime?
+
+  // Assinatura: trialEndsAt é gravado uma única vez na criação (ver garantirUsuario em
+  // lib/auth.ts) com now()+7 dias. periodoAtualFim guarda até quando o acesso Pro vale mesmo
+  // após cancelamento (o usuário já pagou aquele ciclo) — evita cortar o acesso na hora.
+  trialEndsAt      DateTime          @default(now())
+  plano            PlanoUsuario      @default(FREE)
+  statusAssinatura StatusAssinatura  @default(SEM_ASSINATURA)
+  mpAssinaturaId   String?           @unique
+  periodoAtualFim  DateTime?
 
   lancamentos Lancamento[]
   dividas     Divida[]
@@ -67,6 +93,7 @@ model Usuario {
   metas       Meta[]
   limitesCategoria LimiteCategoria[]
   patrimonioSnapshots PatrimonioSnapshot[]
+  eventosWebhookAssinatura EventoWebhookAssinatura[]
 
   @@map("usuarios")
 }
@@ -200,4 +227,19 @@ model PatrimonioSnapshot {
   // dashboard no mês corrente, para acumular histórico ao longo do tempo.
   @@unique([usuarioId, ano, mes])
   @@map("patrimonio_snapshots")
+}
+
+model EventoWebhookAssinatura {
+  id        String   @id @default(uuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  // Id do evento/notificação do Mercado Pago — garante idempotência: o mesmo evento pode chegar
+  // mais de uma vez (retry), então tratamos apenas a primeira ocorrência.
+  mpEventoId   String   @unique
+  tipo         String
+  payload      Json
+  processadoEm DateTime @default(now())
+
+  @@map("eventos_webhook_assinatura")
 }

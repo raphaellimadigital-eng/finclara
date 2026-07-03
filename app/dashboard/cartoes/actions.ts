@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { parseDataLocal } from "@/lib/data";
+import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
 
 // Busca todos os cartões do usuário logado, com as compras parceladas de cada um
 export async function getCartoes() {
@@ -20,7 +21,12 @@ export async function getCartoes() {
 // Cria um novo cartão de crédito
 export async function criarCartao(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user);
+  const usuario = await garantirUsuario(user);
+
+  const cartoesExistentes = await prisma.cartaoCredito.count({ where: { usuarioId: user.id } });
+  if (!podeUsarFeature(usuario, "cartao_extra", { contagemAtual: cartoesExistentes })) {
+    throw erroPaywall("O plano Free permite cadastrar apenas 1 cartão de crédito.");
+  }
 
   const nome = formData.get("nome") as string;
   const limite = parseFloat(formData.get("limite") as string);

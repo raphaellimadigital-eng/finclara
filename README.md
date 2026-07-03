@@ -21,6 +21,7 @@ fatores — tudo num único painel.
 - Relatório mensal em PDF (receitas x despesas, gastos por categoria, evolução das metas)
 - Exportação e exclusão de dados financeiros (LGPD)
 - Modo claro/escuro
+- Assinatura Pro (7 dias de teste grátis, depois plano Free limitado ou Pro via Mercado Pago)
 
 ---
 
@@ -63,11 +64,44 @@ DIRECT_URL="postgresql://postgres:SUA-SENHA@db.SEU-PROJETO.supabase.co:5432/post
 NEXT_PUBLIC_SUPABASE_URL="https://SEU-PROJETO.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="SUA-ANON-KEY"
 GEMINI_API_KEY="SUA-CHAVE-GEMINI"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+MERCADOPAGO_ACCESS_TOKEN="SEU-ACCESS-TOKEN"
+MERCADOPAGO_WEBHOOK_SECRET="SUA-CHAVE-SECRETA-DO-WEBHOOK"
+MERCADOPAGO_PLAN_ID="ID-DO-PLANO"
 ```
 
 ---
 
-## 4. Criar/atualizar as tabelas no banco
+## 4. Configurar o Mercado Pago (assinatura Pro)
+
+O plano Pro (R$ 19,90/mês) é cobrado via [Mercado Pago Assinaturas](https://www.mercadopago.com.br/developers/pt/docs/subscriptions/overview).
+Sem essa configuração, o app funciona normalmente — os usuários só nunca vão conseguir concluir o
+checkout de upgrade.
+
+1. Crie uma aplicação em **Suas integrações** no painel do Mercado Pago e copie o **Access Token**
+   para `MERCADOPAGO_ACCESS_TOKEN`
+2. Configure uma **chave secreta de webhook** na mesma aplicação e copie para
+   `MERCADOPAGO_WEBHOOK_SECRET` — é ela que autentica as notificações recebidas em
+   `/api/mercadopago/webhook` (fora do middleware de sessão, já que o Mercado Pago chama essa rota
+   sem cookie de usuário)
+3. Rode o script de criação do plano (uma vez por ambiente — dev, staging e produção têm contas
+   Mercado Pago distintas):
+
+   ```bash
+   npx tsx scripts/criar-plano-mercadopago.ts
+   ```
+
+   Copie o `MERCADOPAGO_PLAN_ID` impresso no terminal para `.env.local`
+4. Em produção, registre a URL pública do webhook (`https://SEU-DOMINIO/api/mercadopago/webhook`)
+   nas configurações de notificações da aplicação no painel do Mercado Pago, e ajuste
+   `NEXT_PUBLIC_SITE_URL` para o domínio publicado
+
+O trial de 7 dias é controlado inteiramente pelo FinClara (`Usuario.trialEndsAt`), não pelo
+Mercado Pago — por isso o plano criado pelo script não tem período de teste próprio.
+
+---
+
+## 5. Criar/atualizar as tabelas no banco
 
 ```bash
 npx prisma migrate dev
@@ -83,7 +117,7 @@ limites por categoria, etc.) no seu banco Supabase.
 
 ---
 
-## 5. Rodar localmente
+## 6. Rodar localmente
 
 ```bash
 npm run dev
@@ -93,7 +127,7 @@ Acesse http://localhost:3000 — vai pedir para criar uma conta na primeira vez.
 
 ---
 
-## 6. Rodar os testes
+## 7. Rodar os testes
 
 ```bash
 npm run test        # roda a suíte uma vez
@@ -115,7 +149,7 @@ primeiro (ver seção "Pendências e melhorias futuras").
 
 ---
 
-## 7. Publicar no Vercel
+## 8. Publicar no Vercel
 
 ```bash
 # Se ainda não tem o CLI do Vercel:
@@ -168,24 +202,31 @@ finclara/
 │   ├── globals.css               # Estilos globais (tema claro/escuro, componentes)
 │   ├── login/page.tsx            # Login/cadastro + desafio de 2FA
 │   ├── termos/page.tsx           # Termos de uso e privacidade (LGPD)
+│   ├── api/mercadopago/webhook/  # Recebe notificações de assinatura do Mercado Pago
 │   └── dashboard/
 │       ├── page.tsx              # Home: resumo, alertas, metas, cartões, dívidas, lançamentos
+│       ├── layout.tsx            # Faixa de trial + botão flutuante de perguntas
 │       ├── actions.ts            # Server Actions de lançamentos (CRUD + recorrência)
-│       ├── ai-actions.ts         # Recomendação personalizada via Gemini
-│       ├── dividas/              # Dívidas: CRUD + priorização por juros
-│       ├── cartoes/              # Cartões de crédito + compras parceladas
-│       ├── metas/                # Metas financeiras + aportes
+│       ├── ai-actions.ts         # Recomendação personalizada via Gemini (gateada no Pro)
+│       ├── dividas/              # Dívidas: CRUD + priorização por juros + quitação (Pro)
+│       ├── cartoes/              # Cartões de crédito + compras parceladas (2º+ cartão é Pro)
+│       ├── metas/                # Metas financeiras + aportes (2ª+ meta ativa é Pro)
 │       ├── perfil/               # Dados cadastrais + questionário de perfil de investidor
 │       ├── orientacao/           # Motor de orientação (dívida → reserva → investir)
-│       ├── limites/              # Limites de gasto por categoria
+│       ├── limites/              # Limites de gasto por categoria (Pro)
 │       ├── alertas/              # Central de alertas
-│       ├── relatorios/           # Menu de relatórios (seleção de mês + link do PDF)
-│       ├── relatorio/            # Route handler que gera o PDF mensal
+│       ├── assinatura/           # Checkout/cancelamento da assinatura Pro (Mercado Pago)
+│       ├── relatorios/           # Menu de relatórios (seleção de mês + link do PDF, Pro)
+│       ├── relatorio/            # Route handler que gera o PDF mensal (Pro)
 │       ├── exportar/             # Route handler que exporta os dados em JSON (LGPD)
-│       └── configuracoes/        # Aparência, 2FA, exportar/excluir dados
+│       └── configuracoes/        # Aparência, 2FA, assinatura, exportar/excluir dados
 ├── components/                   # Componentes de UI (cards, formulários, listas)
 ├── lib/                          # Regras de negócio puras + clientes Prisma/Supabase/Gemini
+│   ├── assinatura.ts             # Trial de 7 dias, plano Free/Pro e gates por feature
+│   ├── mercadopago.ts            # Mapeamento de status e verificação de assinatura do webhook
 │   └── *.test.ts                 # Testes unitários das regras de negócio
+├── scripts/
+│   └── criar-plano-mercadopago.ts # Script manual: cria o plano Pro no Mercado Pago
 ├── middleware.ts                 # Protege as rotas /dashboard/* (redireciona se não logado)
 ├── prisma/
 │   ├── schema.prisma             # Modelo de dados completo
@@ -234,6 +275,12 @@ conjunto de funcionalidades entregue e testado antes de avançar para a próxima
    exportação de dados em JSON e exclusão de todos os dados financeiros (mantendo o login ativo).
 10. **Qualidade** — testes unitários (Vitest) das regras de negócio e dos componentes principais,
     pipeline de CI (GitHub Actions e Azure DevOps).
+11. **Assinatura Pro** — 7 dias de teste grátis a partir do cadastro (`lib/assinatura.ts`); depois
+    disso, quem não assina cai no plano Free (lançamentos, 1 cartão, 1 meta ativa e dashboard
+    básico) até assinar o Pro via Mercado Pago (`app/dashboard/assinatura`). Marcar parcela de
+    dívida como paga, cartões/metas além do 1º, limites por categoria, relatórios em PDF e a
+    recomendação por IA ficam restritos ao Pro. Cancelamento mantém o acesso até o fim do período
+    já pago (`Usuario.periodoAtualFim`), atualizado via webhook (`app/api/mercadopago/webhook`).
 
 ---
 

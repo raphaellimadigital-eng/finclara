@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { parseDataLocal } from "@/lib/data";
 import { TipoMeta } from "@prisma/client";
+import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
+import { calcularProjecao } from "@/lib/metas";
 
 // Busca todas as metas do usuário logado, ordenadas por prazo (mais próximo primeiro)
 export async function getMetas() {
@@ -20,7 +22,13 @@ export async function getMetas() {
 // Cria uma nova meta
 export async function criarMeta(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user);
+  const usuario = await garantirUsuario(user);
+
+  const metasExistentes = await prisma.meta.findMany({ where: { usuarioId: user.id } });
+  const metasAtivas = metasExistentes.filter((m) => !calcularProjecao(m).concluida).length;
+  if (!podeUsarFeature(usuario, "meta_extra", { contagemAtual: metasAtivas })) {
+    throw erroPaywall("O plano Free permite apenas 1 meta ativa por vez.");
+  }
 
   const tipo = formData.get("tipo") as TipoMeta;
   const descricao = formData.get("descricao") as string;

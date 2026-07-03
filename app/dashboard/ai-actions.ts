@@ -5,16 +5,22 @@ import { prisma } from "@/lib/prisma";
 import { gerarRecomendacaoIA } from "@/lib/gemini";
 import { LABEL_PERFIL } from "@/lib/perfilInvestidor";
 import type { Alocacao } from "@/lib/financas";
+import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
+import { garantirUsuario } from "@/lib/auth";
 
 export async function pedirRecomendacaoIA(alocacao: Alocacao): Promise<string> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Não autenticado");
 
-  const [dividas, metas, usuario] = await Promise.all([
+  const usuarioCompleto = await garantirUsuario(user);
+  if (!podeUsarFeature(usuarioCompleto, "ia_recomendacao")) {
+    throw erroPaywall("A recomendação por IA é um recurso do plano Pro.");
+  }
+
+  const [dividas, metas] = await Promise.all([
     prisma.divida.findMany({ where: { usuarioId: user.id } }),
     prisma.meta.findMany({ where: { usuarioId: user.id, tipo: "RESERVA" } }),
-    prisma.usuario.findUnique({ where: { id: user.id } }),
   ]);
 
   const reservaAcumulada = metas.reduce((s, m) => s + Number(m.valorAtual), 0);
@@ -28,7 +34,9 @@ export async function pedirRecomendacaoIA(alocacao: Alocacao): Promise<string> {
       taxaJurosAoMes: Number(d.taxaJuros),
     })),
     reservaEmergenciaAcumulada: reservaAcumulada,
-    perfilInvestidor: usuario?.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "não informado",
+    perfilInvestidor: usuarioCompleto.perfilInvestidor
+      ? LABEL_PERFIL[usuarioCompleto.perfilInvestidor]
+      : "não informado",
   };
 
   return gerarRecomendacaoIA(dadosParaIA);

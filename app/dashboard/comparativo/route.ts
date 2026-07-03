@@ -1,8 +1,11 @@
+import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { getLancamentos } from "../actions";
 import { gerarDadosRelatorio } from "@/lib/relatorio";
 import { ComparativoDocument } from "./ComparativoDocument";
+import { getStatusAssinatura } from "@/lib/auth";
+import { podeUsarFeature } from "@/lib/assinatura";
 
 function mesAnterior(ano: number, mes: number): { ano: number; mes: number } {
   return mes === 1 ? { ano: ano - 1, mes: 12 } : { ano, mes: mes - 1 };
@@ -13,6 +16,11 @@ function mesAnterior(ano: number, mes: number): { ano: number; mes: number } {
 // com zero — não faz sentido dizer que "as despesas cresceram 100%" quando simplesmente não
 // havia dados ainda.
 export async function GET(request: Request) {
+  const usuario = await getStatusAssinatura();
+  if (!podeUsarFeature(usuario, "relatorios_pdf")) {
+    return NextResponse.redirect(new URL("/dashboard/assinatura?bloqueado=relatorio", request.url));
+  }
+
   const { searchParams } = new URL(request.url);
   const agora = new Date();
   const ano = Number(searchParams.get("ano")) || agora.getFullYear();

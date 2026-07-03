@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil, X, Loader2 } from "lucide-react";
 import { atualizarDadosCadastrais } from "@/app/dashboard/perfil/actions";
 import { formatarCep, buscarEnderecoPorCep } from "@/lib/cep";
+import { formatarCpf, cpfValido } from "@/lib/cpf";
 
 type Props = {
   email: string;
@@ -11,6 +12,8 @@ type Props = {
   nome: string;
   telefone: string;
   endereco: string;
+  cpf: string;
+  dataNascimento: string;
   perfilInvestidor: string;
 };
 
@@ -20,6 +23,8 @@ export function FormDadosCadastrais({
   nome: nomeInicial,
   telefone: telefoneInicial,
   endereco: enderecoInicial,
+  cpf: cpfInicial,
+  dataNascimento: dataNascimentoInicial,
   perfilInvestidor,
 }: Props) {
   const [editando, setEditando] = useState(false);
@@ -29,6 +34,8 @@ export function FormDadosCadastrais({
   const [cep, setCep] = useState("");
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [erroCep, setErroCep] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -50,12 +57,18 @@ export function FormDadosCadastrais({
     }
   }
 
+  function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCpf(formatarCpf(e.target.value));
+  }
+
   function cancelar() {
     setNome(nomeInicial);
     setTelefone(telefoneInicial);
     setEndereco(enderecoInicial);
     setCep("");
     setErroCep("");
+    setCpf("");
+    setDataNascimento("");
     setErro("");
     setEditando(false);
   }
@@ -63,12 +76,22 @@ export function FormDadosCadastrais({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErro("");
+
+    // CPF só é pedido no formulário quando a conta ainda não tem um (contas antigas) — depois de
+    // definido, vira identidade fixa e some do formulário de edição.
+    if (!cpfInicial && cpf && !cpfValido(cpf)) {
+      setErro("Digite um CPF válido.");
+      return;
+    }
+
     setSalvando(true);
     try {
       const dados = new FormData();
       dados.set("nome", nome);
       dados.set("telefone", telefone);
       dados.set("endereco", endereco);
+      if (!cpfInicial) dados.set("cpf", cpf);
+      if (!dataNascimentoInicial) dados.set("dataNascimento", dataNascimento);
       await atualizarDadosCadastrais(dados);
       setEditando(false);
     } catch (err: any) {
@@ -100,6 +123,14 @@ export function FormDadosCadastrais({
         <div className="campo">
           <div className="rotulo">E-mail</div>
           <div>{email}</div>
+        </div>
+        <div className="campo">
+          <div className="rotulo">CPF</div>
+          <div>{cpfInicial ? formatarCpf(cpfInicial) : "-"}</div>
+        </div>
+        <div className="campo">
+          <div className="rotulo">Data de nascimento</div>
+          <div>{dataNascimentoInicial || "-"}</div>
         </div>
         <div className="campo">
           <div className="rotulo">Telefone</div>
@@ -135,6 +166,35 @@ export function FormDadosCadastrais({
               onChange={(e) => setNome(e.target.value)}
               required
             />
+          </div>
+
+          <div className="campo">
+            <div className="rotulo">CPF</div>
+            {cpfInicial ? (
+              <div className="texto-secundario">{formatarCpf(cpfInicial)} (não pode ser alterado por aqui)</div>
+            ) : (
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={handleCpfChange}
+                maxLength={14}
+              />
+            )}
+          </div>
+
+          <div className="campo">
+            <div className="rotulo">Data de nascimento</div>
+            {dataNascimentoInicial ? (
+              <div className="texto-secundario">{dataNascimentoInicial} (não pode ser alterada por aqui)</div>
+            ) : (
+              <input
+                type="date"
+                value={dataNascimento}
+                onChange={(e) => setDataNascimento(e.target.value)}
+              />
+            )}
           </div>
 
           <div className="campo">

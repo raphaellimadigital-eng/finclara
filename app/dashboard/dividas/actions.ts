@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { parseDataLocal } from "@/lib/data";
 import { calcularPagamento, desfazerPagamento } from "@/lib/dividas";
+import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
 
 // Busca todas as dívidas do usuário logado (ativas primeiro, ordenadas por prioridade de
 // quitação; quitadas por último)
@@ -58,6 +59,10 @@ export async function criarDivida(formData: FormData) {
 // o vencimento um mês. Quando o saldo chega a zero, a dívida fica quitada.
 export async function marcarDividaPaga(id: string) {
   const user = await getUsuarioLogado();
+  const usuario = await garantirUsuario(user);
+  if (!podeUsarFeature(usuario, "dividas_quitacao")) {
+    throw erroPaywall("Marcar parcelas como pagas é um recurso do plano Pro.");
+  }
 
   const divida = await prisma.divida.findFirst({ where: { id, usuarioId: user.id } });
   if (!divida) throw new Error("Dívida não encontrada.");
@@ -83,6 +88,10 @@ export async function marcarDividaPaga(id: string) {
 // reabrindo a dívida se ela tinha sido marcada como quitada por engano.
 export async function desfazerPagamentoDivida(id: string) {
   const user = await getUsuarioLogado();
+  const usuario = await garantirUsuario(user);
+  if (!podeUsarFeature(usuario, "dividas_quitacao")) {
+    throw erroPaywall("Desfazer pagamento de parcelas é um recurso do plano Pro.");
+  }
 
   const divida = await prisma.divida.findFirst({ where: { id, usuarioId: user.id } });
   if (!divida) throw new Error("Dívida não encontrada.");

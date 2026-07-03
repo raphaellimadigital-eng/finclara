@@ -1,12 +1,25 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ChevronLeft, FileText, Download, Sparkles, Table, GitCompare, LineChart } from "lucide-react";
+import { ChevronLeft, FileText, Download, Sparkles, Table, GitCompare, LineChart, Crown } from "lucide-react";
 import { SeletorMes } from "@/components/SeletorMes";
 import { getHistoricoPatrimonio } from "../evolucao-patrimonial/actions";
+import { getStatusAssinatura } from "@/lib/auth";
+import { podeUsarFeature } from "@/lib/assinatura";
 
 type Props = {
   searchParams: { ano?: string; mes?: string };
 };
+
+function BadgePro() {
+  return (
+    <span
+      className="categoria-tag"
+      style={{ color: "var(--amarelo-texto)", borderColor: "var(--amarelo)", background: "var(--amarelo-clara)" }}
+    >
+      <Crown size={11} aria-hidden="true" /> Pro
+    </span>
+  );
+}
 
 export default async function RelatoriosPage({ searchParams }: Props) {
   const agora = new Date();
@@ -15,6 +28,9 @@ export default async function RelatoriosPage({ searchParams }: Props) {
 
   const historicoPatrimonio = await getHistoricoPatrimonio();
   const mesesFaltando = Math.max(2 - historicoPatrimonio.length, 0);
+
+  const usuario = await getStatusAssinatura();
+  const temAcessoRelatorios = podeUsarFeature(usuario, "relatorios_pdf");
 
   return (
     <div className="container">
@@ -35,7 +51,9 @@ export default async function RelatoriosPage({ searchParams }: Props) {
       </Suspense>
 
       <div className="card">
-        <h2 className="card-title">Relatório Mensal</h2>
+        <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          Relatório Mensal {!temAcessoRelatorios && <BadgePro />}
+        </h2>
         <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 14 }}>
           Receitas x despesas, gastos por categoria e evolução das metas do mês selecionado, prontos
           para revisão pessoal ou familiar.
@@ -52,6 +70,7 @@ export default async function RelatoriosPage({ searchParams }: Props) {
       <div className="card">
         <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Sparkles size={15} aria-hidden="true" style={{ color: "var(--investimento)" }} /> Diagnóstico Financeiro
+          {!temAcessoRelatorios && <BadgePro />}
         </h2>
         <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 14 }}>
           Sua prioridade atual (quitar dívida, formar reserva ou investir) com uma análise
@@ -86,6 +105,7 @@ export default async function RelatoriosPage({ searchParams }: Props) {
       <div className="card">
         <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <GitCompare size={15} aria-hidden="true" /> Comparativo Mensal
+          {!temAcessoRelatorios && <BadgePro />}
         </h2>
         <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 14 }}>
           Compara receitas, despesas e gastos por categoria do mês selecionado com o mês anterior.
@@ -104,6 +124,7 @@ export default async function RelatoriosPage({ searchParams }: Props) {
       <div className="card">
         <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <LineChart size={15} aria-hidden="true" /> Evolução Patrimonial
+          {!temAcessoRelatorios && <BadgePro />}
         </h2>
         <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 14 }}>
           Mostra como seu patrimônio (metas acumuladas menos dívidas) mudou mês a mês.{" "}

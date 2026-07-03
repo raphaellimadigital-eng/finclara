@@ -4,6 +4,8 @@ import { useState } from "react";
 import { List, Inbox, Trash2, Loader2, AlertTriangle, CheckCircle2, PartyPopper, Undo2 } from "lucide-react";
 import { deletarDivida, marcarDividaPaga, desfazerPagamentoDivida } from "@/app/dashboard/dividas/actions";
 import { ehDividaCara, percentualQuitado } from "@/lib/dividas";
+import { mensagemPaywall } from "@/lib/assinatura";
+import { PromptUpgrade } from "@/components/PromptUpgrade";
 import type { Divida } from "@prisma/client";
 
 function formatarMoeda(valor: number) {
@@ -17,6 +19,7 @@ function formatarData(data: Date) {
 export function ListaDividas({ dividas }: { dividas: Divida[] }) {
   const [processando, setProcessando] = useState<string | null>(null);
   const [erro, setErro] = useState("");
+  const [erroPaywall, setErroPaywall] = useState<string | null>(null);
 
   if (dividas.length === 0) {
     return (
@@ -60,11 +63,14 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
     }
 
     setErro("");
+    setErroPaywall(null);
     setProcessando(divida.id);
     try {
       await marcarDividaPaga(divida.id);
-    } catch {
-      setErro("Não foi possível registrar o pagamento. Tente novamente.");
+    } catch (err) {
+      const paywall = mensagemPaywall(err);
+      if (paywall) setErroPaywall(paywall);
+      else setErro("Não foi possível registrar o pagamento. Tente novamente.");
     } finally {
       setProcessando(null);
     }
@@ -72,11 +78,14 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
 
   async function handleDesfazer(id: string) {
     setErro("");
+    setErroPaywall(null);
     setProcessando(id);
     try {
       await desfazerPagamentoDivida(id);
-    } catch {
-      setErro("Não foi possível desfazer o pagamento. Tente novamente.");
+    } catch (err) {
+      const paywall = mensagemPaywall(err);
+      if (paywall) setErroPaywall(paywall);
+      else setErro("Não foi possível desfazer o pagamento. Tente novamente.");
     } finally {
       setProcessando(null);
     }
@@ -88,6 +97,7 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
         <List size={16} aria-hidden="true" /> Suas dívidas (ordenadas por prioridade de quitação)
       </h2>
 
+      {erroPaywall && <PromptUpgrade mensagem={erroPaywall} />}
       {erro && (
         <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>
           {erro}

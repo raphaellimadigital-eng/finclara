@@ -3,15 +3,19 @@
 import { useRef, useState } from "react";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { criarCartao } from "@/app/dashboard/cartoes/actions";
+import { mensagemPaywall } from "@/lib/assinatura";
+import { PromptUpgrade } from "@/components/PromptUpgrade";
 
 export function FormCartao() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  const [erroPaywall, setErroPaywall] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErro("");
+    setErroPaywall(null);
     setCarregando(true);
 
     try {
@@ -19,7 +23,9 @@ export function FormCartao() {
       await criarCartao(data);
       formRef.current?.reset();
     } catch (err: any) {
-      setErro(err.message || "Não foi possível salvar. Tente novamente.");
+      const paywall = mensagemPaywall(err);
+      if (paywall) setErroPaywall(paywall);
+      else setErro(err.message || "Não foi possível salvar. Tente novamente.");
     } finally {
       setCarregando(false);
     }
@@ -54,6 +60,7 @@ export function FormCartao() {
             </div>
           </div>
 
+          {erroPaywall && <PromptUpgrade mensagem={erroPaywall} />}
           {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
 
           <button type="submit" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>

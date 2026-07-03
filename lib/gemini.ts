@@ -67,8 +67,9 @@ Como o FinClara funciona:
 - Orientação financeira: card na home ou página própria, recomenda sempre nesta ordem: quitar dívida cara, depois formar reserva de emergência (3 meses de gastos essenciais), depois investir.
 - Limites por categoria e alertas: define um teto de gasto mensal por categoria de despesa, com aviso ao atingir 80% e alerta de estouro ao passar de 100%. A central de alertas reúne isso junto com vencimento de fatura/dívida e metas atrasadas.
 - Relatórios: no menu do usuário > "Relatórios", tem 5 tipos, todos com botão de download na própria página: Relatório Mensal (PDF com receitas x despesas, gastos por categoria e evolução das metas), Diagnóstico Financeiro (PDF com análise personalizada por IA), Extrato de Lançamentos (CSV para abrir no Excel ou Google Planilhas), Comparativo Mensal (mês atual vs. anterior) e Evolução Patrimonial (histórico do patrimônio mês a mês, que vai se formando com o uso do app ao longo do tempo).
-- Configurações: no menu do usuário > "Configurações", para alternar tema claro/escuro, ativar autenticação em dois fatores, exportar todos os dados em JSON ou excluir todos os dados financeiros.
-- Dados cadastrais: no menu do usuário > "Dados cadastrais", para editar nome, telefone e endereço (o endereço pode ser preenchido automaticamente digitando o CEP); o e-mail não pode ser alterado por lá.`;
+- Configurações: no menu do usuário > "Configurações", só para alternar tema claro/escuro.
+- Segurança: no menu do usuário > "Segurança", para trocar a senha, ativar autenticação em dois fatores, exportar todos os dados em JSON ou excluir todos os dados financeiros.
+- Perfil: no menu do usuário > "Perfil", para editar nome, telefone e endereço (o endereço pode ser preenchido automaticamente digitando o CEP, o e-mail não pode ser alterado por lá) e ver o status da assinatura (teste grátis, Free ou Pro).`;
 
 export async function responderPerguntaAjuda(pergunta: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Trash2, Loader2 } from "lucide-react";
-import { excluirMeusDados } from "@/app/dashboard/configuracoes/actions";
+import { excluirMeusDados } from "@/app/dashboard/seguranca/actions";
 import { createClient } from "@/lib/supabase-browser";
 
 export function ExportarExcluirDados() {
@@ -56,13 +56,8 @@ export function ExportarExcluirDados() {
         type="button"
         onClick={handleExcluir}
         disabled={excluindo}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          background: "var(--vermelho)",
-        }}
+        className="botao-perigo"
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
       >
         {excluindo ? <Loader2 size={16} className="icone-carregando" aria-hidden="true" /> : <Trash2 size={16} aria-hidden="true" />}
         {excluindo ? "Excluindo..." : "Excluir todos os meus dados"}

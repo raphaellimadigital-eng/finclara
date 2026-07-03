@@ -1,14 +1,22 @@
+import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { getLancamentos } from "../actions";
 import { getMetas } from "../metas/actions";
 import { gerarDadosRelatorio } from "@/lib/relatorio";
 import { RelatorioDocument } from "./RelatorioDocument";
+import { getStatusAssinatura } from "@/lib/auth";
+import { podeUsarFeature } from "@/lib/assinatura";
 
 // Gera e devolve para download o relatório mensal em PDF (receitas x despesas, gastos por
 // categoria e evolução das metas — regra 13.5 da proposta). Protegido pelo middleware, que já
 // redireciona requisições sem sessão para /login antes de chegar aqui.
 export async function GET(request: Request) {
+  const usuario = await getStatusAssinatura();
+  if (!podeUsarFeature(usuario, "relatorios_pdf")) {
+    return NextResponse.redirect(new URL("/dashboard/assinatura?bloqueado=relatorio", request.url));
+  }
+
   const { searchParams } = new URL(request.url);
   const agora = new Date();
   const ano = Number(searchParams.get("ano")) || agora.getFullYear();

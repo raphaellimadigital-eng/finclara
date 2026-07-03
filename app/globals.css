@@ -343,6 +343,22 @@ button:disabled {
   text-decoration: underline;
 }
 
+/* Botão de ação destrutiva (ex: excluir dados) — mesma estrutura do botão secundário, mas em
+   vermelho, para diferenciar visualmente de um "cancelar"/"voltar" comum. */
+.botao-perigo {
+  width: auto;
+  min-height: auto;
+  background: none;
+  color: var(--vermelho);
+  border: 1px solid var(--vermelho-clara);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.botao-perigo:hover:not(:disabled) {
+  background: var(--vermelho-clara);
+}
+
 /* Botão apenas ícone (ex: excluir) */
 .botao-icone {
   width: auto;

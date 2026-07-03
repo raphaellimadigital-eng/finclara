@@ -6,6 +6,9 @@ import Link from "next/link";
 import { Loader2, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
 import { formatarCep, buscarEnderecoPorCep } from "@/lib/cep";
+import { formatarCpf, cpfValido } from "@/lib/cpf";
+import { maiorDeIdade, parseDataLocal } from "@/lib/data";
+import { cpfDisponivel } from "./actions";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -13,6 +16,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
   const [telefone, setTelefone] = useState("");
   const [cep, setCep] = useState("");
   const [endereco, setEndereco] = useState("");
@@ -51,14 +56,36 @@ export default function LoginPage() {
     }
   }
 
+  function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCpf(formatarCpf(e.target.value));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErro("");
-    setCarregando(true);
 
-    // Nome/telefone/endereço vão como metadados do próprio cadastro (em vez de uma Server
-    // Action separada logo em seguida) para não depender da sessão já estar sincronizada no
-    // servidor no exato instante após o signUp.
+    if (modo === "cadastro") {
+      if (!cpfValido(cpf)) {
+        setErro("Digite um CPF válido.");
+        return;
+      }
+      if (!dataNascimento || !maiorDeIdade(parseDataLocal(dataNascimento))) {
+        setErro("É preciso ser maior de 18 anos para criar uma conta no FinClara.");
+        return;
+      }
+      setCarregando(true);
+      if (!(await cpfDisponivel(cpf))) {
+        setErro("Este CPF já está cadastrado em outra conta.");
+        setCarregando(false);
+        return;
+      }
+    } else {
+      setCarregando(true);
+    }
+
+    // Nome/telefone/endereço/CPF/data de nascimento vão como metadados do próprio cadastro (em
+    // vez de uma Server Action separada logo em seguida) para não depender da sessão já estar
+    // sincronizada no servidor no exato instante após o signUp.
     const acao =
       modo === "login"
         ? supabase.auth.signInWithPassword({ email, password: senha })
@@ -66,7 +93,7 @@ export default function LoginPage() {
             email,
             password: senha,
             options: {
-              data: { nome, telefone, endereco },
+              data: { nome, telefone, endereco, cpf: cpf.replace(/\D/g, ""), dataNascimento },
               emailRedirectTo: `${window.location.origin}/auth/callback`,
             },
           });
@@ -206,17 +233,45 @@ export default function LoginPage() {
         <>
           <form className="card" onSubmit={handleSubmit}>
             {modo === "cadastro" && (
-              <div className="campo">
-                <label className="rotulo" htmlFor="nome">Nome</label>
-                <input
-                  id="nome"
-                  type="text"
-                  placeholder="Seu nome completo"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                />
-              </div>
+              <>
+                <div className="campo">
+                  <label className="rotulo" htmlFor="nome">Nome</label>
+                  <input
+                    id="nome"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: 10 }}>
+                  <div className="campo" style={{ flex: 1 }}>
+                    <label className="rotulo" htmlFor="cpf">CPF</label>
+                    <input
+                      id="cpf"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="000.000.000-00"
+                      value={cpf}
+                      onChange={handleCpfChange}
+                      maxLength={14}
+                      required
+                    />
+                  </div>
+                  <div className="campo" style={{ flex: 1 }}>
+                    <label className="rotulo" htmlFor="dataNascimento">Data de nascimento</label>
+                    <input
+                      id="dataNascimento"
+                      type="date"
+                      value={dataNascimento}
+                      onChange={(e) => setDataNascimento(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="campo">

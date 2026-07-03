@@ -6,6 +6,8 @@ import type { PrioridadeOrientacao } from "@/lib/orientacao";
 import type { Alocacao } from "@/lib/financas";
 import { pedirRecomendacaoIA } from "@/app/dashboard/ai-actions";
 import { DisclaimerFinanceiro } from "@/components/DisclaimerFinanceiro";
+import { PromptUpgrade } from "@/components/PromptUpgrade";
+import { mensagemPaywall } from "@/lib/assinatura";
 
 function MarcaFinClara() {
   return (
@@ -109,15 +111,19 @@ export function Resumo({
   const [recomendacaoIA, setRecomendacaoIA] = useState("");
   const [carregandoIA, setCarregandoIA] = useState(false);
   const [erroIA, setErroIA] = useState("");
+  const [erroPaywallIA, setErroPaywallIA] = useState<string | null>(null);
 
   async function handlePedirIA() {
     setCarregandoIA(true);
     setErroIA("");
+    setErroPaywallIA(null);
     try {
       const texto = await pedirRecomendacaoIA(alocacao);
       setRecomendacaoIA(texto);
     } catch (err: any) {
-      setErroIA(err.message || "Não foi possível gerar a sugestão agora.");
+      const paywall = mensagemPaywall(err);
+      if (paywall) setErroPaywallIA(paywall);
+      else setErroIA(err.message || "Não foi possível gerar a sugestão agora.");
     } finally {
       setCarregandoIA(false);
     }
@@ -267,6 +273,7 @@ export function Resumo({
             </button>
           )}
 
+          {erroPaywallIA && <PromptUpgrade mensagem={erroPaywallIA} />}
           {erroIA && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginTop: 8 }}>{erroIA}</p>}
 
           {recomendacaoIA && (

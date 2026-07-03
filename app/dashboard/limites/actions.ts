@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { Categoria } from "@prisma/client";
+import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
 
 // Busca todos os limites de categoria do usuário logado
 export async function getLimites() {
@@ -19,7 +20,10 @@ export async function getLimites() {
 // Cria ou atualiza o limite de uma categoria (uma categoria só tem um limite por usuário)
 export async function salvarLimite(formData: FormData) {
   const user = await getUsuarioLogado();
-  await garantirUsuario(user);
+  const usuario = await garantirUsuario(user);
+  if (!podeUsarFeature(usuario, "alertas_completos")) {
+    throw erroPaywall("Limites de gasto por categoria são um recurso do plano Pro.");
+  }
 
   const categoria = formData.get("categoria") as Categoria;
   const valorLimite = parseFloat(formData.get("valorLimite") as string);

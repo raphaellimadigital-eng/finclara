@@ -13,5 +13,5 @@ export async function excluirMeusDados() {
   await prisma.usuario.deleteMany({ where: { id: user.id } });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/configuracoes");
+  revalidatePath("/dashboard/seguranca");
 }
