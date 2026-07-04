@@ -1,17 +1,32 @@
 "use client";
 
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { PieChart as PieChartIcone, Lightbulb, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { PieChart as PieChartIcone, Lightbulb, Sparkles, Loader2 } from "lucide-react";
+import { pedirRecomendacaoIA } from "@/app/dashboard/ai-actions";
 import { DisclaimerFinanceiro } from "@/components/DisclaimerFinanceiro";
+import { PromptUpgrade } from "@/components/PromptUpgrade";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { mensagemPaywall } from "@/lib/assinatura";
+import { formatarMoeda } from "@/lib/formatos";
 import type { Alocacao } from "@/lib/financas";
 
 const TEXTO_INFO = [
   "Essenciais: gastos fixos necessários, como moradia, alimentação, transporte, saúde e educação.",
-  "Desejos: gastos não essenciais, como lazer, assinaturas e outras despesas.",
+  "Gastos livres: gastos não essenciais, como lazer, assinaturas e outras despesas.",
   "Reserva: dinheiro guardado para imprevistos (reserva de emergência).",
   "Investimentos: aportes visando crescimento no longo prazo (tesouro direto, renda variável, outros).",
 ];
+
+// Sobre fundo azul (botão), "Clara" em --verde não tem contraste suficiente no tema claro (fica
+// quase ilegível) — nesse contexto usa branco puro, sem sombra, herdando a cor do botão.
+function MarcaFinClara({ branco = false }: { branco?: boolean }) {
+  if (branco) return <>FinClara</>;
+  return (
+    <span style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.35)" }}>
+      Fin<span style={{ color: "var(--verde)" }}>Clara</span>
+    </span>
+  );
+}
 
 // Cores do próprio tema do app (se adaptam a claro/escuro automaticamente, ao contrário de um
 // hex fixo). Reserva usa o verde do tema e investimento a cor de investimento já usada no Resumo.
@@ -22,88 +37,69 @@ const CORES = {
   investimento: "var(--investimento)",
 };
 
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
-  const { totalReceitas, atual, ideal, dicas, temDividaCara } = alocacao;
+  const { totalReceitas, atual, ideal, dicas } = alocacao;
+
+  const [recomendacaoIA, setRecomendacaoIA] = useState("");
+  const [carregandoIA, setCarregandoIA] = useState(false);
+  const [erroIA, setErroIA] = useState("");
+  const [erroPaywallIA, setErroPaywallIA] = useState<string | null>(null);
+
+  async function handlePedirIA() {
+    setCarregandoIA(true);
+    setErroIA("");
+    setErroPaywallIA(null);
+    try {
+      const texto = await pedirRecomendacaoIA(alocacao);
+      setRecomendacaoIA(texto);
+    } catch (err: any) {
+      const paywall = mensagemPaywall(err);
+      if (paywall) setErroPaywallIA(paywall);
+      else setErroIA(err.message || "Não foi possível gerar a sugestão agora.");
+    } finally {
+      setCarregandoIA(false);
+    }
+  }
 
   if (totalReceitas <= 0) {
     return (
       <div className="card">
         <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <PieChartIcone size={16} aria-hidden="true" /> Sugestão de alocação da renda
+          <PieChartIcone size={16} aria-hidden="true" /> Para onde foi sua renda
         </h2>
         <p className="texto-secundario">
-          Registre receitas neste mês para ver uma sugestão personalizada de quanto direcionar
-          para gastos essenciais, desejos, reserva de emergência e investimentos.
+          Registre o que entrou neste mês para ver uma sugestão personalizada de quanto direcionar
+          para gastos essenciais, gastos livres, reserva de emergência e investimentos.
         </p>
       </div>
     );
   }
 
-  const dadosIdeal = [
-    { nome: "Essenciais (50%)", valor: ideal.essenciais, cor: CORES.essenciais },
-    { nome: "Desejos (30%)", valor: ideal.desejos, cor: CORES.desejos },
-    { nome: "Reserva (10%)", valor: ideal.reserva, cor: CORES.reserva },
-    { nome: "Investimentos (10%)", valor: ideal.investimento, cor: CORES.investimento },
-  ];
+  // Percentual sugerido para o rótulo de cada barra — mostra o alvo adaptado a esta renda, não
+  // um 50/30/20 fixo (§5.1 da proposta).
+  function pctSugerido(valorIdeal: number) {
+    return totalReceitas > 0 ? Math.round((valorIdeal / totalReceitas) * 100) : 0;
+  }
 
   const comparativos = [
-    { label: "Essenciais", atual: atual.essenciais, ideal: ideal.essenciais, cor: CORES.essenciais, tipo: "gasto" as const },
-    { label: "Desejos", atual: atual.desejos, ideal: ideal.desejos, cor: CORES.desejos, tipo: "gasto" as const },
-    { label: "Reserva de emergência", atual: atual.reserva, ideal: ideal.reserva, cor: CORES.reserva, tipo: "aporte" as const },
-    { label: "Investimentos", atual: atual.investimento, ideal: ideal.investimento, cor: CORES.investimento, tipo: "aporte" as const },
+    { label: `Essenciais (sugerido ${pctSugerido(ideal.essenciais)}%)`, atual: atual.essenciais, ideal: ideal.essenciais, cor: CORES.essenciais, tipo: "gasto" as const },
+    { label: `Gastos livres (sugerido ${pctSugerido(ideal.desejos)}%)`, atual: atual.desejos, ideal: ideal.desejos, cor: CORES.desejos, tipo: "gasto" as const },
+    { label: `Reserva de emergência (sugerido ${pctSugerido(ideal.reserva)}%)`, atual: atual.reserva, ideal: ideal.reserva, cor: CORES.reserva, tipo: "aporte" as const },
+    { label: `Investimentos (sugerido ${pctSugerido(ideal.investimento)}%)`, atual: atual.investimento, ideal: ideal.investimento, cor: CORES.investimento, tipo: "aporte" as const },
   ];
 
   return (
     <div className="card">
       <h2 className="card-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <PieChartIcone size={16} aria-hidden="true" /> Sugestão de alocação da renda
+          <PieChartIcone size={16} aria-hidden="true" /> Para onde foi sua renda
         </span>
         <InfoTooltip texto={TEXTO_INFO} />
       </h2>
       <p className="texto-secundario" style={{ marginTop: -8, marginBottom: 16 }}>
-        Baseado na regra 50/30/20 aplicada à sua receita do mês. As barras comparam o ideal com o
-        que você já lançou (gastos e aportes).
+        As barras comparam o que você já gastou e guardou com uma sugestão para a sua renda
+        do mês.
       </p>
-
-      {temDividaCara && (
-        <div
-          role="alert"
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 8,
-            background: "var(--vermelho-clara)",
-            color: "var(--vermelho)",
-            borderRadius: 10,
-            padding: "10px 12px",
-            fontSize: 13,
-            fontWeight: 500,
-            marginBottom: 16,
-          }}
-        >
-          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
-          Você tem dívida com juros altos. Priorize quitá-la antes de investir.
-        </div>
-      )}
-
-      <div style={{ width: "100%", height: 220 }}>
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie data={dadosIdeal} dataKey="valor" nameKey="nome" innerRadius={55} outerRadius={85} paddingAngle={2}>
-              {dadosIdeal.map((d) => (
-                <Cell key={d.nome} fill={d.cor} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(v) => formatarMoeda(Number(v))} />
-            <Legend verticalAlign="bottom" height={32} iconSize={9} wrapperStyle={{ fontSize: 11.5 }} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
 
       {(["gasto", "aporte"] as const).map((tipoGrupo, i) => (
         <div
@@ -115,7 +111,7 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
           }}
         >
           <div className="texto-secundario" style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
-            {tipoGrupo === "gasto" ? "Gastos" : "Aportes"}
+            {tipoGrupo === "gasto" ? "Gastos" : "Guardado"}
           </div>
 
           {comparativos
@@ -125,8 +121,8 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
               const excedeu = c.atual > c.ideal;
               const atingiuMeta = c.atual >= c.ideal;
 
-              // Para gastos (essenciais/desejos), passar do ideal é ruim (vermelho).
-              // Para aportes (reserva/investimento), atingir ou passar do ideal é bom (verde).
+              // Para gastos (essenciais/livres), passar do sugerido é sinal de atenção (vermelho).
+              // Para o que é guardado (reserva/investimento), atingir ou passar é bom (verde).
               const corTexto =
                 c.tipo === "gasto"
                   ? excedeu
@@ -167,6 +163,44 @@ export function GraficoAlocacao({ alocacao }: { alocacao: Alocacao }) {
           </p>
         ))}
         <DisclaimerFinanceiro />
+      </div>
+
+      {/* Sugestão personalizada por IA — mora aqui porque analisa exatamente esta alocação */}
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
+        {!recomendacaoIA && (
+          <button
+            type="button"
+            onClick={handlePedirIA}
+            disabled={carregandoIA}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          >
+            {carregandoIA ? (
+              <Loader2 size={16} className="icone-carregando" aria-hidden="true" />
+            ) : (
+              <Sparkles size={16} aria-hidden="true" />
+            )}
+            {carregandoIA ? (
+              "Gerando sugestão..."
+            ) : (
+              <>
+                Pedir sugestão personalizada da <MarcaFinClara branco />
+              </>
+            )}
+          </button>
+        )}
+
+        {erroPaywallIA && <PromptUpgrade mensagem={erroPaywallIA} />}
+        {erroIA && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginTop: 8 }}>{erroIA}</p>}
+
+        {recomendacaoIA && (
+          <div>
+            <div className="texto-secundario" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+              <Sparkles size={14} aria-hidden="true" /> Sugestão da <MarcaFinClara />
+            </div>
+            <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: 0 }}>{recomendacaoIA}</p>
+            <DisclaimerFinanceiro />
+          </div>
+        )}
       </div>
     </div>
   );

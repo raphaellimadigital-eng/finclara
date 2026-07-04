@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase-server";
 import { getUsuarioAtual } from "./actions";
 import { FormDadosCadastrais } from "@/components/FormDadosCadastrais";
 import { AssinaturaCard } from "@/components/AssinaturaCard";
-import { GridMosaico } from "@/components/GridMosaico";
 import { LABEL_PERFIL } from "@/lib/perfilInvestidor";
 
 export default async function PerfilPage() {
@@ -30,7 +29,7 @@ export default async function PerfilPage() {
         <UserRound size={20} aria-hidden="true" /> Perfil
       </h1>
 
-      <GridMosaico>
+      <div className="dashboard-grid">
         <AssinaturaCard usuario={usuario} />
 
         <FormDadosCadastrais
@@ -47,7 +46,7 @@ export default async function PerfilPage() {
           }
           perfilInvestidor={usuario.perfilInvestidor ? LABEL_PERFIL[usuario.perfilInvestidor] : "Ainda não definido"}
         />
-      </GridMosaico>
+      </div>
     </div>
   );
 }

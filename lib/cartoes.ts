@@ -81,3 +81,25 @@ export function limiteComprometido(compras: CompraParcelada[], diaFechamento: nu
 export function limiteDisponivel(cartao: Pick<CartaoCredito, "limite" | "diaFechamento">, compras: CompraParcelada[]): number {
   return Number(cartao.limite) - limiteComprometido(compras, cartao.diaFechamento);
 }
+
+// Soma, por categoria, a parcela do mês de todas as compras parceladas de todos os cartões —
+// integra a fatura nos Limites por categoria e no comparativo de alocação da renda (§5.3),
+// que hoje só enxergam lançamentos avulsos.
+export function parcelasPorCategoriaNoMes(
+  cartoes: (Pick<CartaoCredito, "diaFechamento"> & { compras: CompraParcelada[] })[],
+  mes: number,
+  ano: number
+): Record<string, number> {
+  const totais: Record<string, number> = {};
+
+  for (const cartao of cartoes) {
+    for (const compra of cartao.compras) {
+      const parcelaDoMes = gerarParcelas(compra, cartao.diaFechamento).find((p) => p.mes === mes && p.ano === ano);
+      if (parcelaDoMes) {
+        totais[compra.categoria] = (totais[compra.categoria] ?? 0) + parcelaDoMes.valor;
+      }
+    }
+  }
+
+  return totais;
+}

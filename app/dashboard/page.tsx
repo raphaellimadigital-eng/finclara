@@ -5,25 +5,24 @@ import { getCartoes } from "./cartoes/actions";
 import { getMetas } from "./metas/actions";
 import { getUsuarioAtual } from "./perfil/actions";
 import { getLimites } from "./limites/actions";
-import { FormLancamento } from "@/components/FormLancamento";
 import { ListaLancamentos } from "@/components/ListaLancamentos";
-import { Resumo, type MetaResumo } from "@/components/Resumo";
+import { Resumo } from "@/components/Resumo";
 import { SeletorMes } from "@/components/SeletorMes";
-import { MenuUsuario } from "@/components/MenuUsuario";
 import { GraficoAlocacao } from "@/components/GraficoAlocacao";
+import { CardSobra, type MetaResumo } from "@/components/CardSobra";
 import { CardDividas } from "@/components/CardDividas";
 import { CardCartoes } from "@/components/CardCartoes";
 import { CardMetas } from "@/components/CardMetas";
 import { CardOrientacao } from "@/components/CardOrientacao";
 import { CardAlertas } from "@/components/CardAlertas";
-import { GridMosaico } from "@/components/GridMosaico";
+import { OnboardingPrimeirosPassos } from "@/components/OnboardingPrimeirosPassos";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
 import { calcularAlocacao, CATEGORIAS_ESSENCIAIS } from "@/lib/financas";
 import { calcularOrientacao } from "@/lib/orientacao";
-import { valorFaturaNoMes, limiteDisponivel } from "@/lib/cartoes";
-import { totalParcelasMensais, totalDevedor as calcularTotalDevedor } from "@/lib/dividas";
+import { valorFaturaNoMes, limiteDisponivel, parcelasPorCategoriaNoMes } from "@/lib/cartoes";
+import { totalParcelasMensais } from "@/lib/dividas";
 import { calcularProjecao, ordenarPorPrazo } from "@/lib/metas";
 import { calcularProgressoLimites, categoriasEstouradas } from "@/lib/limites";
 import { alertasLimites, alertasCartoes, alertasDividas, alertasMetas, ordenarPorSeveridade } from "@/lib/alertas";
@@ -35,8 +34,8 @@ type Props = {
   searchParams: { ano?: string; mes?: string };
 };
 
-// Escolhe a meta a destacar no resumo do mês: a mais próxima do prazo entre as ainda não
-// concluídas, ou a primeira cadastrada se todas já estiverem concluídas.
+// Escolhe a meta a destacar: a mais próxima do prazo entre as ainda não concluídas, ou a
+// primeira cadastrada se todas já estiverem concluídas. Usada pelo card da sobra do mês.
 function calcularMetaPrincipal(metas: Awaited<ReturnType<typeof getMetas>>): MetaResumo | null {
   if (metas.length === 0) return null;
 
@@ -94,7 +93,8 @@ export default async function DashboardPage({ searchParams }: Props) {
   // Dinheiro que ainda não tem destino: o que sobrou depois de pagar despesas e já ter
   // investido/guardado. Dinheiro já investido não é mais "livre", por isso sai da conta.
   const saldo = totalReceitas - totalDespesas - totalInvestimentos;
-  const alocacao = calcularAlocacao(totalReceitas, lancamentos, dividasAtivas);
+  const parcelasPorCategoria = parcelasPorCategoriaNoMes(cartoes, mes, ano);
+  const alocacao = calcularAlocacao(totalReceitas, lancamentos, dividasAtivas, parcelasPorCategoria);
 
   const essenciaisMensal = lancamentos
     .filter((l) => l.tipo === "DESPESA" && CATEGORIAS_ESSENCIAIS.includes(l.categoria))
@@ -121,11 +121,9 @@ export default async function DashboardPage({ searchParams }: Props) {
   // receita bruta, senão o valor sugerido pode ficar maior que o próprio saldo disponível.
   const poupancaRecomendada = Math.max(saldo - parcelasCartaoMes - parcelasDividaMes, 0);
 
-  const disponivelCartoes = cartoes.reduce((soma, c) => soma + limiteDisponivel(c, c.compras), 0);
-  const totalDevedor = calcularTotalDevedor(dividasAtivas);
   const metaPrincipal = calcularMetaPrincipal(metas);
 
-  const progressoLimites = calcularProgressoLimites(lancamentos, limites);
+  const progressoLimites = calcularProgressoLimites(lancamentos, limites, parcelasPorCategoria);
   const estouradas = categoriasEstouradas(progressoLimites);
 
   const alertas = ordenarPorSeveridade([
@@ -143,10 +141,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           <Logo />
           <h1>Fin<span style={{ color: "var(--verde)" }}>Clara</span></h1>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <ThemeToggle />
-          <MenuUsuario />
-        </div>
+        <ThemeToggle />
       </div>
       <p className="saudacao">
         Olá, {usuario.nome?.split(" ")[0] || user?.email?.split("@")[0]}. Aqui está o resumo de {" "}
@@ -158,7 +153,17 @@ export default async function DashboardPage({ searchParams }: Props) {
         <SeletorMes ano={ano} mes={mes} anoMinimo={usuario.criadoEm.getFullYear()} limiteFuturo={limiteFuturoCalendario} />
       </Suspense>
 
-      {/* 1. Resumo do mês (já traz cartões, dívidas e meta principal integrados) */}
+      <OnboardingPrimeirosPassos
+        temReceita={totalReceitas > 0}
+        temDespesa={totalDespesas > 0}
+        temMeta={metas.length > 0}
+        ano={ano}
+        mes={mes}
+      />
+
+      {/* Bloco A — destaque obrigatório: fluxo do mês e a leitura da renda */}
+
+      {/* 1. Como está seu mês (sobrou/faltou, entrou, saiu, guardado, renda com dono) */}
       <Resumo
         totalReceitas={totalReceitas}
         totalDespesas={totalDespesas}
@@ -166,45 +171,48 @@ export default async function DashboardPage({ searchParams }: Props) {
         saldo={saldo}
         parcelasCartaoMes={parcelasCartaoMes}
         parcelasDividaMes={parcelasDividaMes}
-        poupancaRecomendada={poupancaRecomendada}
-        qtdCartoes={cartoes.length}
-        disponivelCartoes={disponivelCartoes}
-        qtdDividas={dividasAtivas.length}
-        totalDevedor={totalDevedor}
-        metaPrincipal={metaPrincipal}
-        orientacaoPrioridade={orientacao.prioridade}
-        alocacao={alocacao}
       />
 
-      <GridMosaico>
-        {/* Orientação financeira (dívida → reserva → investir), logo abaixo do resumo pra
-            ajudar a explicar os números acima */}
+      {/* 2. Para onde foi sua renda (comparativo com a sugestão + dicas + IA) */}
+      <GraficoAlocacao alocacao={alocacao} />
+
+      {/* Bloco B — grid de decisão, 2 colunas no desktop / 1 no mobile, gap único */}
+      <div className="dashboard-grid">
+        {/* 3. Sua prioridade agora (única voz de prioridade do dashboard) */}
         <CardOrientacao orientacao={orientacao} />
 
-        {/* Evolução patrimonial (metas acumuladas menos dívidas, mês a mês) */}
-        <GraficoEvolucaoPatrimonial historico={historicoPatrimonio} />
+        {/* 4. Sobra do mês com ação (some sozinho quando não há sobra) */}
+        <CardSobra
+          valor={poupancaRecomendada}
+          prioridade={orientacao.prioridade}
+          metaPrincipal={metaPrincipal}
+          metas={metas.map((m) => ({ id: m.id, descricao: m.descricao }))}
+          ano={ano}
+          mes={mes}
+        />
 
-        {/* Central de alertas (limites, faturas, dívidas e metas atrasadas) */}
-        <CardAlertas alertas={alertas} />
-
-        {/* 2. Meta financeira */}
+        {/* 5. Metas (meta principal com progresso) */}
         <CardMetas metas={metas} />
 
-        {/* 3. Cartões */}
+        {/* 6. Cartões */}
         <CardCartoes cartoes={cartoes} mes={mes} ano={ano} />
 
-        {/* 4. Dívidas */}
+        {/* 7. Dívidas */}
         <CardDividas dividas={dividasAtivas} />
 
-        {/* Sugestão de alocação da renda */}
-        <GraficoAlocacao alocacao={alocacao} />
+        {/* 8. Central de alertas */}
+        <CardAlertas alertas={alertas} ano={ano} mes={mes} />
 
-        {/* Formulário de novo lançamento */}
-        <FormLancamento key={`${ano}-${mes}`} ano={ano} mes={mes} />
+        {/* 9. Seu dinheiro ao longo do tempo (só aparece com 2+ meses de histórico) */}
+        <div className="dashboard-grid-full">
+          <GraficoEvolucaoPatrimonial historico={historicoPatrimonio} />
+        </div>
 
-        {/* 5. Lançamentos recentes (card recolhível) */}
-        <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />
-      </GridMosaico>
+        {/* 10. Últimos registros (card recolhível) — full-width */}
+        <div className="dashboard-grid-full">
+          <ListaLancamentos lancamentos={lancamentos} categoriasEstouradas={estouradas} />
+        </div>
+      </div>
     </div>
   );
 }

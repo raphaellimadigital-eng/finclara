@@ -78,4 +78,38 @@ describe("calcularAlocacao", () => {
     expect(alocacao.ideal.essenciais).toBe(0);
     expect(Number.isFinite(alocacao.atual.naoAlocado)).toBe(true);
   });
+
+  it("adapta a faixa para 60/25/15 quando essenciais ficam entre 50% e 65% da renda", () => {
+    const lancamentos = [lancamento({ categoria: "MORADIA", valor: 600 as any })];
+    const alocacao = calcularAlocacao(1000, lancamentos);
+    expect(alocacao.ideal.essenciais).toBe(600);
+    expect(alocacao.ideal.desejos).toBe(250);
+    expect(alocacao.ideal.reserva + alocacao.ideal.investimento).toBe(150);
+  });
+
+  it("adapta a faixa para 70/20/10 quando essenciais ficam entre 65% e 80% da renda", () => {
+    const lancamentos = [lancamento({ categoria: "MORADIA", valor: 700 as any })];
+    const alocacao = calcularAlocacao(1000, lancamentos);
+    expect(alocacao.ideal.essenciais).toBe(700);
+    expect(alocacao.ideal.desejos).toBe(200);
+  });
+
+  it("adapta a faixa para 80/15/5 quando essenciais passam de 80% da renda", () => {
+    const lancamentos = [lancamento({ categoria: "MORADIA", valor: 900 as any })];
+    const alocacao = calcularAlocacao(1000, lancamentos);
+    expect(alocacao.ideal.essenciais).toBe(800);
+    expect(alocacao.ideal.desejos).toBe(150);
+    expect(alocacao.dicas.some((d) => d.toLowerCase().includes("caber no mês"))).toBe(true);
+  });
+
+  it("sugere elevar a fatia de investimento quando a sobra sem destino passa de 30% da renda", () => {
+    const alocacao = calcularAlocacao(1000, []);
+    expect(alocacao.dicas.some((d) => d.toLowerCase().includes("sobra é grande"))).toBe(true);
+  });
+
+  it("soma a parcela do mês de compras parceladas por categoria no comparativo de alocação", () => {
+    const alocacao = calcularAlocacao(1000, [], [], { MORADIA: 200 });
+    expect(alocacao.atual.essenciais).toBe(200);
+    expect(alocacao.ideal.essenciais).toBe(500);
+  });
 });

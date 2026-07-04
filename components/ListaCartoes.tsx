@@ -4,17 +4,18 @@ import { useState } from "react";
 import { CreditCard, Trash2, Loader2, Inbox, ShoppingCart } from "lucide-react";
 import { deletarCartao, deletarCompraParcelada } from "@/app/dashboard/cartoes/actions";
 import { limiteDisponivel } from "@/lib/cartoes";
+import { formatarMoeda } from "@/lib/formatos";
+import { FormCompraParcelada } from "@/components/FormCompraParcelada";
+import { RevelarFormulario } from "@/components/RevelarFormulario";
+import { useConfirmacao } from "@/components/useConfirmacao";
 import type { CartaoCredito, CompraParcelada } from "@prisma/client";
 
 type CartaoComCompras = CartaoCredito & { compras: CompraParcelada[] };
 
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 export function ListaCartoes({ cartoes }: { cartoes: CartaoComCompras[] }) {
   const [excluindo, setExcluindo] = useState<string | null>(null);
   const [erro, setErro] = useState("");
+  const { confirmar, modal } = useConfirmacao();
 
   if (cartoes.length === 0) {
     return (
@@ -24,7 +25,7 @@ export function ListaCartoes({ cartoes }: { cartoes: CartaoComCompras[] }) {
           <p className="texto-secundario" style={{ margin: 0 }}>
             Nenhum cartão cadastrado ainda.
             <br />
-            Cadastre o primeiro no formulário acima.
+            Toque em <strong>+ Adicionar cartão</strong> abaixo para cadastrar o primeiro.
           </p>
         </div>
       </div>
@@ -32,7 +33,7 @@ export function ListaCartoes({ cartoes }: { cartoes: CartaoComCompras[] }) {
   }
 
   async function handleExcluirCartao(id: string, nome: string) {
-    if (!confirm(`Remover o cartão "${nome}"? Isso também remove as compras parceladas vinculadas a ele.`)) return;
+    if (!(await confirmar(`Remover o cartão "${nome}"? Isso também remove as compras parceladas vinculadas a ele.`, "Remover"))) return;
     setErro("");
     setExcluindo(`cartao-${id}`);
     try {
@@ -45,7 +46,7 @@ export function ListaCartoes({ cartoes }: { cartoes: CartaoComCompras[] }) {
   }
 
   async function handleExcluirCompra(id: string, descricao: string) {
-    if (!confirm(`Remover a compra "${descricao}"?`)) return;
+    if (!(await confirmar(`Remover a compra "${descricao}"?`, "Remover"))) return;
     setErro("");
     setExcluindo(`compra-${id}`);
     try {
@@ -59,6 +60,7 @@ export function ListaCartoes({ cartoes }: { cartoes: CartaoComCompras[] }) {
 
   return (
     <>
+      {modal}
       {erro && (
         <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>
           {erro}
@@ -110,7 +112,7 @@ export function ListaCartoes({ cartoes }: { cartoes: CartaoComCompras[] }) {
             </div>
 
             {cartao.compras.length === 0 ? (
-              <p className="texto-secundario" style={{ fontSize: 13, margin: 0 }}>
+              <p className="texto-secundario" style={{ fontSize: 13, margin: "0 0 12px" }}>
                 Nenhuma compra parcelada neste cartão.
               </p>
             ) : (
@@ -145,6 +147,14 @@ export function ListaCartoes({ cartoes }: { cartoes: CartaoComCompras[] }) {
                 </div>
               ))
             )}
+
+            {/* Compra parcelada nasce dentro do cartão em que foi feita — sem formulário
+                solto no fim da página com um select de cartão. */}
+            <div style={{ marginTop: 12 }}>
+              <RevelarFormulario rotulo="Compra neste cartão">
+                <FormCompraParcelada cartaoFixo={cartao} semCard />
+              </RevelarFormulario>
+            </div>
           </div>
         );
       })}

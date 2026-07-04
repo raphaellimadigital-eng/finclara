@@ -16,17 +16,24 @@ describe("FormLancamento", () => {
 
   it("renderiza os campos principais", () => {
     render(<FormLancamento ano={2026} mes={7} />);
+    expect(screen.getByLabelText("O que foi?")).toBeInTheDocument();
     expect(screen.getByLabelText("Categoria")).toBeInTheDocument();
-    expect(screen.getByLabelText("Descrição")).toBeInTheDocument();
     expect(screen.getByLabelText("Valor")).toBeInTheDocument();
     expect(screen.getByLabelText("Data")).toBeInTheDocument();
+  });
+
+  it("usa linguagem simples nos tipos: Entrou, Saiu e Guardei", () => {
+    render(<FormLancamento ano={2026} mes={7} />);
+    expect(screen.getByRole("radio", { name: /Entrou/ })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Saiu/ })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Guardei/ })).toBeInTheDocument();
   });
 
   it("sugere categoria automaticamente a partir da descrição", async () => {
     const user = userEvent.setup();
     render(<FormLancamento ano={2026} mes={7} />);
 
-    await user.type(screen.getByLabelText("Descrição"), "Mercado do bairro");
+    await user.type(screen.getByLabelText("O que foi?"), "Mercado do bairro");
 
     expect(screen.getByLabelText("Categoria")).toHaveValue("ALIMENTACAO");
     expect(screen.getByText(/sugerida com base na descrição/)).toBeInTheDocument();
@@ -37,20 +44,20 @@ describe("FormLancamento", () => {
     render(<FormLancamento ano={2026} mes={7} />);
 
     fireEvent.change(screen.getByLabelText("Categoria"), { target: { value: "OUTRAS_DESPESAS" } });
-    await user.type(screen.getByLabelText("Descrição"), "Mercado do bairro");
+    await user.type(screen.getByLabelText("O que foi?"), "Mercado do bairro");
 
     expect(screen.getByLabelText("Categoria")).toHaveValue("OUTRAS_DESPESAS");
   });
 
-  it("reseta a categoria ao trocar o tipo de lançamento", async () => {
+  it("reseta a categoria ao trocar o tipo de registro", async () => {
     const user = userEvent.setup();
     render(<FormLancamento ano={2026} mes={7} />);
 
-    await user.click(screen.getByRole("radio", { name: /Receita/ }));
-    await user.type(screen.getByLabelText("Descrição"), "Salário de julho");
+    await user.click(screen.getByRole("radio", { name: /Entrou/ }));
+    await user.type(screen.getByLabelText("O que foi?"), "Salário de julho");
     expect(screen.getByLabelText("Categoria")).toHaveValue("SALARIO");
 
-    await user.click(screen.getByRole("radio", { name: /Investimento/ }));
+    await user.click(screen.getByRole("radio", { name: /Guardei/ }));
     expect(screen.getByLabelText("Categoria")).toHaveValue("");
   });
 
@@ -66,14 +73,23 @@ describe("FormLancamento", () => {
     expect(screen.getByLabelText("Data")).toHaveValue(valorEsperado);
   });
 
-  it("envia o formulário chamando a action de criar lançamento", async () => {
-    const user = userEvent.setup();
-    render(<FormLancamento ano={2026} mes={7} />);
+  it("aceita tipo e valor iniciais (pré-preenchimento do 'Guardar agora')", () => {
+    render(<FormLancamento ano={2026} mes={7} tipoInicial="INVESTIMENTO" valorInicial={350.5} />);
 
-    await user.type(screen.getByLabelText("Descrição"), "Mercado");
+    expect(screen.getByRole("radio", { name: /Guardei/ })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByLabelText("Valor")).toHaveValue("350,50");
+  });
+
+  it("envia o formulário chamando a action de criar lançamento e avisa quem abriu", async () => {
+    const aoSalvar = vi.fn();
+    const user = userEvent.setup();
+    render(<FormLancamento ano={2026} mes={7} aoSalvar={aoSalvar} />);
+
+    await user.type(screen.getByLabelText("O que foi?"), "Mercado");
     await user.type(screen.getByLabelText("Valor"), "100");
-    await user.click(screen.getByRole("button", { name: /Salvar lançamento/ }));
+    await user.click(screen.getByRole("button", { name: /^Salvar$/ }));
 
     expect(criarLancamentoMock).toHaveBeenCalledTimes(1);
+    expect(aoSalvar).toHaveBeenCalledTimes(1);
   });
 });

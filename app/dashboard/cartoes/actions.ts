@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
-import { parseDataLocal } from "@/lib/data";
+import { parseDataLocal, inicioDoDia } from "@/lib/data";
 import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
+import { MSG_VALOR_MAXIMO, valorMonetarioValido } from "@/lib/valores";
+import { schemaDescricao, schemaNomeCartao, validar } from "@/lib/textos";
+import type { Categoria } from "@prisma/client";
 
 // Busca todos os cartões do usuário logado, com as compras parceladas de cada um
 export async function getCartoes() {
@@ -28,19 +31,19 @@ export async function criarCartao(formData: FormData) {
     throw erroPaywall("O plano Free permite cadastrar apenas 1 cartão de crédito.");
   }
 
-  const nome = formData.get("nome") as string;
+  const nome = validar(schemaNomeCartao, formData.get("nome"));
   const limite = parseFloat(formData.get("limite") as string);
   const diaFechamento = parseInt(formData.get("diaFechamento") as string, 10);
   const diaVencimento = parseInt(formData.get("diaVencimento") as string, 10);
 
   if (
-    !nome ||
     isNaN(limite) || limite <= 0 ||
     isNaN(diaFechamento) || diaFechamento < 1 || diaFechamento > 31 ||
     isNaN(diaVencimento) || diaVencimento < 1 || diaVencimento > 31
   ) {
     throw new Error("Preencha todos os campos corretamente.");
   }
+  if (!valorMonetarioValido(limite)) throw new Error(MSG_VALOR_MAXIMO);
 
   await prisma.cartaoCredito.create({
     data: {
@@ -73,18 +76,23 @@ export async function criarCompraParcelada(formData: FormData) {
   const user = await getUsuarioLogado();
 
   const cartaoId = formData.get("cartaoId") as string;
-  const descricao = formData.get("descricao") as string;
+  const descricao = validar(schemaDescricao, formData.get("descricao"));
   const valorTotal = parseFloat(formData.get("valorTotal") as string);
   const numParcelas = parseInt(formData.get("numParcelas") as string, 10);
   const dataCompra = parseDataLocal(formData.get("dataCompra") as string);
+  const categoria = formData.get("categoria") as Categoria;
 
   if (
-    !descricao ||
     !cartaoId ||
+    !categoria ||
     isNaN(valorTotal) || valorTotal <= 0 ||
     isNaN(numParcelas) || numParcelas < 1 || numParcelas > 60
   ) {
     throw new Error("Preencha todos os campos corretamente.");
+  }
+  if (!valorMonetarioValido(valorTotal)) throw new Error(MSG_VALOR_MAXIMO);
+  if (inicioDoDia(dataCompra) > inicioDoDia(new Date())) {
+    throw new Error("A data da compra não pode ser no futuro.");
   }
 
   // Garante que o cartão pertence ao usuário logado antes de vincular a compra
@@ -100,6 +108,7 @@ export async function criarCompraParcelada(formData: FormData) {
       valorTotal,
       numParcelas,
       dataCompra,
+      categoria,
     },
   });
 

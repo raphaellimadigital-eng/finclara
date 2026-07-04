@@ -1,11 +1,8 @@
 import Link from "next/link";
 import { Landmark, ChevronRight, AlertTriangle } from "lucide-react";
 import { totalDevedor, temDividaCara } from "@/lib/dividas";
+import { formatarMoeda } from "@/lib/formatos";
 import type { Divida } from "@prisma/client";
-
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
 
 export function CardDividas({ dividas }: { dividas: Divida[] }) {
   const cara = temDividaCara(dividas);
@@ -33,7 +30,7 @@ export function CardDividas({ dividas }: { dividas: Divida[] }) {
             Dívidas
           </div>
           {dividas.length === 0 ? (
-            <span className="texto-secundario">Sem dívidas cadastradas</span>
+            <span className="texto-secundario">Nenhuma dívida — que continue assim!</span>
           ) : (
             <>
               <div style={{ fontWeight: 600, fontSize: 14.5 }}>
@@ -44,7 +41,7 @@ export function CardDividas({ dividas }: { dividas: Divida[] }) {
                   className="texto-secundario"
                   style={{ fontSize: 12, color: "var(--vermelho)", display: "flex", alignItems: "center", gap: 4 }}
                 >
-                  <AlertTriangle size={12} aria-hidden="true" /> Tem dívida com juros altos
+                  <AlertTriangle size={12} aria-hidden="true" /> Juros altos — veja sua prioridade
                 </div>
               )}
             </>

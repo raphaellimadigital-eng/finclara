@@ -2,13 +2,13 @@ import Link from "next/link";
 import { ChevronRight, AlertOctagon, CheckCircle2 } from "lucide-react";
 import type { Alerta } from "@/lib/alertas";
 
-export function CardAlertas({ alertas }: { alertas: Alerta[] }) {
+export function CardAlertas({ alertas, ano, mes }: { alertas: Alerta[]; ano?: number; mes?: number }) {
   const criticos = alertas.filter((a) => a.severidade === "estouro" || a.severidade === "urgente").length;
   const cor = alertas.length === 0 ? "var(--texto-secundario)" : criticos > 0 ? "var(--vermelho)" : "var(--amarelo)";
 
   return (
     <Link
-      href="/dashboard/alertas"
+      href={ano && mes ? `/dashboard/alertas?ano=${ano}&mes=${mes}` : "/dashboard/alertas"}
       className="card"
       style={{
         display: "flex",

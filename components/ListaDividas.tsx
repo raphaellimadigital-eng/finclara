@@ -6,20 +6,15 @@ import { deletarDivida, marcarDividaPaga, desfazerPagamentoDivida } from "@/app/
 import { ehDividaCara, percentualQuitado } from "@/lib/dividas";
 import { mensagemPaywall } from "@/lib/assinatura";
 import { PromptUpgrade } from "@/components/PromptUpgrade";
+import { formatarMoeda, formatarData } from "@/lib/formatos";
+import { useConfirmacao } from "@/components/useConfirmacao";
 import type { Divida } from "@prisma/client";
-
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatarData(data: Date) {
-  return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
 
 export function ListaDividas({ dividas }: { dividas: Divida[] }) {
   const [processando, setProcessando] = useState<string | null>(null);
   const [erro, setErro] = useState("");
   const [erroPaywall, setErroPaywall] = useState<string | null>(null);
+  const { confirmar, modal } = useConfirmacao();
 
   if (dividas.length === 0) {
     return (
@@ -27,10 +22,10 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
         <div className="estado-vazio">
           <Inbox size={28} className="estado-vazio-icone" aria-hidden="true" />
           <p className="texto-secundario" style={{ margin: 0 }}>
-            Nenhuma dívida cadastrada.
+            Nenhuma dívida cadastrada — ótimo se for verdade!
             <br />
-            Ótimo se for verdade, ou cadastre a primeira no formulário acima (compra parcelada no
-            cartão fica em Cartões, não aqui).
+            Se tiver alguma, toque em <strong>+ Adicionar dívida</strong> abaixo (compra parcelada
+            no cartão fica em Cartões, não aqui).
           </p>
         </div>
       </div>
@@ -41,7 +36,7 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
   const quitadas = dividas.filter((d) => d.quitada);
 
   async function handleDeletar(id: string, descricao: string) {
-    if (!confirm(`Remover a dívida "${descricao}"? Use isso quando quiser apagar o registro por completo.`)) return;
+    if (!(await confirmar(`Remover a dívida "${descricao}"? Use isso quando quiser apagar o registro por completo.`, "Remover"))) return;
     setErro("");
     setProcessando(id);
     try {
@@ -56,8 +51,9 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
   async function handleMarcarPaga(divida: Divida) {
     const aindaNaoVenceu = new Date(divida.vencimento) > new Date();
     if (aindaNaoVenceu) {
-      const confirmou = confirm(
-        `Essa dívida ainda não venceu (vence em ${formatarData(divida.vencimento)}). Marcar como paga mesmo assim?`
+      const confirmou = await confirmar(
+        `Essa dívida ainda não venceu (vence em ${formatarData(divida.vencimento)}). Marcar como paga mesmo assim?`,
+        "Marcar como paga"
       );
       if (!confirmou) return;
     }
@@ -93,6 +89,7 @@ export function ListaDividas({ dividas }: { dividas: Divida[] }) {
 
   return (
     <div className="card">
+      {modal}
       <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <List size={16} aria-hidden="true" /> Suas dívidas (ordenadas por prioridade de quitação)
       </h2>

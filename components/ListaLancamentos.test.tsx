@@ -33,22 +33,21 @@ describe("ListaLancamentos", () => {
   beforeEach(() => {
     deletarLancamentoMock.mockClear();
     deletarLancamentoEFuturosMock.mockClear();
-    vi.spyOn(window, "confirm").mockReturnValue(true);
   });
 
-  it("mostra estado vazio quando não há lançamentos", () => {
+  it("mostra estado vazio quando não há registros", () => {
     render(<ListaLancamentos lancamentos={[]} />);
-    expect(screen.getByText(/Nenhum lançamento neste mês/)).toBeInTheDocument();
+    expect(screen.getByText(/Nenhum registro neste mês/)).toBeInTheDocument();
   });
 
-  it("começa recolhido, mostrando só uma prévia dos lançamentos", () => {
+  it("começa recolhido, mostrando só uma prévia dos registros", () => {
     const lancamentos = Array.from({ length: 8 }, (_, i) => lancamento({ descricao: `Item ${i + 1}` }));
     render(<ListaLancamentos lancamentos={lancamentos} />);
 
-    expect(screen.getByText("Lançamentos recentes")).toBeInTheDocument();
+    expect(screen.getByText("Últimos registros")).toBeInTheDocument();
     expect(screen.getByText("Item 1")).toBeInTheDocument();
     expect(screen.queryByText("Item 8")).not.toBeInTheDocument();
-    expect(screen.getByText("Ver todos os 8 lançamentos")).toBeInTheDocument();
+    expect(screen.getByText("Ver todos os 8 registros")).toBeInTheDocument();
   });
 
   it("expande ao clicar no cabeçalho ou no botão 'ver todos'", async () => {
@@ -56,9 +55,9 @@ describe("ListaLancamentos", () => {
     const lancamentos = Array.from({ length: 8 }, (_, i) => lancamento({ descricao: `Item ${i + 1}` }));
     render(<ListaLancamentos lancamentos={lancamentos} />);
 
-    await user.click(screen.getByText("Ver todos os 8 lançamentos"));
+    await user.click(screen.getByText("Ver todos os 8 registros"));
 
-    expect(screen.getByText("Lançamentos do mês")).toBeInTheDocument();
+    expect(screen.getByText("Registros do mês")).toBeInTheDocument();
     expect(screen.getByText("Item 8")).toBeInTheDocument();
   });
 
@@ -67,7 +66,18 @@ describe("ListaLancamentos", () => {
     render(<ListaLancamentos lancamentos={[lancamento({ descricao: "Mercado" })]} />);
 
     await user.click(screen.getByRole("button", { name: /Remover lançamento Mercado/ }));
+    await user.click(screen.getByRole("button", { name: "Remover" }));
 
     expect(deletarLancamentoMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("não remove quando o usuário cancela no modal de confirmação", async () => {
+    const user = userEvent.setup();
+    render(<ListaLancamentos lancamentos={[lancamento({ descricao: "Mercado" })]} />);
+
+    await user.click(screen.getByRole("button", { name: /Remover lançamento Mercado/ }));
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(deletarLancamentoMock).not.toHaveBeenCalled();
   });
 });

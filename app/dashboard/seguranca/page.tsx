@@ -3,7 +3,6 @@ import { ChevronLeft, ShieldCheck } from "lucide-react";
 import { TrocarSenha } from "@/components/TrocarSenha";
 import { ConfiguracaoDoisFatores } from "@/components/ConfiguracaoDoisFatores";
 import { ExportarExcluirDados } from "@/components/ExportarExcluirDados";
-import { GridMosaico } from "@/components/GridMosaico";
 
 export default function SegurancaPage() {
   return (
@@ -20,11 +19,11 @@ export default function SegurancaPage() {
         <ShieldCheck size={20} aria-hidden="true" /> Segurança
       </h1>
 
-      <GridMosaico>
+      <div className="dashboard-grid">
         <TrocarSenha />
         <ConfiguracaoDoisFatores />
         <ExportarExcluirDados />
-      </GridMosaico>
+      </div>
     </div>
   );
 }

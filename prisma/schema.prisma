@@ -112,6 +112,11 @@ model Lancamento {
   // Agrupa todas as ocorrências geradas de um mesmo lançamento recorrente,
   // permitindo excluir "este e os futuros" sem afetar meses já passados.
   serieRecorrenciaId String?
+  // Vínculo opcional com uma meta: um registro "Guardei" pode alimentar uma meta, e guardar
+  // dinheiro numa meta gera este lançamento — o mesmo dinheiro é digitado uma vez só.
+  // SetNull: excluir a meta preserva o histórico do lançamento como investimento avulso.
+  metaId      String?
+  meta        Meta?          @relation(fields: [metaId], references: [id], onDelete: SetNull)
 
   criadoEm    DateTime       @default(now())
   atualizadoEm DateTime      @updatedAt
@@ -133,6 +138,12 @@ model Divida {
   valorTotal    Decimal   @db.Decimal(12, 2)
   valorParcela  Decimal   @db.Decimal(12, 2)
   taxaJuros     Decimal   @db.Decimal(5, 2) // percentual ao mês
+  // Quando o usuário não sabe os juros: taxaJuros grava 0 e a dívida é tratada como cara por
+  // padrão conservador (ver ehDividaCara em lib/dividas.ts), até que o usuário atualize a taxa.
+  jurosDesconhecidos Boolean @default(false)
+  // Opcional: como o usuário pensa a dívida no dia a dia, permite validar o progresso além do
+  // percentual quitado calculado por valor.
+  parcelasRestantes Int?
   vencimento    DateTime
   quitada       Boolean   @default(false)
   quitadaEm     DateTime?
@@ -172,6 +183,8 @@ model CompraParcelada {
   valorTotal  Decimal       @db.Decimal(12, 2)
   numParcelas Int
   dataCompra  DateTime
+  // Integra a parcela do mês nos Limites por categoria e no comparativo de alocação da renda.
+  categoria   Categoria     @default(OUTRAS_DESPESAS)
 
   criadoEm    DateTime      @default(now())
 
@@ -189,6 +202,8 @@ model Meta {
   valorAlvo    Decimal  @db.Decimal(12, 2)
   valorAtual   Decimal  @db.Decimal(12, 2) @default(0)
   prazo        DateTime
+
+  lancamentos  Lancamento[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt

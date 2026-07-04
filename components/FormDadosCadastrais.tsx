@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pencil, X, Loader2 } from "lucide-react";
 import { atualizarDadosCadastrais } from "@/app/dashboard/perfil/actions";
 import { formatarCep, buscarEnderecoPorCep } from "@/lib/cep";
 import { formatarCpf, cpfValido } from "@/lib/cpf";
+import { useValidadeFormulario } from "@/components/useValidadeFormulario";
+import { ENDERECO_MAX, NOME_MAX, NOME_MIN, TELEFONE_MAX, validarTextoNoInput } from "@/lib/textos";
 
 type Props = {
   email: string;
@@ -38,6 +40,8 @@ export function FormDadosCadastrais({
   const [dataNascimento, setDataNascimento] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const valido = useValidadeFormulario(formRef);
 
   async function handleCepChange(e: React.ChangeEvent<HTMLInputElement>) {
     const formatado = formatarCep(e.target.value);
@@ -155,7 +159,7 @@ export function FormDadosCadastrais({
   return (
     <div className="card">
       <h2 className="card-title">Editar dados cadastrais</h2>
-      <form onSubmit={handleSubmit}>
+      <form ref={formRef} onSubmit={handleSubmit}>
         <fieldset disabled={salvando} style={{ border: "none", padding: 0, margin: 0 }}>
           <div className="campo">
             <label className="rotulo" htmlFor="nomeEdit">Nome</label>
@@ -163,8 +167,13 @@ export function FormDadosCadastrais({
               id="nomeEdit"
               type="text"
               value={nome}
-              onChange={(e) => setNome(e.target.value)}
+              onChange={(e) => {
+                setNome(e.target.value);
+                validarTextoNoInput(e, NOME_MIN, NOME_MAX, "O nome");
+              }}
               required
+              minLength={NOME_MIN}
+              maxLength={NOME_MAX}
             />
           </div>
 
@@ -209,7 +218,16 @@ export function FormDadosCadastrais({
               type="tel"
               placeholder="(11) 91234-5678"
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) => {
+                setTelefone(e.target.value);
+                const valor = e.target.value.trim();
+                if (valor && !/^[\d\s()+-]*$/.test(valor)) {
+                  e.target.setCustomValidity("O telefone deve conter apenas números e símbolos como (), - e +.");
+                } else {
+                  e.target.setCustomValidity("");
+                }
+              }}
+              maxLength={TELEFONE_MAX}
             />
           </div>
 
@@ -247,6 +265,7 @@ export function FormDadosCadastrais({
               placeholder="Preenchido pelo CEP, complete com número e complemento"
               value={endereco}
               onChange={(e) => setEndereco(e.target.value)}
+              maxLength={ENDERECO_MAX}
             />
           </div>
 
@@ -255,6 +274,7 @@ export function FormDadosCadastrais({
           <div style={{ display: "flex", gap: 8 }}>
             <button
               type="submit"
+              disabled={salvando || !valido}
               style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
             >
               {salvando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}

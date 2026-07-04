@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
-import { formatarCep, buscarEnderecoPorCep } from "@/lib/cep";
 import { formatarCpf, cpfValido } from "@/lib/cpf";
 import { maiorDeIdade, parseDataLocal } from "@/lib/data";
+import { NOME_MAX, NOME_MIN, validarTextoNoInput } from "@/lib/textos";
+import { useValidadeFormulario } from "@/components/useValidadeFormulario";
 import { cpfDisponivel } from "./actions";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -18,11 +19,6 @@ export default function LoginPage() {
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [cep, setCep] = useState("");
-  const [endereco, setEndereco] = useState("");
-  const [buscandoCep, setBuscandoCep] = useState(false);
-  const [erroCep, setErroCep] = useState("");
   const [modo, setModo] = useState<"login" | "cadastro">("login");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -35,26 +31,8 @@ export default function LoginPage() {
 
   const router = useRouter();
   const supabase = createClient();
-
-  // Busca o endereço automaticamente pelo CEP (ViaCEP, gratuito e sem chave). O campo Endereço
-  // continua editável para completar com número e complemento, ou caso a busca falhe.
-  async function handleCepChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const formatado = formatarCep(e.target.value);
-    setCep(formatado);
-    setErroCep("");
-
-    const digitos = formatado.replace(/\D/g, "");
-    if (digitos.length !== 8) return;
-
-    setBuscandoCep(true);
-    try {
-      setEndereco(await buscarEnderecoPorCep(digitos));
-    } catch (err: any) {
-      setErroCep(err.message || "Não foi possível buscar o CEP agora. Preencha o endereço manualmente.");
-    } finally {
-      setBuscandoCep(false);
-    }
-  }
+  const formRef = useRef<HTMLFormElement>(null);
+  const valido = useValidadeFormulario(formRef);
 
   function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCpf(formatarCpf(e.target.value));
@@ -83,9 +61,10 @@ export default function LoginPage() {
       setCarregando(true);
     }
 
-    // Nome/telefone/endereço/CPF/data de nascimento vão como metadados do próprio cadastro (em
-    // vez de uma Server Action separada logo em seguida) para não depender da sessão já estar
-    // sincronizada no servidor no exato instante após o signUp.
+    // Nome/CPF/data de nascimento vão como metadados do próprio cadastro (em vez de uma Server
+    // Action separada logo em seguida) para não depender da sessão já estar sincronizada no
+    // servidor no exato instante após o signUp. Telefone e endereço saíram daqui — cadastro
+    // enxuto — e ficam disponíveis (opcionais) para completar depois em Perfil.
     const acao =
       modo === "login"
         ? supabase.auth.signInWithPassword({ email, password: senha })
@@ -93,7 +72,7 @@ export default function LoginPage() {
             email,
             password: senha,
             options: {
-              data: { nome, telefone, endereco, cpf: cpf.replace(/\D/g, ""), dataNascimento },
+              data: { nome, cpf: cpf.replace(/\D/g, ""), dataNascimento },
               emailRedirectTo: `${window.location.origin}/auth/callback`,
             },
           });
@@ -231,7 +210,7 @@ export default function LoginPage() {
         </form>
       ) : (
         <>
-          <form className="card" onSubmit={handleSubmit}>
+          <form ref={formRef} className="card" onSubmit={handleSubmit}>
             {modo === "cadastro" && (
               <>
                 <div className="campo">
@@ -241,8 +220,13 @@ export default function LoginPage() {
                     type="text"
                     placeholder="Seu nome completo"
                     value={nome}
-                    onChange={(e) => setNome(e.target.value)}
+                    onChange={(e) => {
+                      setNome(e.target.value);
+                      validarTextoNoInput(e, NOME_MIN, NOME_MAX, "O nome");
+                    }}
                     required
+                    minLength={NOME_MIN}
+                    maxLength={NOME_MAX}
                   />
                 </div>
 
@@ -299,63 +283,11 @@ export default function LoginPage() {
               />
             </div>
 
-            {modo === "cadastro" && (
-              <>
-                <div className="campo">
-                  <label className="rotulo" htmlFor="telefone">Telefone</label>
-                  <input
-                    id="telefone"
-                    type="tel"
-                    placeholder="(11) 91234-5678"
-                    value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
-                  />
-                </div>
-
-                <div className="campo">
-                  <label className="rotulo" htmlFor="cep">CEP</label>
-                  <input
-                    id="cep"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="00000-000"
-                    value={cep}
-                    onChange={handleCepChange}
-                    maxLength={9}
-                  />
-                  {buscandoCep && (
-                    <span
-                      className="texto-secundario"
-                      style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}
-                    >
-                      <Loader2 size={12} className="icone-carregando" aria-hidden="true" /> Buscando endereço...
-                    </span>
-                  )}
-                  {erroCep && (
-                    <span style={{ color: "var(--vermelho)", fontSize: 11.5, marginTop: 4, display: "block" }}>
-                      {erroCep}
-                    </span>
-                  )}
-                </div>
-
-                <div className="campo">
-                  <label className="rotulo" htmlFor="endereco">Endereço</label>
-                  <input
-                    id="endereco"
-                    type="text"
-                    placeholder="Preenchido pelo CEP, complete com número e complemento"
-                    value={endereco}
-                    onChange={(e) => setEndereco(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-
             {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13.5, marginTop: 12 }}>{erro}</p>}
 
             <button
               type="submit"
-              disabled={carregando}
+              disabled={carregando || !valido}
               style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
             >
               {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}

@@ -37,7 +37,6 @@ describe("ListaDividas", () => {
     deletarDividaMock.mockClear();
     marcarDividaPagaMock.mockClear();
     desfazerPagamentoDividaMock.mockClear();
-    vi.spyOn(window, "confirm").mockReset().mockReturnValue(true);
   });
 
   it("mostra estado vazio quando não há dívidas", () => {
@@ -52,7 +51,8 @@ describe("ListaDividas", () => {
 
   it("marca a parcela como paga ao clicar no botão", async () => {
     const user = userEvent.setup();
-    render(<ListaDividas dividas={[divida({ descricao: "Empréstimo" })]} />);
+    const vencimentoPassado = new Date(Date.now() - 1000 * 60 * 60 * 24 * 3);
+    render(<ListaDividas dividas={[divida({ descricao: "Empréstimo", vencimento: vencimentoPassado })]} />);
 
     await user.click(screen.getByRole("button", { name: /Marcar parcela de Empréstimo como paga/ }));
 
@@ -61,36 +61,36 @@ describe("ListaDividas", () => {
 
   it("avisa quando a dívida ainda não venceu, antes de marcar como paga", async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const vencimentoFuturo = new Date(Date.now() + 1000 * 60 * 60 * 24 * 10); // 10 dias no futuro
     render(<ListaDividas dividas={[divida({ descricao: "Empréstimo", vencimento: vencimentoFuturo })]} />);
 
     await user.click(screen.getByRole("button", { name: /Marcar parcela de Empréstimo como paga/ }));
 
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringMatching(/ainda não venceu/));
+    expect(screen.getByText(/ainda não venceu/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Marcar como paga" }));
+
     expect(marcarDividaPagaMock).toHaveBeenCalledTimes(1);
   });
 
   it("não marca como paga se o usuário cancelar o aviso de dívida ainda não vencida", async () => {
     const user = userEvent.setup();
-    vi.spyOn(window, "confirm").mockReturnValue(false);
     const vencimentoFuturo = new Date(Date.now() + 1000 * 60 * 60 * 24 * 10);
     render(<ListaDividas dividas={[divida({ descricao: "Empréstimo", vencimento: vencimentoFuturo })]} />);
 
     await user.click(screen.getByRole("button", { name: /Marcar parcela de Empréstimo como paga/ }));
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(marcarDividaPagaMock).not.toHaveBeenCalled();
   });
 
   it("não avisa quando a dívida já venceu", async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const vencimentoPassado = new Date(Date.now() - 1000 * 60 * 60 * 24 * 3); // 3 dias atrás
     render(<ListaDividas dividas={[divida({ descricao: "Empréstimo", vencimento: vencimentoPassado })]} />);
 
     await user.click(screen.getByRole("button", { name: /Marcar parcela de Empréstimo como paga/ }));
 
-    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(screen.queryByText(/ainda não venceu/)).not.toBeInTheDocument();
     expect(marcarDividaPagaMock).toHaveBeenCalledTimes(1);
   });
 
@@ -117,6 +117,7 @@ describe("ListaDividas", () => {
     render(<ListaDividas dividas={[divida({ descricao: "Empréstimo" })]} />);
 
     await user.click(screen.getByRole("button", { name: /Remover dívida Empréstimo/ }));
+    await user.click(screen.getByRole("button", { name: "Remover" }));
 
     expect(deletarDividaMock).toHaveBeenCalledTimes(1);
   });

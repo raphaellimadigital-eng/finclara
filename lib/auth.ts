@@ -5,6 +5,7 @@ import { createClient } from "./supabase-server";
 import { prisma } from "./prisma";
 import { calcularFimTrial } from "./assinatura";
 import { parseDataLocal } from "./data";
+import { schemaNomeUsuario } from "./textos";
 
 // Retorna o usuário logado ou lança erro — usado em toda Server Action que exige sessão.
 export async function getUsuarioLogado() {
@@ -21,6 +22,9 @@ export async function getUsuarioLogado() {
 // trial de 7 dias.
 export async function garantirUsuario(user: Pick<User, "id" | "email" | "user_metadata">) {
   const metadata = user.user_metadata ?? {};
+  // Metadados do signUp não passam por uma Server Action validável — se vier fora dos limites
+  // (vazio, só espaços, ou maior que o permitido), cai no mesmo fallback de nome ausente.
+  const nomeValidado = schemaNomeUsuario.safeParse(metadata.nome);
 
   try {
     return await prisma.usuario.upsert({
@@ -29,7 +33,7 @@ export async function garantirUsuario(user: Pick<User, "id" | "email" | "user_me
       create: {
         id: user.id,
         email: user.email!,
-        nome: metadata.nome || user.email!.split("@")[0],
+        nome: nomeValidado.success ? nomeValidado.data : user.email!.split("@")[0],
         telefone: metadata.telefone || null,
         endereco: metadata.endereco || null,
         cpf: metadata.cpf || null,

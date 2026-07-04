@@ -3,6 +3,7 @@ import { ChevronLeft, Target } from "lucide-react";
 import { getMetas } from "./actions";
 import { FormMeta } from "@/components/FormMeta";
 import { ListaMetas } from "@/components/ListaMetas";
+import { RevelarFormulario } from "@/components/RevelarFormulario";
 
 export default async function MetasPage() {
   const metas = await getMetas();
@@ -18,11 +19,15 @@ export default async function MetasPage() {
       </Link>
 
       <h1 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, marginBottom: 16 }}>
-        <Target size={20} aria-hidden="true" /> Metas financeiras
+        <Target size={20} aria-hidden="true" /> Metas
       </h1>
 
-      <FormMeta />
+      {/* Situação primeiro; o cadastro fica recolhido atrás do botão */}
       <ListaMetas metas={metas} />
+
+      <RevelarFormulario rotulo="Nova meta">
+        <FormMeta />
+      </RevelarFormulario>
     </div>
   );
 }

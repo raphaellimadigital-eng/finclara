@@ -3,15 +3,18 @@
 import { useRef, useState } from "react";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { salvarLimite } from "@/app/dashboard/limites/actions";
+import { CampoValor } from "@/components/CampoValor";
 import { CATEGORIAS_DESPESA } from "@/lib/categorias";
 import { mensagemPaywall } from "@/lib/assinatura";
 import { PromptUpgrade } from "@/components/PromptUpgrade";
+import { useValidadeFormulario } from "@/components/useValidadeFormulario";
 
 export function FormLimiteCategoria() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const [erroPaywall, setErroPaywall] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const valido = useValidadeFormulario(formRef);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,7 +38,7 @@ export function FormLimiteCategoria() {
   return (
     <div className="card">
       <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <PlusCircle size={16} aria-hidden="true" /> Definir limite por categoria
+        <PlusCircle size={16} aria-hidden="true" /> Quanto quer gastar no máximo com...
       </h2>
 
       <form ref={formRef} onSubmit={handleSubmit}>
@@ -52,13 +55,13 @@ export function FormLimiteCategoria() {
 
           <div className="campo">
             <label className="rotulo" htmlFor="valorLimite">Limite mensal</label>
-            <input id="valorLimite" name="valorLimite" type="number" placeholder="0,00" step="0.01" min="0.01" required />
+            <CampoValor id="valorLimite" name="valorLimite" />
           </div>
 
           {erroPaywall && <PromptUpgrade mensagem={erroPaywall} />}
           {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
 
-          <button type="submit" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <button type="submit" disabled={carregando || !valido} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
             {carregando ? "Salvando..." : "Salvar limite"}
           </button>

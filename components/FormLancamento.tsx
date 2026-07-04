@@ -1,11 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { PlusCircle, TrendingUp, TrendingDown, PiggyBank, Loader2, Sparkles } from "lucide-react";
+import { TrendingUp, TrendingDown, PiggyBank, Loader2, Sparkles } from "lucide-react";
 import { criarLancamento } from "@/app/dashboard/actions";
 import { sugerirCategoria } from "@/lib/categorizacao";
 import { CATEGORIAS_RECEITA, CATEGORIAS_DESPESA, CATEGORIAS_INVESTIMENTO } from "@/lib/categorias";
+import { CampoValor } from "@/components/CampoValor";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { useValidadeFormulario } from "@/components/useValidadeFormulario";
+import { DESCRICAO_MAX, NOME_MIN, validarTextoNoInput } from "@/lib/textos";
+
+export type MetaParaVincular = { id: string; descricao: string };
 
 const TIPOS = ["RECEITA", "DESPESA", "INVESTIMENTO"] as const;
 type Tipo = (typeof TIPOS)[number];
@@ -22,10 +27,11 @@ const ICONE_TIPO: Record<Tipo, typeof TrendingUp> = {
   INVESTIMENTO: PiggyBank,
 };
 
+// Linguagem simples no lugar do jargão contábil: o dinheiro "entrou", "saiu" ou foi "guardado".
 const LABEL_TIPO: Record<Tipo, string> = {
-  RECEITA: "Receita",
-  DESPESA: "Despesa",
-  INVESTIMENTO: "Investimento",
+  RECEITA: "Entrou",
+  DESPESA: "Saiu",
+  INVESTIMENTO: "Guardei",
 };
 
 // Data padrão do formulário: mesmo dia de hoje, mas dentro do mês/ano que está sendo visto na
@@ -40,14 +46,30 @@ function calcularDataPadrao(ano: number, mes: number): string {
   return `${ano}-${mesStr}-${diaStr}`;
 }
 
-export function FormLancamento({ ano, mes }: { ano: number; mes: number }) {
-  const [tipo, setTipo] = useState<Tipo>("DESPESA");
+type Props = {
+  ano: number;
+  mes: number;
+  // Pré-preenchimento (ex: "Guardar agora" a partir da sobra do mês)
+  tipoInicial?: Tipo;
+  valorInicial?: number;
+  // Metas do usuário: um registro "Guardei" pode ser vinculado a uma delas (opcional)
+  metas?: MetaParaVincular[];
+  // Chamado após salvar com sucesso (ex: fechar a folha em que o formulário está)
+  aoSalvar?: () => void;
+  // Sem o card em volta, para uso dentro de uma folha/modal que já tem título próprio
+  semCard?: boolean;
+};
+
+export function FormLancamento({ ano, mes, tipoInicial = "DESPESA", valorInicial, metas = [], aoSalvar, semCard = false }: Props) {
+  const [tipo, setTipo] = useState<Tipo>(tipoInicial);
   const [categoria, setCategoria] = useState("");
   const [categoriaSugerida, setCategoriaSugerida] = useState(false);
   const [categoriaEscolhidaManualmente, setCategoriaEscolhidaManualmente] = useState(false);
+  const [metaVinculada, setMetaVinculada] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+  const valido = useValidadeFormulario(formRef);
 
   const categorias =
     tipo === "RECEITA" ? CATEGORIAS_RECEITA : tipo === "DESPESA" ? CATEGORIAS_DESPESA : CATEGORIAS_INVESTIMENTO;
@@ -59,9 +81,11 @@ export function FormLancamento({ ano, mes }: { ano: number; mes: number }) {
     setCategoria("");
     setCategoriaSugerida(false);
     setCategoriaEscolhidaManualmente(false);
+    setMetaVinculada("");
   }
 
   function handleDescricaoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    validarTextoNoInput(e, NOME_MIN, DESCRICAO_MAX, "A descrição");
     if (categoriaEscolhidaManualmente) return;
     const sugestao = sugerirCategoria(e.target.value);
     if (sugestao && categorias.some((c) => c.value === sugestao)) {
@@ -85,10 +109,12 @@ export function FormLancamento({ ano, mes }: { ano: number; mes: number }) {
       const data = new FormData(e.currentTarget);
       await criarLancamento(data);
       formRef.current?.reset();
-      setTipo("DESPESA");
+      setTipo(tipoInicial);
       setCategoria("");
       setCategoriaSugerida(false);
       setCategoriaEscolhidaManualmente(false);
+      setMetaVinculada("");
+      aoSalvar?.();
     } catch (err: any) {
       setErro(err.message || "Não foi possível salvar. Tente novamente.");
     } finally {
@@ -96,95 +122,101 @@ export function FormLancamento({ ano, mes }: { ano: number; mes: number }) {
     }
   }
 
-  return (
-    <div className="card">
-      <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <PlusCircle size={16} aria-hidden="true" /> Novo lançamento
-      </h2>
+  const formulario = (
+    <form ref={formRef} onSubmit={handleSubmit}>
+      <fieldset disabled={carregando} style={{ border: "none", padding: 0, margin: 0 }}>
+        {/* Tipo */}
+        <div className="toggle-tipo" role="radiogroup" aria-label="Tipo de registro">
+          {TIPOS.map((t) => {
+            const Icone = ICONE_TIPO[t];
+            return (
+              <button
+                key={t}
+                type="button"
+                role="radio"
+                aria-checked={tipo === t}
+                onClick={() => handleTipoChange(t)}
+                className={tipo === t ? CLASSE_ATIVA[t] : ""}
+              >
+                <Icone size={16} aria-hidden="true" />
+                {LABEL_TIPO[t]}
+              </button>
+            );
+          })}
+        </div>
 
-      <form ref={formRef} onSubmit={handleSubmit}>
-        <fieldset disabled={carregando} style={{ border: "none", padding: 0, margin: 0 }}>
-          {/* Tipo */}
-          <div className="toggle-tipo" role="radiogroup" aria-label="Tipo de lançamento">
-            {TIPOS.map((t) => {
-              const Icone = ICONE_TIPO[t];
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  role="radio"
-                  aria-checked={tipo === t}
-                  onClick={() => handleTipoChange(t)}
-                  className={tipo === t ? CLASSE_ATIVA[t] : ""}
-                >
-                  <Icone size={16} aria-hidden="true" />
-                  {LABEL_TIPO[t]}
-                </button>
-              );
-            })}
-          </div>
+        <input type="hidden" name="tipo" value={tipo} />
 
-          <input type="hidden" name="tipo" value={tipo} />
+        {/* Descrição vem ANTES da categoria: é ela que dispara a sugestão automática de
+            categoria — na ordem antiga o usuário escolhia a categoria manualmente primeiro
+            e a sugestão nunca tinha chance de agir. */}
+        <div className="campo">
+          <label className="rotulo" htmlFor="descricao">O que foi?</label>
+          <input
+            id="descricao"
+            name="descricao"
+            type="text"
+            placeholder="Ex: Mercado, Salário de junho..."
+            required
+            minLength={NOME_MIN}
+            maxLength={DESCRICAO_MAX}
+            onChange={handleDescricaoChange}
+          />
+        </div>
 
-          {/* Categoria */}
+        {/* Categoria */}
+        <div className="campo">
+          <label className="rotulo" htmlFor="categoria">Categoria</label>
+          <select id="categoria" name="categoria" required value={categoria} onChange={handleCategoriaChange}>
+            <option value="" disabled>Selecione uma categoria</option>
+            {categorias.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+          {categoriaSugerida && (
+            <span
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--texto-secundario)", marginTop: 4 }}
+            >
+              <Sparkles size={12} aria-hidden="true" /> Categoria sugerida com base na descrição
+            </span>
+          )}
+        </div>
+
+        {/* Ao guardar dinheiro, dá para vincular a uma meta: o valor soma no progresso dela
+            automaticamente, sem precisar registrar duas vezes. */}
+        {tipo === "INVESTIMENTO" && metas.length > 0 && (
           <div className="campo">
-            <label className="rotulo" htmlFor="categoria">Categoria</label>
-            <select id="categoria" name="categoria" required value={categoria} onChange={handleCategoriaChange}>
-              <option value="" disabled>Selecione uma categoria</option>
-              {categorias.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
+            <label className="rotulo" htmlFor="metaId">Para qual meta? (opcional)</label>
+            <select id="metaId" name="metaId" value={metaVinculada} onChange={(e) => setMetaVinculada(e.target.value)}>
+              <option value="">Nenhuma meta</option>
+              {metas.map((m) => (
+                <option key={m.id} value={m.id}>{m.descricao}</option>
               ))}
             </select>
-            {categoriaSugerida && (
-              <span
-                style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--texto-secundario)", marginTop: 4 }}
-              >
-                <Sparkles size={12} aria-hidden="true" /> Categoria sugerida com base na descrição
-              </span>
-            )}
           </div>
+        )}
 
-          {/* Descrição */}
-          <div className="campo">
-            <label className="rotulo" htmlFor="descricao">Descrição</label>
+        {/* Valor e Data lado a lado — evita o campo de data ficar esticado sozinho numa linha */}
+        <div className="campo campo-linha-dupla">
+          <div>
+            <label className="rotulo" htmlFor="valor">Valor</label>
+            <CampoValor id="valor" name="valor" valorInicial={valorInicial} />
+          </div>
+          <div>
+            <label className="rotulo" htmlFor="data">Data</label>
             <input
-              id="descricao"
-              name="descricao"
-              type="text"
-              placeholder="Ex: Mercado, Salário de junho..."
+              id="data"
+              name="data"
+              type="date"
+              defaultValue={dataPadrao}
               required
-              maxLength={100}
-              onChange={handleDescricaoChange}
             />
           </div>
+        </div>
 
-          {/* Valor e Data lado a lado — evita o campo de data ficar esticado sozinho numa linha */}
-          <div className="campo campo-linha-dupla">
-            <div>
-              <label className="rotulo" htmlFor="valor">Valor</label>
-              <input
-                id="valor"
-                name="valor"
-                type="number"
-                placeholder="0,00"
-                step="0.01"
-                min="0.01"
-                required
-              />
-            </div>
-            <div>
-              <label className="rotulo" htmlFor="data">Data</label>
-              <input
-                id="data"
-                name="data"
-                type="date"
-                defaultValue={dataPadrao}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Recorrente */}
+        {/* Recorrente — escondido quando há meta vinculada: as ocorrências futuras somariam
+            na meta hoje, antes de o dinheiro existir */}
+        {!metaVinculada && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "var(--texto-secundario)" }}>
               <input name="recorrente" type="checkbox" />
@@ -192,18 +224,28 @@ export function FormLancamento({ ano, mes }: { ano: number; mes: number }) {
             </label>
             <InfoTooltip texto="Lançamos os próximos 12 meses automaticamente." />
           </div>
+        )}
 
-          {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
+        {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
 
-          <button
-            type="submit"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-          >
-            {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
-            {carregando ? "Salvando..." : "Salvar lançamento"}
-          </button>
-        </fieldset>
-      </form>
+        <button
+          type="submit"
+          disabled={carregando || !valido}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+        >
+          {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
+          {carregando ? "Salvando..." : "Salvar"}
+        </button>
+      </fieldset>
+    </form>
+  );
+
+  if (semCard) return formulario;
+
+  return (
+    <div className="card">
+      <h2 className="card-title">Registrar</h2>
+      {formulario}
     </div>
   );
 }

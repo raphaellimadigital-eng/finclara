@@ -3,11 +3,9 @@ import { ChevronLeft, Landmark } from "lucide-react";
 import { getDividas } from "./actions";
 import { FormDivida } from "@/components/FormDivida";
 import { ListaDividas } from "@/components/ListaDividas";
+import { RevelarFormulario } from "@/components/RevelarFormulario";
 import { totalDevedor, totalParcelasMensais, temDividaCara } from "@/lib/dividas";
-
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+import { formatarMoeda } from "@/lib/formatos";
 
 export default async function DividasPage() {
   const dividas = await getDividas();
@@ -19,7 +17,7 @@ export default async function DividasPage() {
   return (
     <div className="container">
       <Link
-        href="/dashboard"
+        href="/dashboard/contas"
         className="botao-secundario"
         style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 16 }}
       >
@@ -34,30 +32,34 @@ export default async function DividasPage() {
         alguém etc. Compra parcelada no cartão já é controlada em Cartões.
       </p>
 
+      {/* Situação primeiro: resumo e lista; o cadastro fica recolhido atrás do botão */}
       {dividasAtivas.length > 0 && (
         <div className="card">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
-              <div className="texto-secundario">Saldo devedor total</div>
+              <div className="texto-secundario">Quanto você ainda deve</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: "var(--vermelho)" }}>
                 {formatarMoeda(devedor)}
               </div>
             </div>
             <div>
-              <div className="texto-secundario">Parcelas mensais</div>
+              <div className="texto-secundario">Parcelas por mês</div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{formatarMoeda(parcelas)}</div>
             </div>
           </div>
           {possuiCara && (
             <p className="texto-secundario" style={{ fontSize: 12.5, marginTop: 12, marginBottom: 0, color: "var(--vermelho)" }}>
-              Você tem dívida com juros altos. Priorize quitá-la antes de investir.
+              Você tem dívida com juros altos. Priorizar quitá-la pode liberar sua renda mais rápido.
             </p>
           )}
         </div>
       )}
 
-      <FormDivida />
       <ListaDividas dividas={dividas} />
+
+      <RevelarFormulario rotulo="Adicionar dívida">
+        <FormDivida />
+      </RevelarFormulario>
     </div>
   );
 }

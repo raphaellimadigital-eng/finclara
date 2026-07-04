@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ChevronLeft, LifeBuoy, MessageCircle } from "lucide-react";
 import { FormContatoSuporte } from "@/components/FormContatoSuporte";
 import { PerguntaIA } from "@/components/PerguntaIA";
-import { GridMosaico } from "@/components/GridMosaico";
 
 const WHATSAPP_SUPORTE = "5521982232973";
 
@@ -21,60 +20,62 @@ export default function AjudaPage() {
         <LifeBuoy size={20} aria-hidden="true" /> Ajuda ou suporte
       </h1>
 
-      <GridMosaico>
-      <PerguntaIA />
+      <div className="dashboard-grid">
+        <PerguntaIA />
 
-      <div className="card">
-        <p style={{ marginTop: 0 }}>
-          <strong>Como lançar uma receita ou despesa?</strong>
-          <br />
-          Use o formulário &quot;Novo lançamento&quot; no dashboard: escolha o tipo, categoria, valor e data.
-        </p>
-        <p>
-          <strong>Como funciona a sugestão de alocação?</strong>
-          <br />
-          É baseada na regra 50/30/20 aplicada à sua receita do mês, e você também pode pedir uma
-          recomendação personalizada por IA.
-        </p>
-        <p>
-          <strong>Como baixar um relatório?</strong>
-          <br />
-          No menu do usuário, toque em &quot;Relatórios&quot;: lá tem o Relatório Mensal, o Diagnóstico
-          Financeiro (com IA), o Extrato de Lançamentos (Excel/CSV), o Comparativo Mensal e a
-          Evolução Patrimonial, cada um com seu próprio botão de download.
-        </p>
-        <p style={{ marginBottom: 0 }}>
-          <strong>Como faço um lançamento se repetir todo mês?</strong>
-          <br />
-          Ao cadastrar o lançamento, marque a opção &quot;esse lançamento se repete todo mês&quot;: o
-          FinClara já cria os próximos 12 meses automaticamente.
-        </p>
-      </div>
-
-      <a
-        href={`https://wa.me/${WHATSAPP_SUPORTE}?text=${encodeURIComponent("Olá! Vim do FinClara e preciso de ajuda.")}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="card"
-        style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "inherit" }}
-      >
-        <MessageCircle size={18} aria-hidden="true" style={{ color: "var(--verde)", flexShrink: 0 }} />
-        <div>
-          <div style={{ fontWeight: 600, fontSize: 14.5 }}>WhatsApp</div>
-          <div className="texto-secundario" style={{ fontSize: 12 }}>Precisa de ajuda? Chame por aqui</div>
+        <div className="card">
+          <p style={{ marginTop: 0 }}>
+            <strong>Como lançar uma receita ou despesa?</strong>
+            <br />
+            Use o formulário &quot;Novo lançamento&quot; no dashboard: escolha o tipo, categoria, valor e data.
+          </p>
+          <p>
+            <strong>Como funciona a sugestão de alocação?</strong>
+            <br />
+            É baseada na regra 50/30/20 aplicada à sua receita do mês, e você também pode pedir uma
+            recomendação personalizada por IA.
+          </p>
+          <p>
+            <strong>Como baixar um relatório?</strong>
+            <br />
+            No menu do usuário, toque em &quot;Relatórios&quot;: lá tem o Relatório Mensal, o Diagnóstico
+            Financeiro (com IA), o Extrato de Lançamentos (Excel/CSV), o Comparativo Mensal e a
+            Evolução Patrimonial, cada um com seu próprio botão de download.
+          </p>
+          <p style={{ marginBottom: 0 }}>
+            <strong>Como faço um lançamento se repetir todo mês?</strong>
+            <br />
+            Ao cadastrar o lançamento, marque a opção &quot;esse lançamento se repete todo mês&quot;: o
+            FinClara já cria os próximos 12 meses automaticamente.
+          </p>
         </div>
-      </a>
 
-      <FormContatoSuporte />
-      </GridMosaico>
+        <a
+          href={`https://wa.me/${WHATSAPP_SUPORTE}?text=${encodeURIComponent("Olá! Vim do FinClara e preciso de ajuda.")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="card"
+          style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "inherit" }}
+        >
+          <MessageCircle size={18} aria-hidden="true" style={{ color: "var(--verde)", flexShrink: 0 }} />
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14.5 }}>WhatsApp</div>
+            <div className="texto-secundario" style={{ fontSize: 12 }}>Precisa de ajuda? Chame por aqui</div>
+          </div>
+        </a>
 
-      <p className="texto-secundario" style={{ fontSize: 12.5 }}>
-        Veja também nossos{" "}
-        <Link href="/termos" className="botao-secundario" style={{ padding: 0, fontSize: 12.5 }}>
-          Termos de Uso e Privacidade
-        </Link>
-        .
-      </p>
+        <FormContatoSuporte />
+
+        <div className="card dashboard-grid-full">
+          <p className="texto-secundario" style={{ margin: 0, fontSize: 12.5 }}>
+            Veja também nossos{" "}
+            <Link href="/termos" className="botao-secundario" style={{ padding: 0, fontSize: 12.5 }}>
+              Termos de Uso e Privacidade
+            </Link>
+            .
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

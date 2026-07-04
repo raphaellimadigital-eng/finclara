@@ -6,7 +6,15 @@ import { avancarMeses, type MesAno } from "./data";
 // (parametrizável — referência: bem acima da Selic mensal equivalente).
 export const TAXA_JUROS_CARA_AO_MES = 2;
 
-export function ehDividaCara(divida: Pick<Divida, "taxaJuros">): boolean {
+// Palavras que, na descrição, indicam um tipo de dívida tradicionalmente com juros altos no
+// Brasil (cartão, cheque especial) — usado como padrão conservador quando o usuário não sabe
+// os juros, para não deixar de priorizar a quitação por falta de informação.
+const PADRAO_DIVIDA_TIPICAMENTE_CARA = /cart[aã]o|cheque especial/i;
+
+export function ehDividaCara(divida: Pick<Divida, "taxaJuros" | "jurosDesconhecidos" | "descricao">): boolean {
+  if (divida.jurosDesconhecidos) {
+    return PADRAO_DIVIDA_TIPICAMENTE_CARA.test(divida.descricao);
+  }
   return Number(divida.taxaJuros) > TAXA_JUROS_CARA_AO_MES;
 }
 

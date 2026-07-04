@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { Categoria } from "@prisma/client";
 import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
+import { MSG_VALOR_MAXIMO, valorMonetarioValido } from "@/lib/valores";
 
 // Busca todos os limites de categoria do usuário logado
 export async function getLimites() {
@@ -31,6 +32,7 @@ export async function salvarLimite(formData: FormData) {
   if (!categoria || isNaN(valorLimite) || valorLimite <= 0) {
     throw new Error("Preencha todos os campos corretamente.");
   }
+  if (!valorMonetarioValido(valorLimite)) throw new Error(MSG_VALOR_MAXIMO);
 
   await prisma.limiteCategoria.upsert({
     where: { usuarioId_categoria: { usuarioId: user.id, categoria } },

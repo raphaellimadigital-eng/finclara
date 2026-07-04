@@ -3,14 +3,18 @@
 import { useRef, useState } from "react";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { criarCartao } from "@/app/dashboard/cartoes/actions";
+import { CampoValor } from "@/components/CampoValor";
 import { mensagemPaywall } from "@/lib/assinatura";
 import { PromptUpgrade } from "@/components/PromptUpgrade";
+import { useValidadeFormulario } from "@/components/useValidadeFormulario";
+import { NOME_CARTAO_MAX, NOME_MIN, validarTextoNoInput } from "@/lib/textos";
 
 export function FormCartao() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const [erroPaywall, setErroPaywall] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const valido = useValidadeFormulario(formRef);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,12 +45,21 @@ export function FormCartao() {
         <fieldset disabled={carregando} style={{ border: "none", padding: 0, margin: 0 }}>
           <div className="campo">
             <label className="rotulo" htmlFor="nome">Apelido do cartão</label>
-            <input id="nome" name="nome" type="text" placeholder="Ex: Nubank, Inter..." required maxLength={50} />
+            <input
+              id="nome"
+              name="nome"
+              type="text"
+              placeholder="Ex: Nubank, Inter..."
+              required
+              minLength={NOME_MIN}
+              maxLength={NOME_CARTAO_MAX}
+              onChange={(e) => validarTextoNoInput(e, NOME_MIN, NOME_CARTAO_MAX, "O apelido do cartão")}
+            />
           </div>
 
           <div className="campo">
-            <label className="rotulo" htmlFor="limite">Limite total</label>
-            <input id="limite" name="limite" type="number" placeholder="0,00" step="0.01" min="0.01" required />
+            <label className="rotulo" htmlFor="limite">Limite do cartão</label>
+            <CampoValor id="limite" name="limite" />
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
@@ -63,7 +76,7 @@ export function FormCartao() {
           {erroPaywall && <PromptUpgrade mensagem={erroPaywall} />}
           {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>{erro}</p>}
 
-          <button type="submit" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <button type="submit" disabled={carregando || !valido} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
             {carregando ? "Salvando..." : "Salvar cartão"}
           </button>

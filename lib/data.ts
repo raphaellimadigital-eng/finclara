@@ -8,6 +8,12 @@ export function parseDataLocal(valor: string): Date {
   return new Date(ano, mes - 1, dia);
 }
 
+// Zera a hora de uma data, para comparar só o dia (ex: "vencimento não pode ser no passado"
+// não deve reprovar o próprio dia de hoje por causa da hora atual).
+export function inicioDoDia(data: Date): Date {
+  return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+}
+
 // Confirma maioridade a partir da data de nascimento, contando o aniversário corretamente (não
 // só a diferença de anos) — alguém que faz 18 anos amanhã ainda não é maior de idade hoje.
 export function maiorDeIdade(dataNascimento: Date, idadeMinima = 18, agora = new Date()): boolean {

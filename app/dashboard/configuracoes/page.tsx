@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function ConfiguracoesPage() {
   return (
-    <div className="container">
+    <div className="container container-largo">
       <Link
         href="/dashboard"
         className="botao-secundario"
@@ -17,12 +17,14 @@ export default function ConfiguracoesPage() {
         <Settings size={20} aria-hidden="true" /> Configurações
       </h1>
 
-      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ fontWeight: 500, fontSize: 14.5 }}>Aparência</div>
-          <div className="texto-secundario">Alternar entre modo claro e escuro</div>
+      <div className="dashboard-grid">
+        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontWeight: 500, fontSize: 14.5 }}>Aparência</div>
+            <div className="texto-secundario">Alternar entre modo claro e escuro</div>
+          </div>
+          <ThemeToggle />
         </div>
-        <ThemeToggle />
       </div>
     </div>
   );

@@ -1,30 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Inbox, Trash2, Loader2, Target, CheckCircle2, AlertTriangle } from "lucide-react";
 import { deletarMeta, aportarMeta } from "@/app/dashboard/metas/actions";
 import { calcularProjecao, estrategiaSugerida, LABEL_TIPO_META } from "@/lib/metas";
+import { formatarMoeda, formatarData } from "@/lib/formatos";
+import { CampoValor } from "@/components/CampoValor";
+import { useConfirmacao } from "@/components/useConfirmacao";
+import { useValidadeFormulario } from "@/components/useValidadeFormulario";
 import type { Meta } from "@prisma/client";
-
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatarData(data: Date) {
-  return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
 
 function ItemMeta({ meta }: { meta: Meta }) {
   const [excluindo, setExcluindo] = useState(false);
   const [aportando, setAportando] = useState(false);
-  const [valorAporte, setValorAporte] = useState("");
   const [erro, setErro] = useState("");
+  const { confirmar, modal } = useConfirmacao();
+  const formRef = useRef<HTMLFormElement>(null);
+  const valido = useValidadeFormulario(formRef);
 
   const projecao = calcularProjecao(meta);
   const corStatus = projecao.concluida ? "var(--verde)" : projecao.atrasada ? "var(--vermelho)" : "var(--texto-secundario)";
 
   async function handleExcluir() {
-    if (!confirm(`Remover a meta "${meta.descricao}"?`)) return;
+    if (!(await confirmar(`Remover a meta "${meta.descricao}"?`, "Remover"))) return;
     setErro("");
     setExcluindo(true);
     try {
@@ -35,16 +33,15 @@ function ItemMeta({ meta }: { meta: Meta }) {
     }
   }
 
-  async function handleAportar(e: React.FormEvent) {
+  async function handleAportar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErro("");
     setAportando(true);
     try {
-      const fd = new FormData();
+      const fd = new FormData(e.currentTarget);
       fd.set("metaId", meta.id);
-      fd.set("valor", valorAporte);
       await aportarMeta(fd);
-      setValorAporte("");
+      formRef.current?.reset();
     } catch (err: any) {
       setErro(err.message || "Não foi possível registrar o aporte.");
     } finally {
@@ -54,6 +51,7 @@ function ItemMeta({ meta }: { meta: Meta }) {
 
   return (
     <div className="card">
+      {modal}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
         <div>
           <div style={{ fontWeight: 600, fontSize: 15 }}>{meta.descricao}</div>
@@ -108,29 +106,21 @@ function ItemMeta({ meta }: { meta: Meta }) {
       <p className="texto-secundario" style={{ fontSize: 11.5, marginBottom: 12 }}>{estrategiaSugerida(meta.prazo)}</p>
 
       {!projecao.concluida && (
-        <form onSubmit={handleAportar} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <div className="campo" style={{ marginBottom: 0, flex: 1 }}>
-            <label className="rotulo" htmlFor={`aporte-${meta.id}`}>Registrar aporte</label>
-            <input
-              id={`aporte-${meta.id}`}
-              type="number"
-              step="0.01"
-              min="0.01"
-              placeholder="0,00"
-              value={valorAporte}
-              onChange={(e) => setValorAporte(e.target.value)}
-              disabled={aportando}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={aportando}
-            style={{ width: "auto", padding: "11px 16px", display: "flex", alignItems: "center", gap: 6 }}
-          >
-            {aportando && <Loader2 size={14} className="icone-carregando" aria-hidden="true" />}
-            Aportar
-          </button>
+        <form ref={formRef} onSubmit={handleAportar} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <fieldset disabled={aportando} style={{ display: "flex", gap: 8, alignItems: "flex-end", flex: 1, border: "none", padding: 0, margin: 0 }}>
+            <div className="campo" style={{ marginBottom: 0, flex: 1 }}>
+              <label className="rotulo" htmlFor={`aporte-${meta.id}`}>Guardar nesta meta</label>
+              <CampoValor id={`aporte-${meta.id}`} name="valor" />
+            </div>
+            <button
+              type="submit"
+              disabled={aportando || !valido}
+              style={{ width: "auto", padding: "11px 16px", display: "flex", alignItems: "center", gap: 6 }}
+            >
+              {aportando && <Loader2 size={14} className="icone-carregando" aria-hidden="true" />}
+              Guardar
+            </button>
+          </fieldset>
         </form>
       )}
 
@@ -146,9 +136,9 @@ export function ListaMetas({ metas }: { metas: Meta[] }) {
         <div className="estado-vazio">
           <Inbox size={28} className="estado-vazio-icone" aria-hidden="true" />
           <p className="texto-secundario" style={{ margin: 0 }}>
-            Nenhuma meta cadastrada ainda.
+            Que tal criar sua primeira meta?
             <br />
-            Cadastre a primeira no formulário acima.
+            Toque em <strong>+ Nova meta</strong> logo abaixo.
           </p>
         </div>
       </div>

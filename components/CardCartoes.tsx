@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CreditCard, ChevronRight, AlertTriangle, AlertOctagon } from "lucide-react";
 import { limiteComprometido, limiteDisponivel, valorFaturaNoMes } from "@/lib/cartoes";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { formatarMoeda } from "@/lib/formatos";
 import type { CartaoCredito, CompraParcelada } from "@prisma/client";
 
 const TEXTO_INFO = [
@@ -15,15 +16,13 @@ type CartaoComCompras = CartaoCredito & { compras: CompraParcelada[] };
 // categoria); a partir de 100% é estouro.
 const LIMIAR_AVISO_PCT = 80;
 
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 export function CardCartoes({ cartoes, mes, ano }: { cartoes: CartaoComCompras[]; mes: number; ano: number }) {
+  const hrefComMes = `/dashboard/cartoes?ano=${ano}&mes=${mes}`;
+
   if (cartoes.length === 0) {
     return (
       <Link
-        href="/dashboard/cartoes"
+        href={hrefComMes}
         className="card"
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", color: "inherit" }}
       >
@@ -33,7 +32,7 @@ export function CardCartoes({ cartoes, mes, ano }: { cartoes: CartaoComCompras[]
             <div className="texto-secundario" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
               Cartões
             </div>
-            <span className="texto-secundario">Sem cartões cadastrados</span>
+            <span className="texto-secundario">Cadastre seu primeiro cartão</span>
           </div>
         </div>
         <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
@@ -59,7 +58,7 @@ export function CardCartoes({ cartoes, mes, ano }: { cartoes: CartaoComCompras[]
   const Icone = situacao === "estouro" ? AlertOctagon : situacao === "aviso" ? AlertTriangle : CreditCard;
 
   return (
-    <Link href="/dashboard/cartoes" className="card" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+    <Link href={hrefComMes} className="card" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
           <Icone size={18} aria-hidden="true" style={{ color: cor, flexShrink: 0 }} />

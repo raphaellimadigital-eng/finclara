@@ -34,7 +34,7 @@ export function BotaoPerguntaFlutuante() {
   }
 
   return (
-    <div ref={ref} style={{ position: "fixed", bottom: "max(20px, env(safe-area-inset-bottom))", right: 16, zIndex: 60 }}>
+    <div ref={ref} className="flutuante-ia">
       {aberto && (
         <div
           style={{

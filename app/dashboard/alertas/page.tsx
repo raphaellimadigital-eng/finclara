@@ -9,6 +9,7 @@ import { calcularProgressoLimites } from "@/lib/limites";
 import { alertasLimites, alertasCartoes, alertasDividas, alertasMetas, ordenarPorSeveridade } from "@/lib/alertas";
 import type { Alerta } from "@/lib/alertas";
 import { LABEL_CATEGORIA } from "@/lib/categorias";
+import { AvisoMesVisualizado } from "@/components/AvisoMesVisualizado";
 
 const ICONE_SEVERIDADE: Record<Alerta["severidade"], typeof AlertOctagon> = {
   estouro: AlertOctagon,
@@ -22,10 +23,14 @@ const COR_SEVERIDADE: Record<Alerta["severidade"], string> = {
   aviso: "var(--amarelo)",
 };
 
-export default async function AlertasPage() {
+type Props = {
+  searchParams: { ano?: string; mes?: string };
+};
+
+export default async function AlertasPage({ searchParams }: Props) {
   const agora = new Date();
-  const ano = agora.getFullYear();
-  const mes = agora.getMonth() + 1;
+  const ano = Number(searchParams.ano) || agora.getFullYear();
+  const mes = Number(searchParams.mes) || agora.getMonth() + 1;
 
   const [lancamentos, limites, cartoes, dividas, metas] = await Promise.all([
     getLancamentos(ano, mes),
@@ -57,6 +62,8 @@ export default async function AlertasPage() {
       <h1 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, marginBottom: 16 }}>
         <Bell size={20} aria-hidden="true" /> Central de alertas
       </h1>
+
+      <AvisoMesVisualizado ano={ano} mes={mes} baseHref="/dashboard/alertas" />
 
       {alertas.length === 0 ? (
         <div className="card">
@@ -104,7 +111,7 @@ export default async function AlertasPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Gauge size={18} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
-          <span style={{ fontWeight: 600, fontSize: 14.5 }}>Gerenciar limites por categoria</span>
+          <span style={{ fontWeight: 600, fontSize: 14.5 }}>Gerenciar limites de gasto</span>
         </div>
         <ChevronRight size={16} aria-hidden="true" style={{ color: "var(--texto-secundario)", flexShrink: 0 }} />
       </Link>

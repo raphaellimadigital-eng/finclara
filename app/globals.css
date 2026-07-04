@@ -144,6 +144,29 @@ h1 {
   color: var(--texto);
 }
 
+/* Grid de 2 colunas do dashboard (mesmo breakpoint de 900px usado no resto do app). Um único
+   gap para as duas dimensões — os cards viram itens diretos do grid, por isso o margin-bottom
+   de .card (pensado para empilhamento solto em outras telas) é zerado aqui dentro. */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.dashboard-grid > .card {
+  margin-bottom: 0;
+}
+
+.dashboard-grid-full {
+  grid-column: 1 / -1;
+}
+
 .texto-secundario {
   color: var(--texto-secundario);
   font-size: 13px;
@@ -556,6 +579,258 @@ button:disabled {
 
 .menu-usuario-item-perigo:hover:not(:disabled) {
   background: var(--vermelho-clara);
+}
+
+/* Navegação principal: barra inferior no mobile, sidebar fixa no desktop (>=900px, mesmo
+   breakpoint do mosaico). Os itens são os mesmos; só a direção e o que fica visível mudam. */
+.nav-principal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  gap: 2px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--borda);
+  padding: 6px max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  z-index: 55;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 48px;
+  padding: 4px 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--texto-secundario);
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.nav-item:hover:not(:disabled) {
+  background: var(--fundo);
+  color: var(--azul);
+}
+
+.nav-item.ativo {
+  color: var(--azul);
+}
+
+/* Botão central "Registrar" — destacado, redondo, meio "saltando" da barra no mobile */
+.nav-registrar {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 54px;
+  height: 54px;
+  min-height: 54px;
+  margin-top: -24px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--azul);
+  color: #fff;
+  border: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.nav-registrar:hover:not(:disabled) {
+  background: var(--azul-escura);
+}
+
+.nav-marca {
+  display: none;
+}
+
+.nav-so-desktop {
+  display: none;
+}
+
+.nav-divisor {
+  display: none;
+}
+
+/* Espaço para o conteúdo não ficar atrás da barra (mobile) / da sidebar (desktop) */
+.conteudo-com-nav {
+  padding-bottom: 84px;
+}
+
+@media (min-width: 900px) {
+  .nav-principal {
+    top: 0;
+    bottom: 0;
+    right: auto;
+    width: 224px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 2px;
+    border-top: none;
+    border-right: 1px solid var(--borda);
+    padding: 20px 12px;
+    overflow-y: auto;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    padding: 11px 12px;
+    min-height: 44px;
+  }
+
+  .nav-item.ativo {
+    background: var(--azul-clara);
+  }
+
+  .nav-registrar {
+    width: 100%;
+    height: auto;
+    min-height: 46px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: none;
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .nav-marca {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 16px;
+  }
+
+  .nav-so-desktop {
+    display: flex;
+  }
+
+  .nav-so-mobile {
+    display: none;
+  }
+
+  .nav-divisor {
+    display: block;
+    height: 1px;
+    background: var(--borda);
+    margin: 10px 6px;
+  }
+
+  .conteudo-com-nav {
+    margin-left: 224px;
+    padding-bottom: 0;
+  }
+}
+
+/* Folha (bottom-sheet no mobile, modal centralizado no desktop) — usada pelo Registrar e
+   pelos painéis abertos a partir da navegação. */
+.folha-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.folha {
+  background: var(--fundo);
+  border-radius: 18px 18px 0 0;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  padding: 14px 16px max(16px, env(safe-area-inset-bottom));
+}
+
+.folha-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.folha-titulo {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  .folha-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .folha {
+    border-radius: 18px;
+  }
+}
+
+/* Botão "+ Adicionar" que revela um formulário (padrão das telas internas:
+   situação primeiro, cadastro depois) */
+.botao-adicionar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--card-bg);
+  color: var(--azul);
+  border: 1px dashed var(--azul);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.botao-adicionar:hover:not(:disabled) {
+  background: var(--azul-clara);
+}
+
+/* Aviso de que a tela mostra um mês diferente do atual */
+.aviso-mes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--amarelo-clara);
+  color: var(--amarelo-texto);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+/* Botão flutuante da IA: no mobile sobe para não brigar com a bottom nav */
+.flutuante-ia {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 76px);
+  right: 16px;
+  z-index: 60;
+}
+
+@media (min-width: 900px) {
+  .flutuante-ia {
+    bottom: 20px;
+  }
 }
 
 /* Spinner de carregamento */

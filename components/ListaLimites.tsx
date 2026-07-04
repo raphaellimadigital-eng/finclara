@@ -5,6 +5,7 @@ import { Inbox, Trash2, Loader2, AlertTriangle, AlertOctagon } from "lucide-reac
 import { deletarLimite } from "@/app/dashboard/limites/actions";
 import type { ProgressoLimite } from "@/lib/limites";
 import { LABEL_CATEGORIA } from "@/lib/categorias";
+import { useConfirmacao } from "@/components/useConfirmacao";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -19,6 +20,7 @@ const COR_SITUACAO: Record<ProgressoLimite["situacao"], string> = {
 export function ListaLimites({ limites }: { limites: (ProgressoLimite & { id: string })[] }) {
   const [excluindo, setExcluindo] = useState<string | null>(null);
   const [erro, setErro] = useState("");
+  const { confirmar, modal } = useConfirmacao();
 
   if (limites.length === 0) {
     return (
@@ -28,7 +30,7 @@ export function ListaLimites({ limites }: { limites: (ProgressoLimite & { id: st
           <p className="texto-secundario" style={{ margin: 0 }}>
             Nenhum limite definido ainda.
             <br />
-            Cadastre o primeiro no formulário acima.
+            Toque em <strong>+ Definir limite</strong> abaixo para criar o primeiro.
           </p>
         </div>
       </div>
@@ -36,7 +38,7 @@ export function ListaLimites({ limites }: { limites: (ProgressoLimite & { id: st
   }
 
   async function handleExcluir(id: string, label: string) {
-    if (!confirm(`Remover o limite de "${label}"?`)) return;
+    if (!(await confirmar(`Remover o limite de "${label}"?`, "Remover"))) return;
     setErro("");
     setExcluindo(id);
     try {
@@ -50,6 +52,7 @@ export function ListaLimites({ limites }: { limites: (ProgressoLimite & { id: st
 
   return (
     <>
+      {modal}
       {erro && (
         <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13, marginBottom: 10 }}>
           {erro}

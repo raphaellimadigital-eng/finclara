@@ -6,3 +6,4 @@ node_modules/
 *.tsbuildinfo
 coverage/
 FinClara_Proposta.docx
+.claude/settings.local.json

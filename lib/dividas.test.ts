@@ -35,15 +35,24 @@ function divida(overrides: Partial<Divida> = {}): Divida {
 
 describe("ehDividaCara", () => {
   it("considera cara acima do limiar", () => {
-    expect(ehDividaCara({ taxaJuros: (TAXA_JUROS_CARA_AO_MES + 0.1) as any })).toBe(true);
+    expect(ehDividaCara({ taxaJuros: (TAXA_JUROS_CARA_AO_MES + 0.1) as any, jurosDesconhecidos: false, descricao: "Dívida" })).toBe(true);
   });
 
   it("não considera cara exatamente no limiar", () => {
-    expect(ehDividaCara({ taxaJuros: TAXA_JUROS_CARA_AO_MES as any })).toBe(false);
+    expect(ehDividaCara({ taxaJuros: TAXA_JUROS_CARA_AO_MES as any, jurosDesconhecidos: false, descricao: "Dívida" })).toBe(false);
   });
 
   it("não considera cara abaixo do limiar", () => {
-    expect(ehDividaCara({ taxaJuros: (TAXA_JUROS_CARA_AO_MES - 0.5) as any })).toBe(false);
+    expect(ehDividaCara({ taxaJuros: (TAXA_JUROS_CARA_AO_MES - 0.5) as any, jurosDesconhecidos: false, descricao: "Dívida" })).toBe(false);
+  });
+
+  it("com juros desconhecidos, considera cara quando a descrição indica cartão ou cheque especial", () => {
+    expect(ehDividaCara({ taxaJuros: 0 as any, jurosDesconhecidos: true, descricao: "Cartão Nubank" })).toBe(true);
+    expect(ehDividaCara({ taxaJuros: 0 as any, jurosDesconhecidos: true, descricao: "Cheque especial" })).toBe(true);
+  });
+
+  it("com juros desconhecidos, não considera cara para outros tipos de dívida", () => {
+    expect(ehDividaCara({ taxaJuros: 0 as any, jurosDesconhecidos: true, descricao: "Empréstimo com o primo" })).toBe(false);
   });
 });
 

@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { deletarLancamento, deletarLancamentoEFuturos } from "@/app/dashboard/actions";
 import { LABEL_CATEGORIA } from "@/lib/categorias";
+import { formatarMoeda, formatarData } from "@/lib/formatos";
+import { useConfirmacao } from "@/components/useConfirmacao";
 import type { Lancamento } from "@prisma/client";
 
 const ICONE_CATEGORIA: Record<string, LucideIcon> = {
@@ -47,15 +49,7 @@ const ICONE_CATEGORIA: Record<string, LucideIcon> = {
   OUTROS_INVESTIMENTOS: Wallet,
 };
 
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatarData(data: Date) {
-  return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-// Quantos lançamentos mostrar de cara quando o card está recolhido — o resto só aparece ao expandir
+// Quantos registros mostrar de cara quando o card está recolhido — o resto só aparece ao expandir
 const QTD_PREVIA = 5;
 
 export function ListaLancamentos({
@@ -68,6 +62,7 @@ export function ListaLancamentos({
   const [deletando, setDeletando] = useState<string | null>(null);
   const [erro, setErro] = useState("");
   const [expandido, setExpandido] = useState(false);
+  const { confirmar, modal } = useConfirmacao();
 
   if (lancamentos.length === 0) {
     return (
@@ -75,9 +70,9 @@ export function ListaLancamentos({
         <div className="estado-vazio">
           <Inbox size={28} className="estado-vazio-icone" aria-hidden="true" />
           <p className="texto-secundario" style={{ margin: 0 }}>
-            Nenhum lançamento neste mês ainda.
+            Nenhum registro neste mês ainda.
             <br />
-            Adicione o primeiro no formulário acima.
+            Toque no botão <strong>+</strong> abaixo para registrar o primeiro.
           </p>
         </div>
       </div>
@@ -88,12 +83,16 @@ export function ListaLancamentos({
     let excluirFuturos = false;
 
     if (recorrente) {
-      if (!confirm(`"${descricao}" é recorrente. Excluir este mês e também os meses futuros?`)) {
-        if (!confirm(`Excluir apenas esta ocorrência de "${descricao}" (este mês)?`)) return;
-      } else {
+      const excluirTambemFuturos = await confirmar(
+        `"${descricao}" é recorrente. Excluir este mês e também os meses futuros?`,
+        "Excluir também os futuros"
+      );
+      if (excluirTambemFuturos) {
         excluirFuturos = true;
+      } else if (!(await confirmar(`Excluir apenas esta ocorrência de "${descricao}" (este mês)?`, "Excluir só este mês"))) {
+        return;
       }
-    } else if (!confirm(`Remover "${descricao}"?`)) {
+    } else if (!(await confirmar(`Remover "${descricao}"?`, "Remover"))) {
       return;
     }
 
@@ -117,6 +116,7 @@ export function ListaLancamentos({
 
   return (
     <div className="card">
+      {modal}
       <button
         type="button"
         onClick={() => setExpandido((v) => !v)}
@@ -136,7 +136,7 @@ export function ListaLancamentos({
       >
         <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6, margin: 0 }}>
           <List size={16} aria-hidden="true" />
-          {expandido ? "Lançamentos do mês" : "Lançamentos recentes"}
+          {expandido ? "Registros do mês" : "Últimos registros"}
           <span className="texto-secundario" style={{ fontWeight: 400 }}>({lancamentos.length})</span>
         </h2>
         {expandido ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
@@ -208,7 +208,7 @@ export function ListaLancamentos({
           className="botao-secundario"
           style={{ width: "100%", marginTop: 4 }}
         >
-          Ver todos os {lancamentos.length} lançamentos
+          Ver todos os {lancamentos.length} registros
         </button>
       )}
     </div>

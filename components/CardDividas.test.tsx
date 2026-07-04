@@ -24,7 +24,7 @@ function divida(overrides: Partial<Divida> = {}): Divida {
 describe("CardDividas", () => {
   it("mostra estado vazio quando não há dívidas", () => {
     render(<CardDividas dividas={[]} />);
-    expect(screen.getByText("Sem dívidas cadastradas")).toBeInTheDocument();
+    expect(screen.getByText(/Nenhuma dívida/)).toBeInTheDocument();
   });
 
   it("mostra o nome do card, mesmo sem dívidas cadastradas", () => {
@@ -39,11 +39,11 @@ describe("CardDividas", () => {
 
   it("alerta quando há dívida com juros altos", () => {
     render(<CardDividas dividas={[divida({ taxaJuros: 5 as any })]} />);
-    expect(screen.getByText(/juros altos/)).toBeInTheDocument();
+    expect(screen.getByText(/[Jj]uros altos/)).toBeInTheDocument();
   });
 
   it("não alerta quando nenhuma dívida é cara", () => {
     render(<CardDividas dividas={[divida({ taxaJuros: 0.5 as any })]} />);
-    expect(screen.queryByText(/juros altos/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/[Jj]uros altos/)).not.toBeInTheDocument();
   });
 });

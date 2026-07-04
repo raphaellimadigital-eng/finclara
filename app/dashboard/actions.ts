@@ -7,6 +7,8 @@ import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { avancarMeses, maisTardio, parseDataLocal, type MesAno } from "@/lib/data";
 import { ultimoMesProjetado } from "@/lib/dividas";
 import { gerarParcelas } from "@/lib/cartoes";
+import { MSG_VALOR_MAXIMO, VALOR_MONETARIO_MAXIMO, valorMonetarioValido } from "@/lib/valores";
+import { schemaDescricao, validar } from "@/lib/textos";
 import { Categoria, TipoLancamento } from "@prisma/client";
 
 // Quantidade de meses futuros gerados automaticamente ao marcar um lançamento como
@@ -82,20 +84,46 @@ export async function getLimiteFuturoCalendario(): Promise<MesAno> {
   return maisTardio(pontos);
 }
 
-// Cria um novo lançamento
+// Cria um novo lançamento. Um registro "Guardei" pode vir vinculado a uma meta (metaId):
+// nesse caso o valor também soma no progresso da meta — o mesmo dinheiro digitado uma vez só.
 export async function criarLancamento(formData: FormData) {
   const user = await getUsuarioLogado();
   await garantirUsuario(user);
 
   const tipo = formData.get("tipo") as TipoLancamento;
   const categoria = formData.get("categoria") as Categoria;
-  const descricao = formData.get("descricao") as string;
+  const descricao = validar(schemaDescricao, formData.get("descricao"));
   const valor = parseFloat(formData.get("valor") as string);
   const data = parseDataLocal(formData.get("data") as string);
-  const recorrente = formData.get("recorrente") === "on";
+  const metaId = (formData.get("metaId") as string) || null;
+  // Vinculado a meta, o lançamento não pode ser recorrente: as ocorrências futuras somariam
+  // na meta hoje, antes de o dinheiro existir. O formulário esconde o "repetir" nesse caso.
+  const recorrente = formData.get("recorrente") === "on" && !metaId;
 
-  if (!descricao || isNaN(valor) || valor <= 0) {
-    throw new Error("Preencha todos os campos corretamente.");
+  if (isNaN(valor) || valor <= 0) {
+    throw new Error("Informe um valor maior que zero.");
+  }
+  if (!valorMonetarioValido(valor)) throw new Error(MSG_VALOR_MAXIMO);
+
+  if (metaId && tipo === "INVESTIMENTO") {
+    const meta = await prisma.meta.findFirst({ where: { id: metaId, usuarioId: user.id } });
+    if (!meta) throw new Error("Meta inválida.");
+
+    const novoValorAtual = Number(meta.valorAtual) + valor;
+    if (novoValorAtual > VALOR_MONETARIO_MAXIMO) {
+      throw new Error("O total juntado na meta não pode passar de R$ 1.000.000,00.");
+    }
+
+    await prisma.$transaction([
+      prisma.lancamento.create({
+        data: { usuarioId: user.id, tipo, categoria, descricao, valor, data, recorrente: false, metaId },
+      }),
+      prisma.meta.update({ where: { id: metaId }, data: { valorAtual: novoValorAtual } }),
+    ]);
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/metas");
+    return;
   }
 
   // Lançamentos recorrentes já nascem com as ocorrências dos próximos meses criadas,
@@ -133,13 +161,30 @@ export async function criarLancamento(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+// Desfaz o efeito de um lançamento vinculado a meta: devolve o valor do progresso da meta
+// (nunca abaixo de zero), mantendo os dois lados da unificação consistentes.
+async function estornarMetaDoLancamento(lancamento: { metaId: string | null; valor: unknown }) {
+  if (!lancamento.metaId) return;
+
+  const meta = await prisma.meta.findUnique({ where: { id: lancamento.metaId } });
+  if (!meta) return;
+
+  const novoValorAtual = Math.max(Number(meta.valorAtual) - Number(lancamento.valor), 0);
+  await prisma.meta.update({ where: { id: meta.id }, data: { valorAtual: novoValorAtual } });
+  revalidatePath("/dashboard/metas");
+}
+
 // Remove um único lançamento por id (garante que pertence ao usuário logado)
 export async function deletarLancamento(id: string) {
   const user = await getUsuarioLogado();
 
+  const lancamento = await prisma.lancamento.findFirst({ where: { id, usuarioId: user.id } });
+  if (!lancamento) return;
+
   await prisma.lancamento.deleteMany({
     where: { id, usuarioId: user.id },
   });
+  await estornarMetaDoLancamento(lancamento);
 
   revalidatePath("/dashboard");
 }
@@ -164,6 +209,8 @@ export async function deletarLancamentoEFuturos(id: string) {
     });
   } else {
     await prisma.lancamento.deleteMany({ where: { id, usuarioId: user.id } });
+    // Lançamento vinculado a meta nunca é recorrente, então só este ramo pode precisar de estorno
+    await estornarMetaDoLancamento(lancamento);
   }
 
   revalidatePath("/dashboard");

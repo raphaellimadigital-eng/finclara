@@ -2,21 +2,31 @@ import Link from "next/link";
 import { ChevronLeft, Gauge } from "lucide-react";
 import { getLimites } from "./actions";
 import { getLancamentos } from "../actions";
+import { getCartoes } from "../cartoes/actions";
 import { calcularProgressoLimites } from "@/lib/limites";
+import { parcelasPorCategoriaNoMes } from "@/lib/cartoes";
 import { FormLimiteCategoria } from "@/components/FormLimiteCategoria";
 import { ListaLimites } from "@/components/ListaLimites";
+import { RevelarFormulario } from "@/components/RevelarFormulario";
+import { AvisoMesVisualizado } from "@/components/AvisoMesVisualizado";
 
-export default async function LimitesPage() {
+type Props = {
+  searchParams: { ano?: string; mes?: string };
+};
+
+export default async function LimitesPage({ searchParams }: Props) {
   const agora = new Date();
-  const ano = agora.getFullYear();
-  const mes = agora.getMonth() + 1;
+  const ano = Number(searchParams.ano) || agora.getFullYear();
+  const mes = Number(searchParams.mes) || agora.getMonth() + 1;
 
-  const [limites, lancamentos] = await Promise.all([
+  const [limites, lancamentos, cartoes] = await Promise.all([
     getLimites(),
     getLancamentos(ano, mes),
+    getCartoes(),
   ]);
 
-  const progresso = calcularProgressoLimites(lancamentos, limites).map((p, i) => ({
+  const parcelasPorCategoria = parcelasPorCategoriaNoMes(cartoes, mes, ano);
+  const progresso = calcularProgressoLimites(lancamentos, limites, parcelasPorCategoria).map((p, i) => ({
     ...p,
     id: limites[i].id,
   }));
@@ -24,7 +34,7 @@ export default async function LimitesPage() {
   return (
     <div className="container">
       <Link
-        href="/dashboard"
+        href="/dashboard/contas"
         className="botao-secundario"
         style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 16 }}
       >
@@ -32,16 +42,22 @@ export default async function LimitesPage() {
       </Link>
 
       <h1 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, marginBottom: 16 }}>
-        <Gauge size={20} aria-hidden="true" /> Limites por categoria
+        <Gauge size={20} aria-hidden="true" /> Limites de gasto
       </h1>
 
+      <AvisoMesVisualizado ano={ano} mes={mes} baseHref="/dashboard/limites" />
+
       <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 16 }}>
-        Defina quanto pretende gastar em cada categoria de despesa por mês. A partir de 80% do
+        Defina quanto quer gastar no máximo em cada categoria por mês. A partir de 80% do
         limite você recebe um aviso; ao ultrapassar 100%, um alerta de estouro.
       </p>
 
-      <FormLimiteCategoria />
+      {/* Situação primeiro; o cadastro fica recolhido atrás do botão */}
       <ListaLimites limites={progresso} />
+
+      <RevelarFormulario rotulo="Definir limite">
+        <FormLimiteCategoria />
+      </RevelarFormulario>
     </div>
   );
 }

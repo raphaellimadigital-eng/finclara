@@ -36,7 +36,7 @@ function compra(overrides: Partial<CompraParcelada> = {}): CompraParcelada {
 describe("CardCartoes", () => {
   it("mostra estado vazio quando não há cartões", () => {
     render(<CardCartoes cartoes={[]} mes={7} ano={2026} />);
-    expect(screen.getByText("Sem cartões cadastrados")).toBeInTheDocument();
+    expect(screen.getByText("Cadastre seu primeiro cartão")).toBeInTheDocument();
   });
 
   it("mostra o nome do card, mesmo sem cartões cadastrados", () => {

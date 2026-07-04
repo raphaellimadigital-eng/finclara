@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
 import { cpfValido } from "@/lib/cpf";
 import { maiorDeIdade, parseDataLocal } from "@/lib/data";
+import { schemaEndereco, schemaNomeUsuario, schemaTelefone, validar } from "@/lib/textos";
 
 // Busca o registro do usuário (incluindo o perfil de investidor já salvo, se houver)
 export async function getUsuarioAtual() {
@@ -23,13 +24,11 @@ export async function atualizarDadosCadastrais(formData: FormData) {
   const user = await getUsuarioLogado();
   const usuarioAtual = await garantirUsuario(user);
 
-  const nome = formData.get("nome") as string;
-  const telefone = (formData.get("telefone") as string) || null;
-  const endereco = (formData.get("endereco") as string) || null;
-
-  if (!nome) {
-    throw new Error("Informe seu nome.");
-  }
+  const nome = validar(schemaNomeUsuario, formData.get("nome"));
+  const telefoneBruto = (formData.get("telefone") as string) || "";
+  const enderecoBruto = (formData.get("endereco") as string) || "";
+  const telefone = telefoneBruto.trim() ? validar(schemaTelefone, telefoneBruto) : null;
+  const endereco = enderecoBruto.trim() ? validar(schemaEndereco, enderecoBruto) : null;
 
   const dados: Prisma.UsuarioUpdateInput = { nome, telefone, endereco };
 

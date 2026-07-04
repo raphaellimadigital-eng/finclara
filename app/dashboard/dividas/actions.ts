@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
-import { parseDataLocal } from "@/lib/data";
+import { parseDataLocal, inicioDoDia } from "@/lib/data";
 import { calcularPagamento, desfazerPagamento } from "@/lib/dividas";
 import { erroPaywall, podeUsarFeature } from "@/lib/assinatura";
+import { MSG_VALOR_MAXIMO, TAXA_JUROS_MAXIMA, valorMonetarioValido } from "@/lib/valores";
+import { PARCELAS_RESTANTES_MAX, schemaDescricao, validar } from "@/lib/textos";
 
 // Busca todas as dívidas do usuário logado (ativas primeiro, ordenadas por prioridade de
 // quitação; quitadas por último)
@@ -24,19 +26,33 @@ export async function criarDivida(formData: FormData) {
   const user = await getUsuarioLogado();
   await garantirUsuario(user);
 
-  const descricao = formData.get("descricao") as string;
+  const descricao = validar(schemaDescricao, formData.get("descricao"));
   const valorTotal = parseFloat(formData.get("valorTotal") as string);
   const valorParcela = parseFloat(formData.get("valorParcela") as string);
-  const taxaJuros = parseFloat(formData.get("taxaJuros") as string);
+  const jurosDesconhecidos = formData.get("jurosDesconhecidos") === "on";
+  const taxaJuros = jurosDesconhecidos ? 0 : parseFloat(formData.get("taxaJuros") as string);
   const vencimento = parseDataLocal(formData.get("vencimento") as string);
+  const parcelasRestantesTexto = formData.get("parcelasRestantes") as string;
+  const parcelasRestantes = parcelasRestantesTexto ? parseInt(parcelasRestantesTexto, 10) : null;
 
   if (
-    !descricao ||
     isNaN(valorTotal) || valorTotal <= 0 ||
     isNaN(valorParcela) || valorParcela <= 0 ||
-    isNaN(taxaJuros) || taxaJuros < 0
+    (!jurosDesconhecidos && (isNaN(taxaJuros) || taxaJuros < 0))
   ) {
     throw new Error("Preencha todos os campos corretamente.");
+  }
+  if (!valorMonetarioValido(valorTotal) || !valorMonetarioValido(valorParcela)) {
+    throw new Error(MSG_VALOR_MAXIMO);
+  }
+  if (!jurosDesconhecidos && taxaJuros > TAXA_JUROS_MAXIMA) {
+    throw new Error(`A taxa de juros máxima permitida é ${TAXA_JUROS_MAXIMA}% ao mês.`);
+  }
+  if (parcelasRestantes !== null && (isNaN(parcelasRestantes) || parcelasRestantes < 0 || parcelasRestantes > PARCELAS_RESTANTES_MAX)) {
+    throw new Error(`Informe um número de parcelas restantes entre 0 e ${PARCELAS_RESTANTES_MAX}.`);
+  }
+  if (inicioDoDia(vencimento) < inicioDoDia(new Date())) {
+    throw new Error("O vencimento não pode ser uma data passada.");
   }
 
   await prisma.divida.create({
@@ -47,6 +63,8 @@ export async function criarDivida(formData: FormData) {
       valorTotal,
       valorParcela,
       taxaJuros,
+      jurosDesconhecidos,
+      parcelasRestantes,
       vencimento,
     },
   });
