@@ -30,7 +30,7 @@ export function CardOrientacao({ orientacao }: { orientacao: Orientacao }) {
   const primeiroObjetivoAtingido = orientacao.reservaAtual >= orientacao.reservaAlvo;
 
   return (
-    <div className="card">
+    <div className="card" data-tour="prioridade">
       <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <Compass size={16} aria-hidden="true" /> Sua prioridade agora
       </h2>

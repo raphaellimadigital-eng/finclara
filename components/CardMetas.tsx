@@ -16,6 +16,7 @@ export function CardMetas({ metas }: { metas: Meta[] }) {
     <Link
       href="/dashboard/metas"
       className="card"
+      data-tour="metas"
       style={{ display: "block", textDecoration: "none", color: "inherit" }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: metas.length > 0 ? 10 : 0 }}>

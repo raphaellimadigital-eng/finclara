@@ -1,5 +1,4 @@
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 const TEMA_INIT_SCRIPT = `
@@ -38,9 +37,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={inter.variable}>
       <head>
-        <Script id="tema-init" strategy="beforeInteractive">
-          {TEMA_INIT_SCRIPT}
-        </Script>
+        {/* Script inline puro (não next/script) de propósito: precisa rodar de forma síncrona
+            antes da 1ª pintura pra evitar flash do tema errado, e o next/script com
+            beforeInteractive tem um conflito conhecido com ferramentas que carregam a página via
+            iframe (Cypress), gerando um falso positivo de erro de hidratação em toda página. */}
+        <script dangerouslySetInnerHTML={{ __html: TEMA_INIT_SCRIPT }} />
       </head>
       <body>{children}</body>
     </html>

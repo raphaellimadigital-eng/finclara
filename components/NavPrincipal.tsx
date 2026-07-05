@@ -72,7 +72,15 @@ const GRUPOS_SECUNDARIOS: { rotulo: string; itens: ItemSecundario[] }[] = [
 
 const ITENS_SECUNDARIOS: ItemSecundario[] = GRUPOS_SECUNDARIOS.flatMap((grupo) => grupo.itens);
 
-export function NavPrincipal({ metas = [] }: { metas?: MetaParaVincular[] }) {
+type Props = {
+  metas?: MetaParaVincular[];
+  // Enquanto os primeiros passos não estão completos, os itens secundários (Relatórios,
+  // Perfil, Segurança, Configurações, Ajuda...) ficam escondidos — menos opções pra quem ainda
+  // está descobrindo o app, sem tirar o acesso ao Sair (ver components/OnboardingPrimeirosPassos).
+  restringirMenu?: boolean;
+};
+
+export function NavPrincipal({ metas = [], restringirMenu = false }: Props) {
   const pathname = usePathname();
   const params = useSearchParams();
   const router = useRouter();
@@ -127,7 +135,7 @@ export function NavPrincipal({ metas = [] }: { metas?: MetaParaVincular[] }) {
         <ItemLink {...ITENS_PRINCIPAIS[0]} ativo={estaAtivo(ITENS_PRINCIPAIS[0])} />
         <ItemLink {...ITENS_PRINCIPAIS[1]} ativo={estaAtivo(ITENS_PRINCIPAIS[1])} />
 
-        <button type="button" className="nav-registrar" onClick={() => setRegistrando(true)} aria-haspopup="dialog">
+        <button type="button" className="nav-registrar" data-tour="registrar" onClick={() => setRegistrando(true)} aria-haspopup="dialog">
           <Plus size={26} aria-hidden="true" />
           <span className="nav-so-desktop">Registrar</span>
         </button>
@@ -147,20 +155,21 @@ export function NavPrincipal({ metas = [] }: { metas?: MetaParaVincular[] }) {
 
         {/* Desktop: itens secundários expandidos na sidebar, agrupados por tema */}
         <div className="nav-divisor" />
-        {GRUPOS_SECUNDARIOS.map((grupo, i) => (
-          <Fragment key={grupo.rotulo}>
-            {i > 0 && <div className="nav-divisor" />}
-            {grupo.itens.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-item nav-so-desktop ${pathname.startsWith(item.href) ? "ativo" : ""}`}
-              >
-                <item.Icone size={18} aria-hidden="true" /> {item.rotulo}
-              </Link>
-            ))}
-          </Fragment>
-        ))}
+        {!restringirMenu &&
+          GRUPOS_SECUNDARIOS.map((grupo, i) => (
+            <Fragment key={grupo.rotulo}>
+              {i > 0 && <div className="nav-divisor" />}
+              {grupo.itens.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-item nav-so-desktop ${pathname.startsWith(item.href) ? "ativo" : ""}`}
+                >
+                  <item.Icone size={18} aria-hidden="true" /> {item.rotulo}
+                </Link>
+              ))}
+            </Fragment>
+          ))}
         <button type="button" className="nav-item nav-so-desktop" onClick={handleSair} disabled={saindo} style={{ color: "var(--vermelho)" }}>
           {saindo ? <Loader2 size={18} className="icone-carregando" aria-hidden="true" /> : <LogOut size={18} aria-hidden="true" />}
           {saindo ? "Saindo..." : "Sair"}
@@ -175,16 +184,22 @@ export function NavPrincipal({ metas = [] }: { metas?: MetaParaVincular[] }) {
       {/* Folha "Mais" (mobile) */}
       <FolhaFormulario titulo="Mais" aberta={maisAberto} aoFechar={() => setMaisAberto(false)}>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {GRUPOS_SECUNDARIOS.map((grupo, i) => (
-            <Fragment key={grupo.rotulo}>
-              {i > 0 && <div className="menu-usuario-divisor" />}
-              {grupo.itens.map((item) => (
-                <Link key={item.href} href={item.href} className="menu-usuario-item" onClick={() => setMaisAberto(false)}>
-                  <item.Icone size={16} aria-hidden="true" /> {item.rotulo}
-                </Link>
-              ))}
-            </Fragment>
-          ))}
+          {restringirMenu ? (
+            <p className="texto-secundario" style={{ fontSize: 13, padding: "0 12px 10px", lineHeight: 1.5 }}>
+              Mais opções aparecem aqui assim que você completar os primeiros passos no dashboard.
+            </p>
+          ) : (
+            GRUPOS_SECUNDARIOS.map((grupo, i) => (
+              <Fragment key={grupo.rotulo}>
+                {i > 0 && <div className="menu-usuario-divisor" />}
+                {grupo.itens.map((item) => (
+                  <Link key={item.href} href={item.href} className="menu-usuario-item" onClick={() => setMaisAberto(false)}>
+                    <item.Icone size={16} aria-hidden="true" /> {item.rotulo}
+                  </Link>
+                ))}
+              </Fragment>
+            ))
+          )}
           <div className="menu-usuario-divisor" />
           <button
             type="button"

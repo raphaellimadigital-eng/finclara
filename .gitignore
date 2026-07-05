@@ -1,9 +1,12 @@
 .next/
 node_modules/
-.env.local
-.env
-*.env
+.env*
+!.env.example
 *.tsbuildinfo
 coverage/
 FinClara_Proposta.docx
 .claude/settings.local.json
+cypress.env.json
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/

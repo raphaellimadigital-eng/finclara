@@ -23,6 +23,8 @@ export function AssinaturaCard({ usuario }: { usuario: Usuario }) {
   } else if (emTrial) {
     const dias = diasRestantesTrial(usuario);
     statusTexto = `Período de teste — ${dias} ${dias === 1 ? "dia restante" : "dias restantes"}`;
+  } else if (usuario.statusAssinatura === "PENDENTE") {
+    statusTexto = "Pagamento pendente de confirmação";
   } else {
     statusTexto = "Plano Free";
   }

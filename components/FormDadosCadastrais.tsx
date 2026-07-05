@@ -41,7 +41,10 @@ export function FormDadosCadastrais({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  const valido = useValidadeFormulario(formRef);
+  // gatilho=editando: o <form> de edição só existe depois de clicar em "Editar" (alternando
+  // dentro deste mesmo componente) — sem isso o hook nunca liga os listeners nele (ver
+  // useValidadeFormulario) e o botão Salvar fica preso em desabilitado.
+  const valido = useValidadeFormulario(formRef, editando);
 
   async function handleCepChange(e: React.ChangeEvent<HTMLInputElement>) {
     const formatado = formatarCep(e.target.value);

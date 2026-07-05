@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getLancamentos, getLimiteFuturoCalendario } from "./actions";
+import { getLancamentos, getLimiteFuturoCalendario, getStatusPrimeirosPassos } from "./actions";
 import { getDividas } from "./dividas/actions";
 import { getCartoes } from "./cartoes/actions";
 import { getMetas } from "./metas/actions";
@@ -58,7 +58,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const [lancamentos, dividas, cartoes, metas, usuario, limites, limiteFuturoCalendario] = await Promise.all([
+  const [lancamentos, dividas, cartoes, metas, usuario, limites, limiteFuturoCalendario, statusPrimeirosPassos] = await Promise.all([
     getLancamentos(ano, mes),
     getDividas(),
     getCartoes(),
@@ -66,6 +66,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     getUsuarioAtual(),
     getLimites(),
     getLimiteFuturoCalendario(),
+    getStatusPrimeirosPassos(),
     // Registra a "foto" do patrimônio do mês corrente para acumular histórico ao longo do
     // tempo (usado no gráfico e no relatório de Evolução Patrimonial). Não bloqueia nada se falhar.
     registrarSnapshotPatrimonio().catch(() => {}),
@@ -154,9 +155,9 @@ export default async function DashboardPage({ searchParams }: Props) {
       </Suspense>
 
       <OnboardingPrimeirosPassos
-        temReceita={totalReceitas > 0}
-        temDespesa={totalDespesas > 0}
-        temMeta={metas.length > 0}
+        temReceita={statusPrimeirosPassos.temReceita}
+        temDespesa={statusPrimeirosPassos.temDespesa}
+        temMeta={statusPrimeirosPassos.temMeta}
         ano={ano}
         mes={mes}
       />

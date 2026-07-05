@@ -25,6 +25,22 @@ function adicionarMeses(data: Date, meses: number): Date {
   return alvo;
 }
 
+// Progresso dos "primeiros passos" (ver OnboardingPrimeirosPassos e TourPrimeirosPassos):
+// checagem por TODA a vida do usuário, não só o mês em exibição — navegar para um mês antigo ou
+// futuro sem lançamentos não pode fazer o onboarding "voltar" para quem já passou por ele.
+export async function getStatusPrimeirosPassos() {
+  const user = await getUsuarioLogado();
+  await garantirUsuario(user);
+
+  const [receita, despesa, meta] = await Promise.all([
+    prisma.lancamento.findFirst({ where: { usuarioId: user.id, tipo: "RECEITA" }, select: { id: true } }),
+    prisma.lancamento.findFirst({ where: { usuarioId: user.id, tipo: "DESPESA" }, select: { id: true } }),
+    prisma.meta.findFirst({ where: { usuarioId: user.id }, select: { id: true } }),
+  ]);
+
+  return { temReceita: !!receita, temDespesa: !!despesa, temMeta: !!meta };
+}
+
 // Busca todos os lançamentos do mês/ano informado para o usuário logado
 export async function getLancamentos(ano: number, mes: number) {
   const user = await getUsuarioLogado();

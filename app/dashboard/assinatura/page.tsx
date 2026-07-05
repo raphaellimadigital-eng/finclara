@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, Crown, CheckCircle2 } from "lucide-react";
 import { getStatusAssinatura } from "@/lib/auth";
 import { diasRestantesTrial, temAcessoCompleto, trialAtivo } from "@/lib/assinatura";
-import { BotaoAssinar, BotaoCancelarAssinatura } from "@/components/BotaoAssinatura";
+import { BotaoAssinar, BotaoCancelarAssinatura, BotaoVerificarPagamento } from "@/components/BotaoAssinatura";
 
 const BENEFICIOS_PRO = [
   "Marcar parcelas de dívidas como pagas e acompanhar a quitação",
@@ -59,10 +59,20 @@ export default async function AssinaturaPage() {
           </p>
         )}
 
-        {!acessoCompleto && (
+        {!acessoCompleto && usuario.statusAssinatura !== "PENDENTE" && (
           <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 10 }}>
             Você está no plano Free. Assine o Pro para desbloquear tudo abaixo.
           </p>
+        )}
+
+        {usuario.statusAssinatura === "PENDENTE" && (
+          <div style={{ marginBottom: 10 }}>
+            <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 8 }}>
+              Estamos aguardando a confirmação do seu pagamento pelo Mercado Pago. Se você já
+              concluiu o checkout, isso costuma ser automático — mas se demorar, verifique manualmente.
+            </p>
+            <BotaoVerificarPagamento />
+          </div>
         )}
 
         <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 16px" }}>

@@ -17,6 +17,10 @@ npm run build      # build de produção — SEMPRE rodar antes de finalizar uma
 npm run lint       # lint
 npx prisma studio  # inspecionar o banco
 npx prisma migrate dev --name <nome>  # nova migration
+npm test           # testes unitários (Vitest)
+npm run cy:open    # Cypress em modo interativo (precisa do `npm run dev` rodando em outro terminal)
+npm run test:e2e   # Cypress headless — todos os specs de cypress/e2e
+npm run test:e2e:limpar  # limpeza manual dos dados de teste (roda sozinha ao final do test:e2e)
 ```
 
 ## Regras de código
@@ -54,8 +58,11 @@ npx prisma migrate dev --name <nome>  # nova migration
 
 ## Testes e qualidade
 
-- Testes E2E com **Cypress** para os fluxos críticos: cadastro/login, adicionar receita, adicionar despesa, criar meta, visualizar dashboard.
-- Ao corrigir um bug, criar/atualizar o teste que o cobre.
+- Testes E2E com **Cypress** (`cypress/e2e`) para os fluxos críticos: cadastro/login, onboarding guiado, adicionar receita, adicionar despesa, criar meta, visualizar dashboard, aviso de plano limitado, dívidas/cartões/limites, editar perfil, trocar senha.
+  - Precisam de `cypress.env.json` (fora do git, ver `cypress.env.json.example`) com `TEST_EMAIL`/`TEST_PASSWORD` de uma conta já confirmada no Supabase — os specs de cadastro/onboarding e de plano limitado criam suas próprias contas descartáveis via `cy.task`.
+  - Rodar com o `npm run dev` ativo em outro terminal (ou `npm run build && npm start` para simular produção).
+  - Ao corrigir um bug, criar/atualizar o teste que o cobre — o objetivo é que a suíte sirva de regressão: rodar `npm run test:e2e` antes de considerar uma tarefa concluída sempre que mexer em login, dashboard, lançamentos, metas, onboarding ou assinatura.
+  - Limpeza automática: `cypress.config.ts` (hook `after:run`) apaga sozinho, ao final de toda execução, as contas descartáveis criadas pelos specs (e-mail com `+cy`) e os lançamentos/metas de teste (descrição com "Cypress") da conta fixa — para não lotar o banco de dados de teste a cada rodada. Ver `lib/limpezaDadosTeste.ts`.
 - Rodar `npm run build` ao final de toda tarefa para garantir que nada quebrou.
 
 ## Workflow

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { MercadoPagoConfig, PreApproval } from "mercadopago";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioLogado, garantirUsuario } from "@/lib/auth";
+import { mapearStatusMercadoPago } from "@/lib/mercadopago";
 
 function clienteMercadoPago() {
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -54,4 +55,49 @@ export async function cancelarAssinatura() {
 
   revalidatePath("/dashboard/assinatura");
   revalidatePath("/dashboard/perfil");
+}
+
+// Rede de segurança para quando o webhook não chega a tempo (ou nunca chega — ex: usuário fechou
+// a aba do Mercado Pago antes do redirect de volta): busca a assinatura diretamente pelo e-mail
+// do pagador e reconcilia o status, em vez de deixar o usuário preso em PENDENTE para sempre.
+// Chamado manualmente pelo botão "Já paguei, verificar agora" em app/dashboard/assinatura/page.tsx.
+export async function verificarPagamento(): Promise<{ atualizou: boolean; mensagem: string }> {
+  const user = await getUsuarioLogado();
+  const usuario = await garantirUsuario(user);
+
+  const planId = process.env.MERCADOPAGO_PLAN_ID;
+  if (!planId) throw new Error("Mercado Pago não configurado (MERCADOPAGO_PLAN_ID ausente).");
+
+  const preApproval = new PreApproval(clienteMercadoPago());
+  const resultado = await preApproval.search({
+    options: { payer_email: usuario.email, preapproval_plan_id: planId, sort: "date_created", criteria: "desc" },
+  });
+
+  const assinatura = resultado.results?.[0];
+  if (!assinatura || !assinatura.id) {
+    return { atualizou: false, mensagem: "Ainda não encontramos um pagamento para o seu e-mail. Se você acabou de assinar, aguarde alguns minutos e tente de novo." };
+  }
+
+  const statusAssinatura = mapearStatusMercadoPago(assinatura.status ?? "pending");
+
+  await prisma.usuario.update({
+    where: { id: usuario.id },
+    data: {
+      mpAssinaturaId: assinatura.id,
+      statusAssinatura,
+      plano: statusAssinatura === "ATIVA" || statusAssinatura === "PAUSADA" ? "PRO" : usuario.plano,
+      periodoAtualFim: assinatura.next_payment_date ? new Date(assinatura.next_payment_date) : usuario.periodoAtualFim,
+    },
+  });
+
+  revalidatePath("/dashboard/assinatura");
+  revalidatePath("/dashboard/perfil");
+
+  if (statusAssinatura === "ATIVA" || statusAssinatura === "PAUSADA") {
+    return { atualizou: true, mensagem: "Pagamento confirmado! Seu plano Pro já está ativo." };
+  }
+  if (statusAssinatura === "CANCELADA") {
+    return { atualizou: true, mensagem: "Essa assinatura consta como cancelada no Mercado Pago." };
+  }
+  return { atualizou: true, mensagem: "O pagamento ainda está pendente de confirmação no Mercado Pago." };
 }

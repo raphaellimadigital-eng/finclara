@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, MailCheck } from "lucide-react";
+import { Loader2, MailCheck, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
 import { formatarCpf, cpfValido } from "@/lib/cpf";
 import { maiorDeIdade, parseDataLocal } from "@/lib/data";
@@ -13,13 +13,44 @@ import { cpfDisponivel } from "./actions";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+const HOJE = new Date().toISOString().split("T")[0];
+const DATA_NASCIMENTO_MIN = new Date(new Date().getFullYear() - 120, 0, 1).toISOString().split("T")[0];
+
+const BENEFICIOS = [
+  { Icone: Wallet, texto: "Visão clara do que entrou, saiu e sobrou no mês" },
+  { Icone: Target, texto: "Metas com progresso automático e regra 50/30/20 na sua realidade" },
+  { Icone: ShieldCheck, texto: "Seus dados protegidos, sem coletar cartão no cadastro" },
+];
+
+function validarCpfNoInput(e: React.ChangeEvent<HTMLInputElement>) {
+  const digitos = e.target.value.replace(/\D/g, "");
+  if (digitos.length < 11) {
+    e.target.setCustomValidity("Digite os 11 números do CPF.");
+  } else if (!cpfValido(e.target.value)) {
+    e.target.setCustomValidity("Este CPF não é válido.");
+  } else {
+    e.target.setCustomValidity("");
+  }
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
+  // Sempre começa em "login" (idêntico no servidor e no cliente, sem risco de hidratação) — se a
+  // URL pedir o cadastro (ex: CTA da landing em /login?modo=cadastro), troca logo após montar.
+  // useSearchParams() exigiria um <Suspense> que, nesta página estática, faz o HTML do servidor
+  // sair vazio e sempre diverge do cliente — daí ler a query direto de window.location aqui.
   const [modo, setModo] = useState<"login" | "cadastro">("login");
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("modo") === "cadastro") {
+      setModo("cadastro");
+    }
+  }, []);
+
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [aguardandoConfirmacao, setAguardandoConfirmacao] = useState(false);
@@ -36,6 +67,7 @@ export default function LoginPage() {
 
   function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCpf(formatarCpf(e.target.value));
+    validarCpfNoInput(e);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -138,190 +170,229 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container">
-      <div className="topo">
+    <div className="login-layout">
+      <div className="login-painel-marca">
         <div className="marca">
-          <Logo />
-          <h1>Fin<span style={{ color: "var(--verde)" }}>Clara</span></h1>
+          <Logo size={40} />
+          <span style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>
+            Fin<span style={{ color: "#dffbff" }}>Clara</span>
+          </span>
         </div>
-        <ThemeToggle />
+        <h2>Finanças simples, decisões claras.</h2>
+        <p>
+          Qualquer pessoa, com qualquer renda, consegue organizar as finanças, economizar e fazer
+          o dinheiro render. Comece com 7 dias grátis, sem precisar de cartão de crédito.
+        </p>
+        <ul className="login-beneficios">
+          {BENEFICIOS.map(({ Icone, texto }) => (
+            <li key={texto} className="login-beneficio">
+              <Icone size={18} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+              {texto}
+            </li>
+          ))}
+        </ul>
       </div>
-      <p className="slogan" style={{ marginBottom: 24 }}>
-        Finanças simples, decisões{" "}
-        <span style={{ color: "var(--verde)", fontWeight: 700, fontStyle: "italic" }}>claras</span>
-        .
-      </p>
 
-      {aguardandoConfirmacao ? (
-        <div className="card" style={{ textAlign: "center" }}>
-          <MailCheck size={32} style={{ color: "var(--azul)", marginBottom: 10 }} aria-hidden="true" />
-          <h2 className="card-title" style={{ justifyContent: "center" }}>Confirme seu e-mail</h2>
-          <p className="texto-secundario" style={{ fontSize: 13.5, lineHeight: 1.6 }}>
-            Enviamos um link de confirmação para <strong>{email}</strong>. Abra sua caixa de
-            entrada e clique no link para ativar sua conta. Depois é só voltar aqui e entrar.
-          </p>
-          <p className="texto-secundario" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-            Não encontrou o e-mail? Confira também a caixa de spam ou lixo eletrônico, às vezes
-            e-mails automáticos caem lá.
-          </p>
-          <button
-            type="button"
-            className="botao-secundario"
-            style={{ marginTop: 8 }}
-            onClick={() => {
-              setAguardandoConfirmacao(false);
-              setModo("login");
-            }}
-          >
-            Voltar para o login
-          </button>
-        </div>
-      ) : precisaMfa ? (
-        <form className="card" onSubmit={handleConfirmarMfa}>
-          <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 12 }}>
-            Digite o código de 6 dígitos do seu app autenticador.
-          </p>
-          <div className="campo">
-            <label className="rotulo" htmlFor="codigoMfa">Código</label>
-            <input
-              id="codigoMfa"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              placeholder="000000"
-              value={codigoMfa}
-              onChange={(e) => setCodigoMfa(e.target.value)}
-              required
-              autoFocus
-            />
+      <div className="login-formulario-coluna">
+        <div className="login-formulario-conteudo">
+          <div className="topo" style={{ marginBottom: 8 }}>
+            <div className="marca">
+              <Logo />
+              <h1>Fin<span style={{ color: "var(--verde)" }}>Clara</span></h1>
+            </div>
+            <ThemeToggle />
           </div>
+          <p className="slogan" style={{ marginBottom: 20 }}>
+            Finanças simples, decisões{" "}
+            <span style={{ color: "var(--verde)", fontWeight: 700, fontStyle: "italic" }}>claras</span>
+            .
+          </p>
 
-          {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13.5, marginTop: 12 }}>{erro}</p>}
+          {aguardandoConfirmacao ? (
+            <div className="card" style={{ textAlign: "center" }}>
+              <MailCheck size={32} style={{ color: "var(--azul)", marginBottom: 10 }} aria-hidden="true" />
+              <h2 className="card-title" style={{ justifyContent: "center" }}>Confirme seu e-mail</h2>
+              <p className="texto-secundario" style={{ fontSize: 13.5, lineHeight: 1.6 }}>
+                Enviamos um link de confirmação para <strong>{email}</strong>. Abra sua caixa de
+                entrada e clique no link para ativar sua conta. Depois é só voltar aqui e entrar.
+              </p>
+              <p className="texto-secundario" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+                Não encontrou o e-mail? Confira também a caixa de spam ou lixo eletrônico, às vezes
+                e-mails automáticos caem lá.
+              </p>
+              <button
+                type="button"
+                className="botao-secundario"
+                style={{ marginTop: 8 }}
+                onClick={() => {
+                  setAguardandoConfirmacao(false);
+                  setModo("login");
+                }}
+              >
+                Voltar para o login
+              </button>
+            </div>
+          ) : precisaMfa ? (
+            <form className="card" onSubmit={handleConfirmarMfa}>
+              <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 12 }}>
+                Digite o código de 6 dígitos do seu app autenticador.
+              </p>
+              <div className="campo">
+                <label className="rotulo" htmlFor="codigoMfa">Código</label>
+                <input
+                  id="codigoMfa"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={codigoMfa}
+                  onChange={(e) => setCodigoMfa(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
 
-          <button
-            type="submit"
-            disabled={carregando}
-            style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-          >
-            {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
-            {carregando ? "Verificando..." : "Confirmar"}
-          </button>
-        </form>
-      ) : (
-        <>
-          <form ref={formRef} className="card" onSubmit={handleSubmit}>
-            {modo === "cadastro" && (
-              <>
+              {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13.5, marginTop: 12 }}>{erro}</p>}
+
+              <button
+                type="submit"
+                disabled={carregando}
+                style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              >
+                {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
+                {carregando ? "Verificando..." : "Confirmar"}
+              </button>
+            </form>
+          ) : (
+            <>
+              <div className="login-modo-toggle" role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={modo === "login"}
+                  className={modo === "login" ? "ativo" : ""}
+                  disabled={carregando}
+                  onClick={() => setModo("login")}
+                >
+                  Entrar
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={modo === "cadastro"}
+                  className={modo === "cadastro" ? "ativo" : ""}
+                  disabled={carregando}
+                  onClick={() => setModo("cadastro")}
+                >
+                  Criar conta grátis
+                </button>
+              </div>
+
+              <form ref={formRef} className="card" onSubmit={handleSubmit}>
+                {modo === "cadastro" && (
+                  <>
+                    <div className="campo">
+                      <label className="rotulo" htmlFor="nome">Nome</label>
+                      <input
+                        id="nome"
+                        type="text"
+                        placeholder="Seu nome completo"
+                        value={nome}
+                        onChange={(e) => {
+                          setNome(e.target.value);
+                          validarTextoNoInput(e, NOME_MIN, NOME_MAX, "O nome");
+                        }}
+                        required
+                        minLength={NOME_MIN}
+                        maxLength={NOME_MAX}
+                      />
+                    </div>
+
+                    <div className="campo-linha-dupla">
+                      <div className="campo">
+                        <label className="rotulo" htmlFor="cpf">CPF</label>
+                        <input
+                          id="cpf"
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="000.000.000-00"
+                          value={cpf}
+                          onChange={handleCpfChange}
+                          maxLength={14}
+                          required
+                        />
+                      </div>
+                      <div className="campo">
+                        <label className="rotulo" htmlFor="dataNascimento">Data de nascimento</label>
+                        <input
+                          id="dataNascimento"
+                          type="date"
+                          value={dataNascimento}
+                          onChange={(e) => setDataNascimento(e.target.value)}
+                          min={DATA_NASCIMENTO_MIN}
+                          max={HOJE}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="campo">
-                  <label className="rotulo" htmlFor="nome">Nome</label>
+                  <label className="rotulo" htmlFor="email">E-mail</label>
                   <input
-                    id="nome"
-                    type="text"
-                    placeholder="Seu nome completo"
-                    value={nome}
-                    onChange={(e) => {
-                      setNome(e.target.value);
-                      validarTextoNoInput(e, NOME_MIN, NOME_MAX, "O nome");
-                    }}
+                    id="email"
+                    type="email"
+                    placeholder="voce@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    minLength={NOME_MIN}
-                    maxLength={NOME_MAX}
                   />
                 </div>
 
-                <div style={{ display: "flex", gap: 10 }}>
-                  <div className="campo" style={{ flex: 1 }}>
-                    <label className="rotulo" htmlFor="cpf">CPF</label>
-                    <input
-                      id="cpf"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="000.000.000-00"
-                      value={cpf}
-                      onChange={handleCpfChange}
-                      maxLength={14}
-                      required
-                    />
-                  </div>
-                  <div className="campo" style={{ flex: 1 }}>
-                    <label className="rotulo" htmlFor="dataNascimento">Data de nascimento</label>
-                    <input
-                      id="dataNascimento"
-                      type="date"
-                      value={dataNascimento}
-                      onChange={(e) => setDataNascimento(e.target.value)}
-                      required
-                    />
-                  </div>
+                <div className="campo">
+                  <label className="rotulo" htmlFor="senha">Senha</label>
+                  <input
+                    id="senha"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    minLength={6}
+                    maxLength={72}
+                    required
+                  />
                 </div>
-              </>
-            )}
 
-            <div className="campo">
-              <label className="rotulo" htmlFor="email">E-mail</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="voce@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+                {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13.5, marginTop: 12 }}>{erro}</p>}
 
-            <div className="campo">
-              <label className="rotulo" htmlFor="senha">Senha</label>
-              <input
-                id="senha"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                minLength={6}
-                required
-              />
-            </div>
-
-            {erro && <p role="alert" style={{ color: "var(--vermelho)", fontSize: 13.5, marginTop: 12 }}>{erro}</p>}
-
-            <button
-              type="submit"
-              disabled={carregando || !valido}
-              style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
-              {carregando ? "Aguarde..." : modo === "login" ? "Entrar" : "Criar conta"}
-            </button>
-          </form>
-
-          <p className="texto-secundario" style={{ textAlign: "center" }}>
-            {modo === "login" ? (
-              <>
-                Ainda não tem conta?{" "}
-                <button type="button" className="botao-secundario" disabled={carregando} onClick={() => setModo("cadastro")}>
-                  Criar conta grátis
+                <button
+                  type="submit"
+                  disabled={carregando || !valido}
+                  className={modo === "cadastro" ? "botao-cta" : ""}
+                  style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                >
+                  {carregando && <Loader2 size={16} className="icone-carregando" aria-hidden="true" />}
+                  {carregando
+                    ? "Aguarde..."
+                    : modo === "login"
+                      ? "Entrar"
+                      : (<><Sparkles size={16} aria-hidden="true" /> Criar conta grátis</>)}
                 </button>
-              </>
-            ) : (
-              <>
-                Já tem conta?{" "}
-                <button type="button" className="botao-secundario" disabled={carregando} onClick={() => setModo("login")}>
-                  Entrar
-                </button>
-              </>
-            )}
-          </p>
+              </form>
 
-          <p className="texto-secundario" style={{ textAlign: "center", fontSize: 11.5, marginTop: -8 }}>
-            Ao continuar, você concorda com nossos{" "}
-            <Link href="/termos" style={{ color: "var(--texto-secundario)" }}>
-              Termos de Uso e Privacidade
-            </Link>
-            .
-          </p>
-        </>
-      )}
+              <p className="texto-secundario" style={{ textAlign: "center", fontSize: 11.5 }}>
+                Ao continuar, você concorda com nossos{" "}
+                <Link href="/termos" style={{ color: "var(--texto-secundario)" }}>
+                  Termos de Uso e Privacidade
+                </Link>
+                .
+              </p>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

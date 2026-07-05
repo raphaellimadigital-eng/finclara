@@ -49,7 +49,7 @@ export function Resumo({
   const dividasPesadas = percentualDividas > 30;
 
   return (
-    <div className="card">
+    <div className="card" data-tour="resumo">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h2 className="card-title" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
           <BarChart3 size={16} aria-hidden="true" /> Como está seu mês
