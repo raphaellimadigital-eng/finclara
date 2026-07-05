@@ -4,11 +4,11 @@ import { MESES_MINIMOS_RESERVA, MESES_IDEAL_RESERVA } from "./orientacao";
 
 // Classificação das categorias de despesa para a regra 50/30/20
 export const CATEGORIAS_ESSENCIAIS = ["MORADIA", "ALIMENTACAO", "TRANSPORTE", "SAUDE", "EDUCACAO"];
-export const CATEGORIAS_DESEJOS = ["LAZER", "ASSINATURAS", "OUTRAS_DESPESAS"];
+const CATEGORIAS_DESEJOS = ["LAZER", "ASSINATURAS", "OUTRAS_DESPESAS"];
 
 // Categorias de aporte (tipo INVESTIMENTO)
-export const CATEGORIAS_RESERVA = ["RESERVA_EMERGENCIA"];
-export const CATEGORIAS_INVESTIMENTO = ["TESOURO_DIRETO", "RENDA_VARIAVEL", "OUTROS_INVESTIMENTOS"];
+const CATEGORIAS_RESERVA = ["RESERVA_EMERGENCIA"];
+const CATEGORIAS_INVESTIMENTO = ["TESOURO_DIRETO", "RENDA_VARIAVEL", "OUTROS_INVESTIMENTOS"];
 
 // A regra 50/30/20 vira ponto de partida, não teto único: quem gasta mais que isso com o
 // essencial (moradia, alimentação, transporte, saúde, educação) não tem como caber em 50% só

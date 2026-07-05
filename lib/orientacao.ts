@@ -1,5 +1,4 @@
 import type { PerfilInvestidor } from "@prisma/client";
-import { LABEL_PERFIL } from "./perfilInvestidor";
 
 // Meses de despesas essenciais que a reserva de emergência deve cobrir. Dois marcos, usados
 // em todo o app (Orientação, dicas do GraficoAlocacao, skill do produto) para acabar com os
@@ -89,5 +88,3 @@ export function calcularOrientacao({
     mesesReserva,
   };
 }
-
-export { LABEL_PERFIL };

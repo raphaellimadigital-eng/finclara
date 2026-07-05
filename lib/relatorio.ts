@@ -2,14 +2,14 @@ import type { Lancamento, Meta } from "@prisma/client";
 import { calcularProjecao, LABEL_TIPO_META } from "./metas";
 import { LABEL_CATEGORIA } from "./categorias";
 
-export type GastoCategoria = {
+type GastoCategoria = {
   categoria: string;
   label: string;
   valor: number;
   percentual: number;
 };
 
-export type MetaRelatorio = {
+type MetaRelatorio = {
   descricao: string;
   tipo: string;
   valorAtual: number;

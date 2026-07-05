@@ -3,7 +3,7 @@ import type { Lancamento, LimiteCategoria } from "@prisma/client";
 // A partir de 80% do limite o alerta é preventivo; a partir de 100% é estouro (regra 13.3)
 const LIMIAR_AVISO_PCT = 80;
 
-export type SituacaoLimite = "ok" | "aviso" | "estouro";
+type SituacaoLimite = "ok" | "aviso" | "estouro";
 
 export type ProgressoLimite = {
   categoria: string;

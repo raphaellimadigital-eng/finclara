@@ -5,7 +5,7 @@ import type { ProgressoLimite } from "./limites";
 // Antecedência (em dias) para avisar sobre fechamento/vencimento de fatura e vencimento de dívida
 const DIAS_ANTECEDENCIA = 5;
 
-export type Severidade = "estouro" | "urgente" | "aviso";
+type Severidade = "estouro" | "urgente" | "aviso";
 
 export type Alerta = {
   id: string;
