@@ -1,9 +1,12 @@
 import type { CartaoCredito, Divida, Meta } from "@prisma/client";
 import { calcularProjecao } from "./metas";
+import { calcularAporteNecessario } from "./simulador";
 import type { ProgressoLimite } from "./limites";
 
 // Antecedência (em dias) para avisar sobre fechamento/vencimento de fatura e vencimento de dívida
 const DIAS_ANTECEDENCIA = 5;
+
+const DIA_MS = 1000 * 60 * 60 * 24;
 
 type Severidade = "estouro" | "urgente" | "aviso";
 
@@ -102,16 +105,32 @@ export function alertasDividas(dividas: Divida[], referencia: Date = new Date())
   return alertas;
 }
 
+// Aporte de referência para o alerta: Tesouro Selic, por ser a opção mais conservadora e
+// líquida — só para dar uma ideia de ordem de grandeza, a simulação completa fica na meta.
 export function alertasMetas(metas: Meta[]): Alerta[] {
   return metas
     .filter((m) => calcularProjecao(m).atrasada)
-    .map((m) => ({
-      id: `meta-${m.id}`,
-      severidade: "aviso",
-      titulo: `Meta "${m.descricao}" atrasada`,
-      descricao: "No ritmo atual de aportes, a meta não será concluída dentro do prazo.",
-      href: "/dashboard/metas",
-    }));
+    .map((m) => {
+      const meses = Math.round((new Date(m.prazo).getTime() - Date.now()) / (DIA_MS * 30));
+      const necessario = calcularAporteNecessario({
+        valorAtual: Number(m.valorAtual),
+        valorAlvo: Number(m.valorAlvo),
+        meses,
+        tipoInvestimento: "TESOURO_SELIC",
+      });
+      const descricao =
+        necessario.possivel && necessario.aporteMensal > 0
+          ? `No ritmo atual, a meta não será concluída no prazo. Considere aportar cerca de ${formatarMoeda(necessario.aporteMensal)} por mês para recuperar o ritmo.`
+          : "No ritmo atual de aportes, a meta não será concluída dentro do prazo.";
+
+      return {
+        id: `meta-${m.id}`,
+        severidade: "aviso",
+        titulo: `Meta "${m.descricao}" atrasada`,
+        descricao,
+        href: "/dashboard/metas",
+      };
+    });
 }
 
 export function ordenarPorSeveridade(alertas: Alerta[]): Alerta[] {

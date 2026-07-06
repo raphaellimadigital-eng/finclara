@@ -13,6 +13,7 @@ import {
   Compass,
   FileText,
   TrendingUp,
+  Calculator,
   UserRound,
   ShieldCheck,
   Settings,
@@ -54,6 +55,7 @@ const GRUPOS_SECUNDARIOS: { rotulo: string; itens: ItemSecundario[] }[] = [
       { href: "/dashboard/alertas", rotulo: "Alertas", Icone: Bell },
       { href: "/dashboard/relatorios", rotulo: "Relatórios", Icone: FileText },
       { href: "/dashboard/perfil-investidor", rotulo: "Perfil de investidor", Icone: TrendingUp },
+      { href: "/dashboard/simulador", rotulo: "Simulador de investimentos", Icone: Calculator },
     ],
   },
   {

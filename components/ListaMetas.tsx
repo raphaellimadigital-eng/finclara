@@ -3,9 +3,10 @@
 import { useRef, useState } from "react";
 import { Inbox, Trash2, Loader2, Target, CheckCircle2, AlertTriangle } from "lucide-react";
 import { deletarMeta, aportarMeta } from "@/app/dashboard/metas/actions";
-import { calcularProjecao, estrategiaSugerida, LABEL_TIPO_META } from "@/lib/metas";
+import { calcularProjecao, LABEL_TIPO_META } from "@/lib/metas";
 import { formatarMoeda, formatarData } from "@/lib/formatos";
 import { CampoValor } from "@/components/CampoValor";
+import { SimuladorAporteMeta } from "@/components/SimuladorAporteMeta";
 import { useConfirmacao } from "@/components/useConfirmacao";
 import { useValidadeFormulario } from "@/components/useValidadeFormulario";
 import type { Meta } from "@prisma/client";
@@ -103,7 +104,9 @@ function ItemMeta({ meta }: { meta: Meta }) {
         )}
       </div>
 
-      <p className="texto-secundario" style={{ fontSize: 11.5, marginBottom: 12 }}>{estrategiaSugerida(meta.prazo)}</p>
+      {!projecao.concluida && (
+        <SimuladorAporteMeta valorAtual={Number(meta.valorAtual)} valorAlvo={Number(meta.valorAlvo)} prazo={meta.prazo} />
+      )}
 
       {!projecao.concluida && (
         <form ref={formRef} onSubmit={handleAportar} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>

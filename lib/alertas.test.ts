@@ -104,6 +104,20 @@ describe("alertasMetas", () => {
     const alertas = alertasMetas([meta({ prazo: futuro, criadoEm: new Date() })]);
     expect(alertas).toHaveLength(0);
   });
+
+  it("sugere um aporte mensal para recuperar o ritmo quando o prazo ainda não venceu", () => {
+    const criadoEm = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+    const prazoProximo = new Date(Date.now() + 1000 * 60 * 60 * 24 * 300);
+    const alertas = alertasMetas([
+      meta({ valorAtual: 100 as any, valorAlvo: 10000 as any, criadoEm, prazo: prazoProximo }),
+    ]);
+    expect(alertas[0].descricao).toMatch(/aportar cerca de/i);
+  });
+
+  it("mantém a mensagem genérica quando o prazo já venceu (sem meses para calcular)", () => {
+    const alertas = alertasMetas([meta()]);
+    expect(alertas[0].descricao).toMatch(/não será concluída dentro do prazo/i);
+  });
 });
 
 describe("ordenarPorSeveridade", () => {
