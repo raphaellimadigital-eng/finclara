@@ -4,6 +4,7 @@ import { FaixaTrial } from "@/components/FaixaTrial";
 import { FaixaPlanoLimitado } from "@/components/FaixaPlanoLimitado";
 import { NavPrincipal } from "@/components/NavPrincipal";
 import { TourPrimeirosPassos } from "@/components/TourPrimeirosPassos";
+import { OnboardingBoasVindas } from "@/components/OnboardingBoasVindas";
 import { getStatusAssinatura } from "@/lib/auth";
 import { diasRestantesTrial, temAcessoCompleto, trialAtivo } from "@/lib/assinatura";
 import { getMetas } from "./metas/actions";
@@ -18,6 +19,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const emTrial = trialAtivo(usuario);
   const onboardingCompleto =
     statusPrimeirosPassos.temReceita && statusPrimeirosPassos.temDespesa && statusPrimeirosPassos.temMeta;
+  // Onboarding de perfil (tela cheia) só para quem ainda não definiu o perfil de investidor.
+  const onboardingPerfilPendente = usuario.perfilInvestidor === null;
 
   return (
     <>
@@ -34,7 +37,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </Suspense>
       <div className="conteudo-com-nav">{children}</div>
       <BotaoPerguntaFlutuante />
-      <TourPrimeirosPassos ativo={!onboardingCompleto} />
+      <OnboardingBoasVindas mostrar={onboardingPerfilPendente} />
+      <TourPrimeirosPassos ativo={!onboardingCompleto} onboardingPerfilPendente={onboardingPerfilPendente} />
     </>
   );
 }
