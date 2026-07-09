@@ -10,12 +10,14 @@ import { Resumo } from "@/components/Resumo";
 import { SeletorMes } from "@/components/SeletorMes";
 import { GraficoAlocacao } from "@/components/GraficoAlocacao";
 import { CardSobra, type MetaResumo } from "@/components/CardSobra";
+import { CardEconomia } from "@/components/CardEconomia";
 import { CardDividas } from "@/components/CardDividas";
 import { CardCartoes } from "@/components/CardCartoes";
 import { CardMetas } from "@/components/CardMetas";
 import { CardOrientacao } from "@/components/CardOrientacao";
 import { CardAlertas } from "@/components/CardAlertas";
 import { OnboardingPrimeirosPassos } from "@/components/OnboardingPrimeirosPassos";
+import { BannerGuia } from "@/components/BannerGuia";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase-server";
@@ -154,6 +156,8 @@ export default async function DashboardPage({ searchParams }: Props) {
         <SeletorMes ano={ano} mes={mes} anoMinimo={usuario.criadoEm.getFullYear()} limiteFuturo={limiteFuturoCalendario} />
       </Suspense>
 
+      <BannerGuia />
+
       <OnboardingPrimeirosPassos
         temReceita={statusPrimeirosPassos.temReceita}
         temDespesa={statusPrimeirosPassos.temDespesa}
@@ -191,6 +195,9 @@ export default async function DashboardPage({ searchParams }: Props) {
           ano={ano}
           mes={mes}
         />
+
+        {/* 4b. Economia do mês (quanto da renda já foi guardado — some sozinho sem investimento) */}
+        <CardEconomia totalReceitas={totalReceitas} totalInvestimentos={totalInvestimentos} />
 
         {/* 5. Metas (meta principal com progresso) */}
         <CardMetas metas={metas} />

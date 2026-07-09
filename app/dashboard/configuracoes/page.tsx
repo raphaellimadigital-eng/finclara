@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ChevronLeft, Settings } from "lucide-react";
+import { ChevronLeft, Settings, Compass, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LembreteDiario } from "@/components/LembreteDiario";
 
 export default function ConfiguracoesPage() {
   return (
@@ -25,6 +26,24 @@ export default function ConfiguracoesPage() {
           </div>
           <ThemeToggle />
         </div>
+
+        <LembreteDiario />
+
+        {/* Reabre o tour guiado do dashboard (?tour=1 é lido pelo TourPrimeirosPassos) */}
+        <Link
+          href="/dashboard?tour=1"
+          className="card"
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textDecoration: "none", color: "inherit" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Compass size={18} style={{ color: "var(--verde)", flexShrink: 0 }} aria-hidden="true" />
+            <div>
+              <div style={{ fontWeight: 500, fontSize: 14.5 }}>Refazer tour guiado</div>
+              <div className="texto-secundario">Rever a apresentação das principais funcionalidades</div>
+            </div>
+          </div>
+          <ChevronRight size={18} className="texto-secundario" aria-hidden="true" />
+        </Link>
       </div>
     </div>
   );

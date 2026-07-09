@@ -191,6 +191,197 @@ h2 {
   color: var(--vermelho);
 }
 
+/* Privacidade: o botão "olho" (OcultarValores) marca o <html> com data-valores-ocultos e
+   borra tudo que estiver marcado como valor-sensivel, sem tirar o valor do fluxo do layout. */
+[data-valores-ocultos] .valor-sensivel {
+  filter: blur(9px);
+  user-select: none;
+  cursor: default;
+}
+.valor-sensivel {
+  transition: filter 0.15s ease;
+}
+
+/* Banner de convite ao tour guiado (BannerGuia) — topo do dashboard.
+   Mesmo visual dos cards do app (fundo do card + borda), só com um filete verde à esquerda
+   para chamar atenção sem destoar. */
+.banner-guia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--verde);
+  background: var(--card-bg);
+}
+
+.banner-guia-comecar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: auto;
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--verde);
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.banner-guia-comecar:hover {
+  text-decoration: underline;
+}
+
+/* Onboarding de boas-vindas em tela cheia (OnboardingBoasVindas) */
+.onboarding-tela {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: var(--fundo);
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.onboarding-conteudo {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0 24px;
+}
+
+.onboarding-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  margin-bottom: 8px;
+}
+
+.onboarding-progresso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onboarding-pular {
+  width: auto;
+  padding: 8px 14px;
+  min-height: 40px;
+  background: none;
+  border: none;
+  color: var(--verde);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.onboarding-pular:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.onboarding-abertura {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.onboarding-selo {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: var(--verde-clara);
+  color: var(--verde);
+  margin-bottom: 20px;
+}
+
+.onboarding-comecar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: auto;
+  align-self: flex-start;
+  padding: 12px 22px;
+}
+
+.onboarding-opcao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--card-bg);
+  border: 1.5px solid var(--borda);
+  border-radius: 14px;
+  color: var(--texto);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.onboarding-opcao:hover:not(:disabled) {
+  border-color: var(--verde);
+}
+.onboarding-opcao.selecionada {
+  border-color: var(--verde);
+  background: var(--verde-clara);
+}
+
+/* Toggle (switch) — usado na preferência de lembrete diário (LembreteDiario) */
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-trilho {
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--borda);
+  transition: background 0.15s ease;
+}
+.switch-trilho::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+.switch input:checked + .switch-trilho {
+  background: var(--verde);
+}
+.switch input:checked + .switch-trilho::after {
+  transform: translateX(20px);
+}
+.switch input:focus-visible + .switch-trilho {
+  outline: 2px solid var(--verde);
+  outline-offset: 2px;
+}
+
 /* Indicador de saúde financeira */
 .badge-saude {
   display: inline-flex;
@@ -884,15 +1075,33 @@ button:disabled {
 
 .tour-balao {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(320px, calc(100vw - 32px));
   background: var(--card-bg);
   border: 1px solid var(--borda);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.24);
+  box-shadow: 0 14px 34px rgba(17, 24, 39, 0.28);
   pointer-events: auto;
+  transition: top 0.2s ease, left 0.2s ease;
+}
+
+/* Setinha apontando para o elemento destacado (posição horizontal vem do inline setaLeft) */
+.tour-seta {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--borda);
+  transform: translateX(-50%) rotate(45deg);
+}
+.tour-balao.seta-cima .tour-seta {
+  top: -8px;
+  border-right: none;
+  border-bottom: none;
+}
+.tour-balao.seta-baixo .tour-seta {
+  bottom: -8px;
+  border-left: none;
+  border-top: none;
 }
 
 .tour-fechar {
@@ -901,13 +1110,30 @@ button:disabled {
   right: 6px;
 }
 
+.tour-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.tour-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--borda);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+.tour-dot.ativo {
+  width: 20px;
+  background: var(--verde);
+}
+
 .tour-passo-contador {
   margin: 0;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--azul);
+  color: var(--verde);
 }
 
 /* Carregamento de tela inteira (loading.tsx) */

@@ -22,6 +22,9 @@ export function OnboardingPrimeirosPassos({ temReceita, temDespesa, temMeta, ano
 
   if (temReceita && temDespesa && temMeta) return null;
 
+  const concluidos = [temReceita, temDespesa, temMeta].filter(Boolean).length;
+  const percentual = Math.round((concluidos / 3) * 100);
+
   return (
     <div className="card">
       <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -30,6 +33,23 @@ export function OnboardingPrimeirosPassos({ temReceita, temDespesa, temMeta, ano
       <p className="texto-secundario" style={{ fontSize: 13, marginBottom: 12 }}>
         Três registros simples e seu dashboard já mostra um retrato real das suas finanças.
       </p>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <div
+          className="barra-fundo"
+          role="progressbar"
+          aria-valuenow={percentual}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Progresso dos primeiros passos"
+          style={{ flex: 1 }}
+        >
+          <div className="barra-preenchimento" style={{ width: `${percentual}%`, background: "var(--verde)" }} />
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--verde)", minWidth: 34, textAlign: "right" }}>
+          {percentual}%
+        </span>
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <button

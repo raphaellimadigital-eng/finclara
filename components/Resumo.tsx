@@ -1,5 +1,6 @@
 import { BarChart3, CheckCircle2, AlertTriangle, AlertOctagon } from "lucide-react";
 import { formatarMoeda } from "@/lib/formatos";
+import { OcultarValores } from "@/components/OcultarValores";
 
 type Props = {
   totalReceitas: number;
@@ -54,16 +55,19 @@ export function Resumo({
         <h2 className="card-title" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
           <BarChart3 size={16} aria-hidden="true" /> Como está seu mês
         </h2>
-        <span className={`badge-saude ${situacao.classe}`}>
-          <IconeSituacao size={14} aria-hidden="true" /> {situacao.texto}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className={`badge-saude ${situacao.classe}`}>
+            <IconeSituacao size={14} aria-hidden="true" /> {situacao.texto}
+          </span>
+          <OcultarValores />
+        </div>
       </div>
 
       <div>
         <div className="texto-secundario" style={{ marginBottom: 4 }}>
           {faltou ? "Faltou" : "Sobrou até agora"}
         </div>
-        <div className={`saldo ${faltou ? "negativo" : "positivo"}`}>
+        <div className={`saldo valor-sensivel ${faltou ? "negativo" : "positivo"}`}>
           {formatarMoeda(Math.abs(saldo))}
         </div>
         <div className="texto-secundario" style={{ fontSize: 12.5, marginTop: 2 }}>
@@ -76,19 +80,19 @@ export function Resumo({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--borda)" }}>
         <div>
           <div className="texto-secundario" style={{ fontSize: 12 }}>Entrou</div>
-          <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--verde)" }}>
+          <div className="valor-sensivel" style={{ fontSize: 15.5, fontWeight: 700, color: "var(--verde)" }}>
             {formatarMoeda(totalReceitas)}
           </div>
         </div>
         <div>
           <div className="texto-secundario" style={{ fontSize: 12 }}>Saiu</div>
-          <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--vermelho)" }}>
+          <div className="valor-sensivel" style={{ fontSize: 15.5, fontWeight: 700, color: "var(--vermelho)" }}>
             {formatarMoeda(totalDespesas)}
           </div>
         </div>
         <div>
           <div className="texto-secundario" style={{ fontSize: 12 }}>Guardado</div>
-          <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--investimento)" }}>
+          <div className="valor-sensivel" style={{ fontSize: 15.5, fontWeight: 700, color: "var(--investimento)" }}>
             {formatarMoeda(totalInvestimentos)}
           </div>
         </div>

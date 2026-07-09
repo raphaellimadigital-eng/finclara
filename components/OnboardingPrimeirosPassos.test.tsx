@@ -21,6 +21,18 @@ describe("OnboardingPrimeirosPassos", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it("mostra o progresso em percentual conforme os passos são concluídos", () => {
+    const { rerender } = render(
+      <OnboardingPrimeirosPassos temReceita={false} temDespesa={false} temMeta={false} ano={2026} mes={7} />
+    );
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
+    expect(screen.getByText("0%")).toBeInTheDocument();
+
+    rerender(<OnboardingPrimeirosPassos temReceita temDespesa={false} temMeta={false} ano={2026} mes={7} />);
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "33");
+    expect(screen.getByText("33%")).toBeInTheDocument();
+  });
+
   it("desabilita o passo já concluído", () => {
     render(<OnboardingPrimeirosPassos temReceita temDespesa={false} temMeta={false} ano={2026} mes={7} />);
     expect(screen.getByText("Registre quanto entrou este mês").closest("button")).toBeDisabled();
